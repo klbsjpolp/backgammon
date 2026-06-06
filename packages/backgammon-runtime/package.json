@@ -1,0 +1,26 @@
+{
+  "name": "@backgammon/runtime",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "lint": "eslint src tests --report-unused-disable-directives --max-warnings 0",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage --coverage.reporter=lcovonly --coverage.reporter=text-summary",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@backgammon/core": "workspace:*",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^4.1.7",
+    "vite": "^8.0.14",
+    "vitest": "^4.1.7"
+  }
+}

@@ -1,0 +1,136 @@
+import type { GameResult, GameState, Move, Player, WinKind } from './types.js';
+import { CHECKERS_PER_SIDE, checkersOn, createInitialBoard, opponent } from './board.js';
+import { applyMove, legalMoves } from './moves.js';
+
+export type Rng = () => number;
+
+/** Deterministic, seedable RNG (mulberry32) — handy for tests and replays. */
+export const createRng = (seed: number): Rng => {
+  let a = seed >>> 0;
+  return () => {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+};
+
+const rollDie = (rng: Rng): number => 1 + Math.floor(rng() * 6);
+
+export const rollDice = (rng: Rng = Math.random): [number, number] => [rollDie(rng), rollDie(rng)];
+
+export const createInitialState = (startingPlayer: Player = 'white'): GameState => ({
+  board: createInitialBoard(),
+  turn: startingPlayer,
+  phase: 'rolling',
+  roll: null,
+  remaining: [],
+  cube: { value: 1, owner: null },
+  doubleOfferedBy: null,
+  result: null,
+});
+
+/** Moves available to the player on roll right now (empty unless phase is 'moving'). */
+export const currentLegalMoves = (state: GameState): Move[] =>
+  state.phase === 'moving' ? legalMoves(state.board, state.turn, state.remaining) : [];
+
+const endTurn = (state: GameState): GameState => ({
+  ...state,
+  turn: opponent(state.turn),
+  phase: 'rolling',
+  roll: null,
+  remaining: [],
+});
+
+const loserTrappedInWinnerHome = (state: GameState, winner: Player, loser: Player): boolean => {
+  if (state.board.bar[loser] > 0) return true;
+  const [start, end] = winner === 'white' ? [0, 5] : [18, 23];
+  for (let i = start; i <= end; i++) {
+    if (checkersOn(state.board, loser, i) > 0) return true;
+  }
+  return false;
+};
+
+const detectResult = (state: GameState, winner: Player): GameResult => {
+  const loser = opponent(winner);
+  let kind: WinKind = 'single';
+  if (state.board.off[loser] === 0) {
+    kind = loserTrappedInWinnerHome(state, winner, loser) ? 'backgammon' : 'gammon';
+  }
+  const base = kind === 'single' ? 1 : kind === 'gammon' ? 2 : 3;
+  return { winner, kind, points: base * state.cube.value, cubeValue: state.cube.value };
+};
+
+/** Record a dice roll and enter the moving phase (passing the turn if no move is possible). */
+export const applyRoll = (state: GameState, roll: [number, number]): GameState => {
+  if (state.phase !== 'rolling') return state;
+  const [d1, d2] = roll;
+  const remaining = d1 === d2 ? [d1, d1, d1, d1] : [d1, d2];
+  const moving: GameState = { ...state, roll, remaining, phase: 'moving' };
+  if (legalMoves(moving.board, moving.turn, remaining).length === 0) {
+    return endTurn(moving);
+  }
+  return moving;
+};
+
+/** Convenience: roll the dice with an RNG and apply them. */
+export const roll = (state: GameState, rng: Rng = Math.random): GameState => applyRoll(state, rollDice(rng));
+
+/** Play one checker move, consuming its die. Ends the turn or the game as needed. */
+export const playMove = (state: GameState, move: Move): GameState => {
+  if (state.phase !== 'moving') return state;
+
+  const board = applyMove(state.board, state.turn, move);
+  const idx = state.remaining.indexOf(move.die);
+  const remaining = idx === -1 ? state.remaining : state.remaining.slice(0, idx).concat(state.remaining.slice(idx + 1));
+  let next: GameState = { ...state, board, remaining };
+
+  if (board.off[state.turn] === CHECKERS_PER_SIDE) {
+    const result = detectResult(next, state.turn);
+    return { ...next, phase: 'gameOver', result, remaining: [] };
+  }
+
+  if (remaining.length === 0 || legalMoves(board, state.turn, remaining).length === 0) {
+    next = endTurn(next);
+  }
+  return next;
+};
+
+// --- Doubling cube ---------------------------------------------------------
+
+/** May the player on roll offer a double right now? */
+export const canDouble = (state: GameState, player: Player): boolean =>
+  state.phase === 'rolling' &&
+  state.turn === player &&
+  state.result === null &&
+  (state.cube.owner === null || state.cube.owner === player);
+
+export const offerDouble = (state: GameState): GameState => {
+  if (!canDouble(state, state.turn)) return state;
+  return { ...state, phase: 'doubleOffered', doubleOfferedBy: state.turn };
+};
+
+/**
+ * Respond to a pending double. Accepting doubles the cube and hands it to the
+ * responder; declining ends the game, conceding the current cube stake.
+ */
+export const respondDouble = (state: GameState, accept: boolean): GameState => {
+  if (state.phase !== 'doubleOffered' || state.doubleOfferedBy === null) return state;
+  const offerer = state.doubleOfferedBy;
+  const responder = opponent(offerer);
+  if (!accept) {
+    return {
+      ...state,
+      phase: 'gameOver',
+      doubleOfferedBy: null,
+      result: { winner: offerer, kind: 'single', points: state.cube.value, cubeValue: state.cube.value },
+    };
+  }
+  return {
+    ...state,
+    phase: 'rolling',
+    doubleOfferedBy: null,
+    cube: { value: state.cube.value * 2, owner: responder },
+  };
+};

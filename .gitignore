@@ -1,0 +1,13 @@
+/node_modules/
+**/node_modules/
+**/dist/
+**/dist-types/
+**/*.tsbuildinfo
+**/coverage/
+.DS_Store
+.idea/
+*.iml
+.env
+.env.local
+.env.*.local
+.claude/worktrees

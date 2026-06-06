@@ -1,0 +1,8 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./apps/web" },
+    { "path": "./packages/backgammon-core" },
+    { "path": "./packages/backgammon-runtime" }
+  ]
+}

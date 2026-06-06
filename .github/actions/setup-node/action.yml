@@ -1,0 +1,23 @@
+name: 'Setup Node.js'
+description: 'Centralized setup for Node.js, pnpm, and dependencies'
+inputs:
+  node-version:
+    description: 'Node.js version'
+    required: false
+    default: '22.x'
+
+runs:
+  using: 'composite'
+  steps:
+    - uses: pnpm/action-setup@v5
+      with:
+        run_install: false
+
+    - uses: actions/setup-node@v5
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: 'pnpm'
+
+    - name: Install dependencies
+      shell: bash
+      run: pnpm install

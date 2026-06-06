@@ -1,0 +1,7 @@
+# Build artifacts
+**/dist
+**/dist-types
+**/coverage
+
+# Lockfiles
+pnpm-lock.yaml
