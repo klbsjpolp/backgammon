@@ -1,6 +1,14 @@
-import { BAR, OFF } from '@backgammon/core';
+import { BAR, OFF, type GameState } from '@backgammon/core';
 import { cn } from '@/lib/cn';
-import type { LocalGame } from '@/useLocalGame';
+
+/** Minimal surface the board needs; satisfied by both the local and online games. */
+export interface BoardController {
+  state: GameState;
+  selectableFroms: number[];
+  selectedFrom: number | null;
+  targets: number[];
+  clickPoint: (index: number) => void;
+}
 
 const TOP_ROW = [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23];
 const BOTTOM_ROW = [11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
@@ -106,8 +114,8 @@ const Bar = ({ white, black, selectable, selected, onClick }: BarProps) => (
 
 const die = (n: number) => '⚀⚁⚂⚃⚄⚅'[n - 1] ?? '?';
 
-export const Board = ({ game }: { game: LocalGame }) => {
-  const { state, selectableFroms, selectedFrom, targets } = game;
+export const Board = ({ controller }: { controller: BoardController }) => {
+  const { state, selectableFroms, selectedFrom, targets } = controller;
   const board = state.board;
 
   const renderPoint = (index: number, orientation: 'top' | 'bottom') => (
@@ -119,7 +127,7 @@ export const Board = ({ game }: { game: LocalGame }) => {
       selectable={selectableFroms.includes(index)}
       selected={selectedFrom === index}
       target={targets.includes(index)}
-      onClick={() => game.clickPoint(index)}
+      onClick={() => controller.clickPoint(index)}
     />
   );
 
@@ -136,7 +144,7 @@ export const Board = ({ game }: { game: LocalGame }) => {
           black={-Math.max(0, board.bar.black)}
           selectable={selectableFroms.includes(BAR)}
           selected={selectedFrom === BAR}
-          onClick={() => game.clickPoint(BAR)}
+          onClick={() => controller.clickPoint(BAR)}
         />
 
         <div className="flex flex-col justify-between gap-3">
@@ -150,7 +158,7 @@ export const Board = ({ game }: { game: LocalGame }) => {
             label="white off"
             value={board.off.white}
             active={targets.includes(OFF)}
-            onClick={() => game.clickPoint(OFF)}
+            onClick={() => controller.clickPoint(OFF)}
           />
         </div>
       </div>

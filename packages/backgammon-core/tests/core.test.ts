@@ -2,12 +2,15 @@ import { describe, expect, it } from 'vitest';
 import {
   applyAiTurn,
   applyMove,
+  applyRoll,
   BAR,
   OFF,
   canDouble,
+  chooseTurn,
   createInitialBoard,
   createInitialState,
   createRng,
+  evaluateBoard,
   legalMoves,
   offerDouble,
   pipCount,
@@ -152,6 +155,19 @@ describe('doubling cube', () => {
   it('only lets the cube owner double', () => {
     const state = { ...createInitialState('white'), cube: { value: 2, owner: 'black' as Player } };
     expect(canDouble(state, 'white')).toBe(false);
+  });
+});
+
+describe('ai', () => {
+  it('uses both dice when a full sequence is available', () => {
+    const state = applyRoll(createInitialState('white'), [3, 1]);
+    expect(chooseTurn(state)).toHaveLength(2);
+  });
+
+  it('evaluation penalizes a blot exposed to a direct shot', () => {
+    const exposed = makeBoard({ 12: 1, 6: -1 }); // black on 6 hits the 12-blot with a 6
+    const safe = makeBoard({ 12: 1, 0: -1 }); // black on 0 has no direct shot
+    expect(evaluateBoard(exposed, 'white')).toBeLessThan(evaluateBoard(safe, 'white'));
   });
 });
 

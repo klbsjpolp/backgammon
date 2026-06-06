@@ -21,6 +21,12 @@ export interface HostSnapshot {
 export interface HostOptions {
   /** Seat indices in play, in seating order (from the server's `gameStarted`). */
   seating: number[];
+  /**
+   * Seat index that takes the first turn (the server's `currentSeatIndex`). When
+   * given, the player on that seat starts so the host stays in lockstep with the
+   * server's abstract turn pointer.
+   */
+  startingSeatIndex?: number;
   config?: BackgammonGameConfig;
   /** Injectable RNG for deterministic tests/replays. Defaults to Math.random. */
   rng?: Rng;
@@ -51,7 +57,16 @@ export class BackgammonHost {
     this.seatToPlayer.set(blackSeat, 'black');
     this.playerToSeat.set('white', whiteSeat);
     this.playerToSeat.set('black', blackSeat);
-    this.state = createInitialState(options.config?.startingPlayer ?? 'white');
+    const startingPlayer =
+      options.startingSeatIndex !== undefined
+        ? (this.seatToPlayer.get(options.startingSeatIndex) ?? 'white')
+        : (options.config?.startingPlayer ?? 'white');
+    this.state = createInitialState(startingPlayer);
+  }
+
+  /** Color assigned to a seat, or undefined if the seat isn't in play. */
+  playerForSeat(seatIndex: number): Player | undefined {
+    return this.seatToPlayer.get(seatIndex);
   }
 
   getState(): GameState {

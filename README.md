@@ -29,7 +29,14 @@ pnpm lint
 
 ## Status
 
-v1 ships **local play** (you vs a heuristic AI) with full rules: bar/hit/bearing off,
-the use-both-dice rule, doubling cube, and gammon/backgammon scoring. Online
-multiplayer is architected but not yet wired (pending the `@klbsjpolp/realtime-core`
-npm publish). See [DECISIONS.md](DECISIONS.md).
+Full rules (bar/hit/bearing off, the use-both-dice rule, doubling cube,
+gammon/backgammon scoring) with two modes:
+
+- **vs AI** — local play against a move-sequence-search, shot-aware bot.
+- **Online** — host-authoritative multiplayer over the shared realtime-infra relay
+  (create/join a room by code).
+
+Online requires `@klbsjpolp/realtime-core` to be published to npm and
+`VITE_BACKGAMMON_API_URL` to point at the relay server. Until the package is
+published, a temporary `file:` override in `pnpm-workspace.yaml` resolves it from a
+local tarball. See [DECISIONS.md](DECISIONS.md).

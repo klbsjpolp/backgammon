@@ -46,6 +46,27 @@ describe('BackgammonHost', () => {
     expect(host.getState().cube).toEqual({ value: 2, owner: 'black' });
   });
 
+  it('starts the player on the server-chosen seat', () => {
+    const host = new BackgammonHost({ seating: [0, 1], startingSeatIndex: 1, rng: createRng(2) });
+    expect(host.getState().turn).toBe('black');
+    expect(host.currentSeatIndex()).toBe(1);
+  });
+
+  it('hands the turn to the other seat after a full turn (online exchange)', () => {
+    const host = new BackgammonHost({ seating: [0, 1], startingSeatIndex: 0, rng: createRng(3) });
+    host.applyAction(0, { type: 'roll' });
+    let guard = 0;
+    while (host.getState().turn === 'white' && host.getState().phase === 'moving' && guard++ < 10) {
+      const move = host.viewFor(0).legalMoves[0];
+      host.applyAction(0, { type: 'move', from: move.from, to: move.to, die: move.die });
+    }
+    expect(host.getState().turn).toBe('black');
+    expect(host.currentSeatIndex()).toBe(1);
+    // The other seat (a guest) may now act; the seat that just played may not.
+    expect(() => host.applyAction(1, { type: 'roll' })).not.toThrow();
+    expect(() => host.applyAction(0, { type: 'roll' })).toThrow(/not your turn/);
+  });
+
   it('round-trips through a snapshot', () => {
     const host = newHost();
     host.applyAction(0, { type: 'roll' });
