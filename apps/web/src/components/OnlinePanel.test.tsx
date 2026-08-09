@@ -212,9 +212,14 @@ describe('OnlinePanel', () => {
       expect(screen.getAllByText(/connection lost/i).length).toBeGreaterThan(0);
     });
 
-    it('leaves the room', () => {
+    it('leaves the room only once the tap is confirmed', () => {
       const game = renderPanel(playing());
-      fireEvent.click(screen.getByRole('button', { name: /leave/i }));
+      const leave = () => screen.getByRole('button', { name: /leave/i });
+
+      fireEvent.click(leave());
+      expect(game.leave).not.toHaveBeenCalled();
+
+      fireEvent.click(leave());
       expect(game.leave).toHaveBeenCalled();
     });
   });

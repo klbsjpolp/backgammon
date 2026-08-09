@@ -1,5 +1,12 @@
 @import 'tailwindcss';
 
+/*
+ * Landscape phones: plenty of width, almost no height. The page switches to a
+ * board-beside-controls layout there so nothing lands under the thumb rest at
+ * the bottom edge of the screen.
+ */
+@custom-variant compact (@media (orientation: landscape) and (max-height: 640px));
+
 :root {
   color-scheme: dark;
 }
@@ -21,4 +28,65 @@ body {
     Helvetica,
     Arial,
     sans-serif;
+}
+
+/*
+ * The board is drawn from a single length unit, `--pt` (the width of one point),
+ * so it scales to whatever room the viewport actually has instead of overflowing
+ * a phone. Everything else — checkers, bar, trays, labels — is a multiple of it.
+ *
+ * A board is ~17 × --pt wide and ~9.1 × --pt tall (12 points + bar + tray + gaps
+ * + padding), hence the two divisors: `--pt` is the largest unit that fits both
+ * the width and the height still available once the page chrome is counted.
+ */
+.board-fit {
+  --avail-w: calc(100vw - 2.75rem);
+  --avail-h: calc(100svh - 19rem);
+  --pt: clamp(1rem, min(calc(var(--avail-w) / 17), calc(var(--avail-h) / 9.1)), 2.5rem);
+  --pt-h: calc(var(--pt) * 4.1);
+  --checker: calc(var(--pt) * 0.68);
+  --board-gap: calc(var(--pt) * 0.12);
+  --label: max(0.5rem, calc(var(--pt) * 0.22));
+
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+
+/* Landscape phone: the board sits beside the controls, with little height to spare. */
+@media (orientation: landscape) and (max-height: 640px) {
+  .board-fit {
+    --avail-w: calc(100vw - 16rem);
+    --avail-h: calc(100svh - 7.5rem);
+  }
+}
+
+/*
+ * Portrait phone: a backgammon board is twice as wide as it is tall, which is the
+ * worst possible fit for a portrait screen — laid out flat it leaves most of the
+ * height empty and shrinks the checkers to a few millimetres. Turning it a quarter
+ * turn swaps the axes: the long side runs down the screen, so the points come out
+ * roughly 50% larger. Your home board and your tray end up bottom-left, and the
+ * text is turned back upright by `.board-label`.
+ */
+@media (orientation: portrait) and (max-width: 640px) {
+  .board-fit {
+    --avail-w: calc(100svh - 22rem);
+    --avail-h: calc(100vw - 1rem);
+    /* A rotation does not change the space an element takes in layout, so the
+       wrapper has to reserve the turned footprint itself. */
+    width: calc(var(--pt) * 9.1);
+    height: calc(var(--pt) * 17);
+  }
+
+  .board-frame {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(90deg);
+  }
+
+  .board-label {
+    transform: rotate(-90deg);
+  }
 }
