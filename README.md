@@ -32,9 +32,12 @@ pnpm lint
 Full rules (bar/hit/bearing off, the use-both-dice rule, doubling cube,
 gammon/backgammon scoring) with two modes:
 
-- **vs AI** — local play against a move-sequence-search, shot-aware bot.
+- **vs AI** — local play against a move-sequence-search, shot-aware bot that also
+  turns the cube: it offers doubles inside the classic window and takes or drops on
+  its own estimated win probability.
 - **Online** — host-authoritative multiplayer over the shared realtime-infra relay
-  (create/join a room by code).
+  (create/join a room by code). The board is drawn from each seat's point of view, so
+  both colors see their home board bottom-right and bear off onto their own tray.
 
 Online requires `@klbsjpolp/realtime-core` to be published to npm and
 `VITE_BACKGAMMON_API_URL` to point at the relay server. Until the package is

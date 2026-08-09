@@ -1,17 +1,30 @@
-import { BAR, OFF, type GameState } from '@backgammon/core';
+import { BAR, OFF, opponent, type GameState, type Player } from '@backgammon/core';
 import { cn } from '@/lib/cn';
 
 /** Minimal surface the board needs; satisfied by both the local and online games. */
 export interface BoardController {
   state: GameState;
+  /** Color this client plays; the board is drawn and wired from its point of view. */
+  you: Player;
   selectableFroms: number[];
   selectedFrom: number | null;
   targets: number[];
   clickPoint: (index: number) => void;
 }
 
+// Rows as white sees them: its home board (0..5) ends up bottom-right, next to
+// the bear-off tray.
 const TOP_ROW = [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23];
 const BOTTOM_ROW = [11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
+
+/** Black's view is white's mirrored across the middle, so home is bottom-right for both. */
+const rowsFor = (you: Player): { top: number[]; bottom: number[] } =>
+  you === 'white'
+    ? { top: TOP_ROW, bottom: BOTTOM_ROW }
+    : { top: TOP_ROW.map((i) => 23 - i), bottom: BOTTOM_ROW.map((i) => 23 - i) };
+
+/** Signed checker count (as {@link Checkers} wants it) for one player's off-board pile. */
+const signedFor = (player: Player, count: number): number => (player === 'white' ? count : -count);
 
 interface CheckersProps {
   count: number; // signed: + white, - black
@@ -89,14 +102,16 @@ const Tray = ({ label, value, active, onClick }: TrayProps) => (
 );
 
 interface BarProps {
-  white: number;
-  black: number;
+  /** Signed count shown on the far side of the bar (the opponent's checkers). */
+  theirs: number;
+  /** Signed count shown on the near side (this client's checkers). */
+  yours: number;
   selectable: boolean;
   selected: boolean;
   onClick: () => void;
 }
 
-const Bar = ({ white, black, selectable, selected, onClick }: BarProps) => (
+const Bar = ({ theirs, yours, selectable, selected, onClick }: BarProps) => (
   <button
     type="button"
     onClick={onClick}
@@ -106,17 +121,19 @@ const Bar = ({ white, black, selectable, selected, onClick }: BarProps) => (
       (selectable || selected) && 'cursor-pointer ring-2 ring-amber-300',
     )}
   >
-    <Checkers count={black} />
+    <Checkers count={theirs} />
     <span className="text-[9px] uppercase text-emerald-300/60">bar</span>
-    <Checkers count={white} />
+    <Checkers count={yours} />
   </button>
 );
 
 const die = (n: number) => '⚀⚁⚂⚃⚄⚅'[n - 1] ?? '?';
 
 export const Board = ({ controller }: { controller: BoardController }) => {
-  const { state, selectableFroms, selectedFrom, targets } = controller;
+  const { state, you, selectableFroms, selectedFrom, targets } = controller;
   const board = state.board;
+  const them = opponent(you);
+  const { top, bottom } = rowsFor(you);
 
   const renderPoint = (index: number, orientation: 'top' | 'bottom') => (
     <Point
@@ -135,28 +152,29 @@ export const Board = ({ controller }: { controller: BoardController }) => {
     <div className="flex flex-col items-center gap-3">
       <div className="flex items-stretch gap-2 rounded-xl border-4 border-amber-900/60 bg-emerald-900 p-3 shadow-2xl">
         <div className="flex flex-col justify-between gap-3">
-          <div className="flex gap-1">{TOP_ROW.slice(0, 6).map((i) => renderPoint(i, 'top'))}</div>
-          <div className="flex gap-1">{BOTTOM_ROW.slice(0, 6).map((i) => renderPoint(i, 'bottom'))}</div>
+          <div className="flex gap-1">{top.slice(0, 6).map((i) => renderPoint(i, 'top'))}</div>
+          <div className="flex gap-1">{bottom.slice(0, 6).map((i) => renderPoint(i, 'bottom'))}</div>
         </div>
 
         <Bar
-          white={Math.max(0, board.bar.white)}
-          black={-Math.max(0, board.bar.black)}
+          theirs={signedFor(them, board.bar[them])}
+          yours={signedFor(you, board.bar[you])}
           selectable={selectableFroms.includes(BAR)}
           selected={selectedFrom === BAR}
           onClick={() => controller.clickPoint(BAR)}
         />
 
         <div className="flex flex-col justify-between gap-3">
-          <div className="flex gap-1">{TOP_ROW.slice(6).map((i) => renderPoint(i, 'top'))}</div>
-          <div className="flex gap-1">{BOTTOM_ROW.slice(6).map((i) => renderPoint(i, 'bottom'))}</div>
+          <div className="flex gap-1">{top.slice(6).map((i) => renderPoint(i, 'top'))}</div>
+          <div className="flex gap-1">{bottom.slice(6).map((i) => renderPoint(i, 'bottom'))}</div>
         </div>
 
+        {/* The near tray is always this client's, so either color can bear off. */}
         <div className="flex flex-col justify-between gap-3 pl-1">
-          <Tray label="black off" value={board.off.black} />
+          <Tray label={`${them} off`} value={board.off[them]} />
           <Tray
-            label="white off"
-            value={board.off.white}
+            label={`${you} off`}
+            value={board.off[you]}
             active={targets.includes(OFF)}
             onClick={() => controller.clickPoint(OFF)}
           />
