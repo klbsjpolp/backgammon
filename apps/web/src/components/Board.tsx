@@ -36,13 +36,17 @@ const Checkers = ({ count }: CheckersProps) => {
   const color = count > 0 ? 'bg-stone-100 text-stone-900' : 'bg-stone-900 text-stone-100 ring-1 ring-stone-500';
   const shown = Math.min(n, 5);
   return (
-    <div className="flex flex-col items-center gap-0.5">
+    <div className="flex flex-col items-center gap-[calc(var(--pt)*0.03)]">
       {Array.from({ length: shown }).map((_, i) => (
         <div
           key={i}
-          className={cn('flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold', color)}
+          className={cn(
+            'flex h-[var(--checker)] w-[var(--checker)] items-center justify-center rounded-full',
+            'text-[calc(var(--pt)*0.3)] leading-none font-bold',
+            color,
+          )}
         >
-          {i === shown - 1 && n > 5 ? n : ''}
+          <span className="board-label">{i === shown - 1 && n > 5 ? n : ''}</span>
         </div>
       ))}
     </div>
@@ -66,7 +70,8 @@ const Point = ({ index, count, orientation, selectable, selected, target, onClic
     aria-label={`point ${index}`}
     data-point={index}
     className={cn(
-      'flex min-h-36 w-10 flex-col items-center gap-0.5 rounded-md border border-emerald-950/40 px-0.5 py-1 transition',
+      'flex h-[var(--pt-h)] w-[var(--pt)] flex-col items-center gap-[calc(var(--pt)*0.02)] rounded-md',
+      'border border-emerald-950/40 px-[1px] py-[calc(var(--pt)*0.04)] transition',
       orientation === 'bottom' && 'flex-col-reverse justify-start',
       index % 2 === 0 ? 'bg-emerald-800/40' : 'bg-emerald-900/50',
       selectable && 'cursor-pointer ring-2 ring-amber-400/70 hover:brightness-125',
@@ -74,7 +79,7 @@ const Point = ({ index, count, orientation, selectable, selected, target, onClic
       target && 'cursor-pointer ring-2 ring-sky-400 hover:brightness-125',
     )}
   >
-    <span className="text-[9px] text-emerald-200/60">{index}</span>
+    <span className="board-label text-[length:var(--label)] leading-none text-emerald-200/60">{index}</span>
     <Checkers count={count} />
   </button>
 );
@@ -92,12 +97,18 @@ const Tray = ({ label, value, active, onClick }: TrayProps) => (
     onClick={onClick}
     disabled={!onClick}
     className={cn(
-      'flex h-16 w-16 flex-col items-center justify-center rounded-md border border-emerald-950/50 bg-emerald-950/40 text-emerald-100',
+      'flex h-[calc(var(--pt)*1.75)] w-[calc(var(--pt)*1.6)] flex-col items-center justify-center',
+      'rounded-md border border-emerald-950/50 bg-emerald-950/40 text-emerald-100',
       active && 'cursor-pointer ring-2 ring-sky-400 hover:brightness-125',
     )}
   >
-    <span className="text-2xl font-bold">{value}</span>
-    <span className="text-[10px] uppercase tracking-wide text-emerald-300/70">{label}</span>
+    {/* One block so the count and its caption turn back upright together. */}
+    <div className="board-label flex flex-col items-center gap-[2px]">
+      <span className="text-[calc(var(--pt)*0.55)] leading-none font-bold">{value}</span>
+      <span className="text-[length:var(--label)] leading-none tracking-wide text-emerald-300/70 uppercase">
+        {label}
+      </span>
+    </div>
   </button>
 );
 
@@ -117,12 +128,13 @@ const Bar = ({ theirs, yours, selectable, selected, onClick }: BarProps) => (
     onClick={onClick}
     aria-label="bar"
     className={cn(
-      'flex w-12 flex-col items-center justify-center gap-2 self-stretch rounded-md border border-emerald-950/60 bg-emerald-950/70 py-2',
+      'flex w-[calc(var(--pt)*1.15)] flex-col items-center justify-center gap-[calc(var(--pt)*0.2)] self-stretch',
+      'rounded-md border border-emerald-950/60 bg-emerald-950/70 py-[calc(var(--pt)*0.1)]',
       (selectable || selected) && 'cursor-pointer ring-2 ring-amber-300',
     )}
   >
     <Checkers count={theirs} />
-    <span className="text-[9px] uppercase text-emerald-300/60">bar</span>
+    <span className="board-label text-[length:var(--label)] leading-none text-emerald-300/60 uppercase">bar</span>
     <Checkers count={yours} />
   </button>
 );
@@ -149,39 +161,48 @@ export const Board = ({ controller }: { controller: BoardController }) => {
   );
 
   return (
-    <div className="flex flex-col items-center gap-3">
-      <div className="flex items-stretch gap-2 rounded-xl border-4 border-amber-900/60 bg-emerald-900 p-3 shadow-2xl">
-        <div className="flex flex-col justify-between gap-3">
-          <div className="flex gap-1">{top.slice(0, 6).map((i) => renderPoint(i, 'top'))}</div>
-          <div className="flex gap-1">{bottom.slice(0, 6).map((i) => renderPoint(i, 'bottom'))}</div>
-        </div>
+    // `touch-manipulation` keeps a quick double tap on two points from zooming
+    // the page instead of playing the move.
+    <div className="flex touch-manipulation flex-col items-center gap-2 select-none">
+      <div className="board-fit">
+        <div
+          className={cn(
+            'board-frame flex items-stretch gap-[var(--board-gap)] rounded-xl border-2 border-amber-900/60',
+            'bg-emerald-900 p-[calc(var(--pt)*0.25)] shadow-2xl sm:border-4',
+          )}
+        >
+          <div className="flex flex-col justify-between gap-[var(--board-gap)]">
+            <div className="flex gap-[var(--board-gap)]">{top.slice(0, 6).map((i) => renderPoint(i, 'top'))}</div>
+            <div className="flex gap-[var(--board-gap)]">{bottom.slice(0, 6).map((i) => renderPoint(i, 'bottom'))}</div>
+          </div>
 
-        <Bar
-          theirs={signedFor(them, board.bar[them])}
-          yours={signedFor(you, board.bar[you])}
-          selectable={selectableFroms.includes(BAR)}
-          selected={selectedFrom === BAR}
-          onClick={() => controller.clickPoint(BAR)}
-        />
-
-        <div className="flex flex-col justify-between gap-3">
-          <div className="flex gap-1">{top.slice(6).map((i) => renderPoint(i, 'top'))}</div>
-          <div className="flex gap-1">{bottom.slice(6).map((i) => renderPoint(i, 'bottom'))}</div>
-        </div>
-
-        {/* The near tray is always this client's, so either color can bear off. */}
-        <div className="flex flex-col justify-between gap-3 pl-1">
-          <Tray label={`${them} off`} value={board.off[them]} />
-          <Tray
-            label={`${you} off`}
-            value={board.off[you]}
-            active={targets.includes(OFF)}
-            onClick={() => controller.clickPoint(OFF)}
+          <Bar
+            theirs={signedFor(them, board.bar[them])}
+            yours={signedFor(you, board.bar[you])}
+            selectable={selectableFroms.includes(BAR)}
+            selected={selectedFrom === BAR}
+            onClick={() => controller.clickPoint(BAR)}
           />
+
+          <div className="flex flex-col justify-between gap-[var(--board-gap)]">
+            <div className="flex gap-[var(--board-gap)]">{top.slice(6).map((i) => renderPoint(i, 'top'))}</div>
+            <div className="flex gap-[var(--board-gap)]">{bottom.slice(6).map((i) => renderPoint(i, 'bottom'))}</div>
+          </div>
+
+          {/* The near tray is always this client's, so either color can bear off. */}
+          <div className="flex flex-col justify-between gap-[var(--board-gap)]">
+            <Tray label={`${them} off`} value={board.off[them]} />
+            <Tray
+              label={`${you} off`}
+              value={board.off[you]}
+              active={targets.includes(OFF)}
+              onClick={() => controller.clickPoint(OFF)}
+            />
+          </div>
         </div>
       </div>
 
-      <div className="flex h-8 items-center gap-3 text-2xl text-amber-200">
+      <div className="flex h-7 items-center gap-3 text-2xl text-amber-200 compact:h-6 compact:text-xl">
         {state.roll && state.phase !== 'rolling' ? (
           <span aria-label="dice">
             {die(state.roll[0])} {die(state.roll[1])}

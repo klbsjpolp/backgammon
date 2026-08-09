@@ -49,6 +49,35 @@ carries a `you` color, and black's layout is white's mirrored across the middle 
 **both players see their own home board bottom-right, next to their own bear-off tray**.
 The near tray is always the viewer's, which is what lets either color bear off.
 
+## Phone layout
+
+The board used to be drawn at a fixed pixel size (40px points), which overflowed any
+phone in portrait. It is now derived from a single CSS length, `--pt` (the width of one
+point), computed in `apps/web/src/index.css` as the largest unit that fits both the
+width and the height the viewport still has free. Everything else — checkers, bar,
+trays, labels, gaps — is a multiple of `--pt`, so one number rescales the whole board
+and it never overflows.
+
+Three cases, all CSS-only (no resize observers, no JS breakpoints):
+
+- **Portrait phone** (`≤640px` wide): the board is **turned a quarter turn** — a board
+  is twice as wide as it is tall, the worst possible fit for a portrait screen, and laid
+  out flat it leaves most of the height empty while shrinking the checkers to a couple of
+  millimetres. Rotating swaps the axes and buys ~50% larger points. Your home board and
+  tray land bottom-left; `.board-label` turns the text back upright. Hit testing follows
+  the transform, so clicking is unaffected.
+- **Landscape phone** (`compact` variant: landscape and `≤640px` tall): the controls move
+  into a column _beside_ the board instead of under it, where they used to sit below the
+  fold and under the thumb rest. The primary buttons are a two-up grid there so take/drop
+  and clear-selection still fit; the hint line is dropped.
+- **Anything roomier**: unchanged — `--pt` caps at the original 40px.
+
+Destructive controls (**new game**, **leave**) are separated from the primary row and are
+`ConfirmButton`s: one tap arms, a second confirms, and it disarms after four seconds or on
+blur. On a phone they are a thumb-width from the board and a stray tap used to be
+unrecoverable. Every button carries a 44px minimum touch target, and the page reserves
+`env(safe-area-inset-bottom)`.
+
 ## Stack
 
 - Same primary libraries as skip-bo: React 19, Vite 8, Tailwind 4, Vitest 4, zod 4,

@@ -50,13 +50,24 @@ describe('LocalPanel', () => {
     expect(screen.getByText(/black to roll \(AI\)/i)).toBeDefined();
   });
 
-  it('rolls and starts a new game on demand', () => {
+  it('rolls on demand', () => {
     const game = renderPanel();
     fireEvent.click(screen.getByRole('button', { name: /^roll$/i }));
     expect(game.rollDice).toHaveBeenCalled();
+  });
 
-    fireEvent.click(screen.getByRole('button', { name: /new game/i }));
+  it('starts a new game only after the tap is confirmed', () => {
+    const game = renderPanel();
+    const newGame = () => screen.getByRole('button', { name: /new game/i });
+
+    // A single (possibly stray) tap only arms the button.
+    fireEvent.click(newGame());
+    expect(game.newGame).not.toHaveBeenCalled();
+    expect(newGame().textContent).toMatch(/start over\?/i);
+
+    fireEvent.click(newGame());
     expect(game.newGame).toHaveBeenCalled();
+    expect(newGame().textContent).toMatch(/new game/i);
   });
 
   it('disables roll when it is not your turn', () => {

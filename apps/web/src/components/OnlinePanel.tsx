@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { canDouble, opponent, pipCount } from '@backgammon/core';
 import { Board, type BoardController } from '@/components/Board';
-import { Button } from '@/components/Button';
+import { Button, ConfirmButton } from '@/components/Button';
+import { Controls, GameLayout } from '@/components/GameLayout';
 import { cn } from '@/lib/cn';
 import { useOnlineGame } from '@/online/useOnlineGame';
 
@@ -84,9 +85,12 @@ export const OnlinePanel = () => {
               Start game
             </Button>
           )}
-          <Button onClick={g.leave} className="bg-stone-600 text-stone-50 hover:bg-stone-500">
-            Leave
-          </Button>
+          <ConfirmButton
+            label="Leave"
+            confirmLabel="Leave room?"
+            onConfirm={g.leave}
+            className="bg-stone-600 text-stone-50 hover:bg-stone-500"
+          />
         </div>
       </div>
     );
@@ -100,9 +104,12 @@ export const OnlinePanel = () => {
         <Banner tone={g.status === 'disconnected' ? 'error' : 'info'}>
           {g.status === 'disconnected' ? (g.error ?? 'Disconnected.') : 'Waiting for the host to start…'}
         </Banner>
-        <Button onClick={g.leave} className="bg-stone-600 text-stone-50 hover:bg-stone-500">
-          Leave
-        </Button>
+        <ConfirmButton
+          label="Leave"
+          confirmLabel="Leave room?"
+          onConfirm={g.leave}
+          className="bg-stone-600 text-stone-50 hover:bg-stone-500"
+        />
       </div>
     );
   }
@@ -132,50 +139,68 @@ export const OnlinePanel = () => {
   })();
 
   return (
-    <div className="flex flex-col items-center gap-4">
-      <p className="text-sm text-emerald-200/70">You play {g.myPlayer}. Click a checker, then its destination.</p>
-
-      {g.status === 'disconnected' && <Banner tone="error">{g.error ?? 'Connection lost.'}</Banner>}
-
-      <div
-        className={cn(
-          'flex w-full items-center justify-between gap-3 rounded-lg bg-emerald-950/60 px-4 py-2 text-sm',
-          state.phase === 'gameOver' && 'bg-amber-900/40',
-        )}
-      >
-        <span className="font-semibold capitalize">{status}</span>
-        <span className="text-emerald-200/70">
-          cube ×{state.cube.value} · pips W {pipCount(state.board, 'white')} / B {pipCount(state.board, 'black')}
-        </span>
-      </div>
-
-      <Board controller={controller} />
-
-      <div className="flex flex-wrap items-center justify-center gap-2">
-        <Button onClick={g.rollDice} disabled={!(youTurn && state.phase === 'rolling')}>
-          Roll
-        </Button>
-        <Button
-          onClick={g.double}
-          disabled={g.myPlayer == null || !canDouble(state, g.myPlayer)}
-          className="bg-sky-500 hover:bg-sky-400"
-        >
-          Double
-        </Button>
-        {doubleToMe && (
-          <>
-            <Button onClick={() => g.respond(true)} className="bg-emerald-600 text-emerald-50 hover:bg-emerald-500">
-              Take
-            </Button>
-            <Button onClick={() => g.respond(false)} className="bg-red-600 text-red-50 hover:bg-red-500">
-              Drop
-            </Button>
-          </>
-        )}
-        <Button onClick={g.leave} className="bg-stone-600 text-stone-50 hover:bg-stone-500">
-          Leave
-        </Button>
-      </div>
-    </div>
+    <GameLayout
+      hint={`You play ${g.myPlayer}. Click a checker, then its destination.`}
+      status={
+        <div className="flex w-full flex-col gap-2">
+          {g.status === 'disconnected' && <Banner tone="error">{g.error ?? 'Connection lost.'}</Banner>}
+          <div
+            className={cn(
+              'flex w-full flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-lg bg-emerald-950/60 px-4 py-2 text-sm',
+              state.phase === 'gameOver' && 'bg-amber-900/40',
+            )}
+          >
+            <span className="font-semibold capitalize">{status}</span>
+            <span className="text-emerald-200/70">
+              cube ×{state.cube.value} · pips W {pipCount(state.board, 'white')} / B {pipCount(state.board, 'black')}
+            </span>
+          </div>
+        </div>
+      }
+      board={<Board controller={controller} />}
+      controls={
+        <Controls
+          primary={
+            <>
+              <Button
+                onClick={g.rollDice}
+                disabled={!(youTurn && state.phase === 'rolling')}
+                className="min-w-28 text-base compact:col-span-2"
+              >
+                Roll
+              </Button>
+              <Button
+                onClick={g.double}
+                disabled={g.myPlayer == null || !canDouble(state, g.myPlayer)}
+                className="bg-sky-500 hover:bg-sky-400"
+              >
+                Double
+              </Button>
+              {doubleToMe && (
+                <>
+                  <Button
+                    onClick={() => g.respond(true)}
+                    className="bg-emerald-600 text-emerald-50 hover:bg-emerald-500"
+                  >
+                    Take
+                  </Button>
+                  <Button onClick={() => g.respond(false)} className="bg-red-600 text-red-50 hover:bg-red-500">
+                    Drop
+                  </Button>
+                </>
+              )}
+            </>
+          }
+          danger={
+            <ConfirmButton
+              label="Leave"
+              confirmLabel="Leave game?"
+              onConfirm={g.leave}
+              className="bg-stone-600 text-stone-50 hover:bg-stone-500"
+            />
+          }
+        />
+      }
+    />
   );
 };
