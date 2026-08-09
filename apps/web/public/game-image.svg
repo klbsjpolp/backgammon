@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="150" height="100" viewBox="0 0 150 100" role="img" aria-label="Backgammon">
+<rect width="150" height="100" rx="5" fill="#5b3a1e"/>
+<rect x="4" y="4" width="142" height="92" fill="#c9a06a"/>
+<polygon points="6.00,6 16.83,6 11.42,44" fill="#8c2f22"/>
+<polygon points="6.00,94 16.83,94 11.42,56" fill="#8c2f22"/>
+<polygon points="16.83,6 27.67,6 22.25,44" fill="#f0e2c4"/>
+<polygon points="16.83,94 27.67,94 22.25,56" fill="#f0e2c4"/>
+<polygon points="27.67,6 38.50,6 33.08,44" fill="#8c2f22"/>
+<polygon points="27.67,94 38.50,94 33.08,56" fill="#8c2f22"/>
+<polygon points="38.50,6 49.33,6 43.92,44" fill="#f0e2c4"/>
+<polygon points="38.50,94 49.33,94 43.92,56" fill="#f0e2c4"/>
+<polygon points="49.33,6 60.17,6 54.75,44" fill="#8c2f22"/>
+<polygon points="49.33,94 60.17,94 54.75,56" fill="#8c2f22"/>
+<polygon points="60.17,6 71.00,6 65.58,44" fill="#f0e2c4"/>
+<polygon points="60.17,94 71.00,94 65.58,56" fill="#f0e2c4"/>
+<polygon points="79.00,6 89.83,6 84.42,44" fill="#8c2f22"/>
+<polygon points="79.00,94 89.83,94 84.42,56" fill="#8c2f22"/>
+<polygon points="89.83,6 100.67,6 95.25,44" fill="#f0e2c4"/>
+<polygon points="89.83,94 100.67,94 95.25,56" fill="#f0e2c4"/>
+<polygon points="100.67,6 111.50,6 106.08,44" fill="#8c2f22"/>
+<polygon points="100.67,94 111.50,94 106.08,56" fill="#8c2f22"/>
+<polygon points="111.50,6 122.33,6 116.92,44" fill="#f0e2c4"/>
+<polygon points="111.50,94 122.33,94 116.92,56" fill="#f0e2c4"/>
+<polygon points="122.33,6 133.17,6 127.75,44" fill="#8c2f22"/>
+<polygon points="122.33,94 133.17,94 127.75,56" fill="#8c2f22"/>
+<polygon points="133.17,6 144.00,6 138.58,44" fill="#f0e2c4"/>
+<polygon points="133.17,94 144.00,94 138.58,56" fill="#f0e2c4"/>
+<rect x="71" y="4" width="8" height="92" fill="#5b3a1e"/>
+<circle cx="11.42" cy="11.00" r="4.6" fill="#26221f" stroke="#0f0d0c" stroke-width="0.8"/><circle cx="11.42" cy="11.00" r="2.2" fill="none" stroke="#0f0d0c" stroke-width="0.6" opacity="0.55"/>
+<circle cx="11.42" cy="20.00" r="4.6" fill="#26221f" stroke="#0f0d0c" stroke-width="0.8"/><circle cx="11.42" cy="20.00" r="2.2" fill="none" stroke="#0f0d0c" stroke-width="0.6" opacity="0.55"/>
+<circle cx="11.42" cy="29.00" r="4.6" fill="#26221f" stroke="#0f0d0c" stroke-width="0.8"/><circle cx="11.42" cy="29.00" r="2.2" fill="none" stroke="#0f0d0c" stroke-width="0.6" opacity="0.55"/>
+<circle cx="65.58" cy="11.00" r="4.6" fill="#f7f2e7" stroke="#3b2a1a" stroke-width="0.8"/><circle cx="65.58" cy="11.00" r="2.2" fill="none" stroke="#3b2a1a" stroke-width="0.6" opacity="0.55"/>
+<circle cx="65.58" cy="20.00" r="4.6" fill="#f7f2e7" stroke="#3b2a1a" stroke-width="0.8"/><circle cx="65.58" cy="20.00" r="2.2" fill="none" stroke="#3b2a1a" stroke-width="0.6" opacity="0.55"/>
+<circle cx="138.58" cy="89.00" r="4.6" fill="#26221f" stroke="#0f0d0c" stroke-width="0.8"/><circle cx="138.58" cy="89.00" r="2.2" fill="none" stroke="#0f0d0c" stroke-width="0.6" opacity="0.55"/>
+<circle cx="138.58" cy="80.00" r="4.6" fill="#26221f" stroke="#0f0d0c" stroke-width="0.8"/><circle cx="138.58" cy="80.00" r="2.2" fill="none" stroke="#0f0d0c" stroke-width="0.6" opacity="0.55"/>
+<circle cx="138.58" cy="71.00" r="4.6" fill="#26221f" stroke="#0f0d0c" stroke-width="0.8"/><circle cx="138.58" cy="71.00" r="2.2" fill="none" stroke="#0f0d0c" stroke-width="0.6" opacity="0.55"/>
+<circle cx="84.42" cy="89.00" r="4.6" fill="#f7f2e7" stroke="#3b2a1a" stroke-width="0.8"/><circle cx="84.42" cy="89.00" r="2.2" fill="none" stroke="#3b2a1a" stroke-width="0.6" opacity="0.55"/>
+<circle cx="84.42" cy="80.00" r="4.6" fill="#f7f2e7" stroke="#3b2a1a" stroke-width="0.8"/><circle cx="84.42" cy="80.00" r="2.2" fill="none" stroke="#3b2a1a" stroke-width="0.6" opacity="0.55"/>
+<rect x="46" y="43" width="14" height="14" rx="3" fill="#faf7f0" stroke="#3b2a1a" stroke-width="0.8"/><circle cx="50.0" cy="47.0" r="1.5" fill="#26221f"/><circle cx="56.0" cy="53.0" r="1.5" fill="#26221f"/><circle cx="53.0" cy="50.0" r="1.5" fill="#26221f"/>
+<rect x="90" y="43" width="14" height="14" rx="3" fill="#faf7f0" stroke="#3b2a1a" stroke-width="0.8"/><circle cx="94.0" cy="47.0" r="1.5" fill="#26221f"/><circle cx="100.0" cy="47.0" r="1.5" fill="#26221f"/><circle cx="94.0" cy="53.0" r="1.5" fill="#26221f"/><circle cx="100.0" cy="53.0" r="1.5" fill="#26221f"/>
+<rect x="4" y="4" width="142" height="92" fill="none" stroke="#5b3a1e" stroke-width="2"/>
+</svg>
