@@ -1,6 +1,6 @@
 import type { Board, GameState, Move, Player } from './types.js';
-import { checkersOn, opponent, pipCount } from './board.js';
-import { currentLegalMoves, playMove } from './game.js';
+import { CHECKERS_PER_SIDE, checkersOn, opponent, pipCount } from './board.js';
+import { canDouble, currentLegalMoves, playMove } from './game.js';
 
 const inHomeBoard = (player: Player, index: number): boolean => (player === 'white' ? index <= 5 : index >= 18);
 
@@ -117,3 +117,66 @@ export const applyAiTurn = (state: GameState): GameState => {
   }
   return s;
 };
+
+// --- Doubling cube strategy ------------------------------------------------
+
+/** Being on roll is worth roughly half a roll, i.e. about four pips. */
+const ON_ROLL_PIPS = 4;
+
+/**
+ * Rough win probability for `player`, in [0, 1]. This is a heuristic built for
+ * cube decisions, not a rollout: it takes the pip race as the backbone, corrects
+ * it by the positional factors that most often override a raw pip lead (primes,
+ * exposed blots, checkers on the bar), and squashes the result through a
+ * logistic.
+ *
+ * The lead is scaled by how much racing is left, because the same pip lead means
+ * very different things at 160 pips and at 40.
+ */
+export const winProbability = (state: GameState, player: Player): number => {
+  const opp = opponent(player);
+  const board = state.board;
+  if (board.off[player] === CHECKERS_PER_SIDE) return 1;
+  if (board.off[opp] === CHECKERS_PER_SIDE) return 0;
+
+  const myPips = pipCount(board, player);
+  const oppPips = pipCount(board, opp);
+  const onRoll = state.turn === player ? ON_ROLL_PIPS : -ON_ROLL_PIPS;
+
+  // Positional edge, expressed in pips so it can be added to the race.
+  const primeEdge = longestPrime(board, player) ** 2 - longestPrime(board, opp) ** 2;
+  const shotEdge = directShots(board, opp) - directShots(board, player);
+  const barEdge = board.bar[opp] - board.bar[player];
+  const edge = primeEdge * 0.8 + shotEdge * 1.5 + barEdge * 6;
+
+  const lead = oppPips - myPips + onRoll + edge;
+  const scale = Math.sqrt(Math.max(20, (myPips + oppPips) / 2));
+  return 1 / (1 + Math.exp((-0.55 * lead) / scale));
+};
+
+/**
+ * Lower bound of the doubling window. Below this a double gives away more cube
+ * ownership than it gains.
+ */
+const DOUBLE_POINT = 0.68;
+/**
+ * Upper bound: past this the position is "too good to double" — cashing one
+ * point throws away the gammon that playing on would likely win.
+ */
+const TOO_GOOD_POINT = 0.85;
+/**
+ * Take point. The textbook figure is 25%; the cushion below it accounts for the
+ * value of owning the cube after taking.
+ */
+const TAKE_POINT = 0.22;
+
+/** Should `player` offer a double right now? */
+export const shouldDouble = (state: GameState, player: Player): boolean => {
+  if (!canDouble(state, player)) return false;
+  const p = winProbability(state, player);
+  return p >= DOUBLE_POINT && p <= TOO_GOOD_POINT;
+};
+
+/** Should `player` take (rather than drop) the double currently offered to them? */
+export const shouldTakeDouble = (state: GameState, player: Player): boolean =>
+  winProbability(state, player) >= TAKE_POINT;

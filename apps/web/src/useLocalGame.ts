@@ -9,6 +9,8 @@ import {
   playMove,
   respondDouble,
   roll,
+  shouldDouble,
+  shouldTakeDouble,
   type GameState,
   type Move,
   type Player,
@@ -20,18 +22,22 @@ const AI_DELAY_MS = 600;
 
 export interface LocalGame {
   state: GameState;
-  human: Player;
+  /** Color the human plays; the board is drawn from this side. */
+  you: Player;
   legalMoves: Move[];
   selectableFroms: number[];
   selectedFrom: number | null;
   targets: number[];
   isHumanTurn: boolean;
   canHumanDouble: boolean;
+  /** True while the AI has a double pending the human's take/drop answer. */
+  doubleToYou: boolean;
   newGame: () => void;
   rollDice: () => void;
   clickPoint: (index: number) => void;
   clearSelection: () => void;
   double: () => void;
+  respond: (accept: boolean) => void;
 }
 
 export const useLocalGame = (): LocalGame => {
@@ -65,6 +71,10 @@ export const useLocalGame = (): LocalGame => {
     setState((s) => (canDouble(s, HUMAN) ? offerDouble(s) : s));
   }, []);
 
+  const respond = useCallback((accept: boolean) => {
+    setState((s) => (s.phase === 'doubleOffered' && s.doubleOfferedBy === AI ? respondDouble(s, accept) : s));
+  }, []);
+
   const clearSelection = useCallback(() => setSelectedFrom(null), []);
 
   const clickPoint = useCallback(
@@ -89,12 +99,20 @@ export const useLocalGame = (): LocalGame => {
     [isHumanTurn, state.phase, selectedFrom, selectableFroms, legalMoves],
   );
 
-  // Drive the AI: roll, play its whole turn, or take a human double offer.
+  // Drive the AI: offer a double when the cube is right, roll, play its whole
+  // turn, or answer a human double offer.
   useEffect(() => {
     if (state.phase === 'gameOver') return;
 
     if (state.turn === AI && state.phase === 'rolling') {
-      const t = setTimeout(() => setState((s) => (s.turn === AI && s.phase === 'rolling' ? roll(s) : s)), AI_DELAY_MS);
+      const t = setTimeout(
+        () =>
+          setState((s) => {
+            if (!(s.turn === AI && s.phase === 'rolling')) return s;
+            return shouldDouble(s, AI) ? offerDouble(s) : roll(s);
+          }),
+        AI_DELAY_MS,
+      );
       return () => clearTimeout(t);
     }
     if (state.turn === AI && state.phase === 'moving') {
@@ -106,7 +124,10 @@ export const useLocalGame = (): LocalGame => {
     }
     if (state.phase === 'doubleOffered' && state.doubleOfferedBy === HUMAN) {
       const t = setTimeout(
-        () => setState((s) => (s.phase === 'doubleOffered' ? respondDouble(s, true) : s)),
+        () =>
+          setState((s) =>
+            s.phase === 'doubleOffered' && s.doubleOfferedBy === HUMAN ? respondDouble(s, shouldTakeDouble(s, AI)) : s,
+          ),
         AI_DELAY_MS,
       );
       return () => clearTimeout(t);
@@ -115,18 +136,20 @@ export const useLocalGame = (): LocalGame => {
 
   return {
     state,
-    human: HUMAN,
+    you: HUMAN,
     legalMoves,
     selectableFroms,
     selectedFrom,
     targets,
     isHumanTurn,
     canHumanDouble: canDouble(state, HUMAN),
+    doubleToYou: state.phase === 'doubleOffered' && state.doubleOfferedBy === AI,
     newGame,
     rollDice,
     clickPoint,
     clearSelection,
     double,
+    respond,
   };
 };
 

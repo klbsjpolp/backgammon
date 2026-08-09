@@ -26,8 +26,28 @@ you think and record it" instruction). Open questions are at the bottom.
   played, play the higher" rule.
 - **Doubling cube** is modelled in core (value, owner, offer/take/drop) and detected in
   the runtime/UI. Win detection includes **single / gammon (2×) / backgammon (3×)** and
-  multiplies by the cube.
+  multiplies by the cube. The AI turns the cube too — see below.
 - **Single games** (play to a win), not match play.
+
+## AI
+
+- **Checker play**: full search over every legal move sequence for the dice (capped at
+  60k nodes), keeping the sequence whose resulting board evaluates highest. The evaluation
+  weighs the pip race, made points, home-board structure, primes and direct shots at blots.
+- **Cube play**: `winProbability` estimates the AI's chances from the pip race, corrected
+  by primes, blot exposure and checkers on the bar, then squashed through a logistic scaled
+  by how much race is left. It is a heuristic for cube decisions, not a rollout — it puts
+  the opening position at ~0.54 for the player on roll. `shouldDouble` fires inside the
+  classic window (0.68–0.85: strong enough to gain, not so strong that playing on for the
+  gammon beats cashing) and `shouldTakeDouble` uses a take point of 0.22, a little under the
+  textbook 25% to account for owning the cube after taking.
+
+## Board orientation
+
+The board is drawn from the point of view of whoever is looking at it: `BoardController`
+carries a `you` color, and black's layout is white's mirrored across the middle so that
+**both players see their own home board bottom-right, next to their own bear-off tray**.
+The near tray is always the viewer's, which is what lets either color bear off.
 
 ## Stack
 
@@ -67,8 +87,12 @@ you think and record it" instruction). Open questions are at the bottom.
 ## Deferred
 
 - Match play, Crawford rule, Jacoby rule.
-- Stronger AI still possible (current bot does full move-sequence search with a
-  shot-aware evaluation — much stronger than the original greedy pick, but not equity-based).
+- Opening roll to decide who starts (white starts locally; online the server's
+  `currentSeatIndex` decides).
+- Undoing a checker move before the turn is committed.
+- Stronger AI still possible: checker play is a full move-sequence search with a shot-aware
+  evaluation, and cube decisions come off a heuristic win-probability estimate — neither is
+  equity-based, and rollouts would beat both.
 - PWA, Sentry, theme system, Playwright e2e.
 - Online polish: reconnection/resume parity with skip-bo, richer lobby (names, kicking),
   animation/drag-and-drop (v1 uses click-to-move).

@@ -13,7 +13,11 @@ export const LocalPanel = () => {
       const { winner, kind, points } = state.result;
       return `${winner} wins a ${kind} — ${points} point${points === 1 ? '' : 's'}`;
     }
-    if (state.phase === 'doubleOffered') return `${state.doubleOfferedBy} offers a double`;
+    if (state.phase === 'doubleOffered') {
+      return game.doubleToYou
+        ? `AI offers a double — take at ×${state.cube.value * 2} or drop`
+        : `${state.doubleOfferedBy} offers a double`;
+    }
     const verb = state.phase === 'rolling' ? 'to roll' : 'to move';
     return `${state.turn} ${verb}${game.isHumanTurn ? ' (you)' : ' (AI)'}`;
   })();
@@ -48,6 +52,16 @@ export const LocalPanel = () => {
         <Button onClick={game.double} disabled={!game.canHumanDouble} className="bg-sky-500 hover:bg-sky-400">
           Double
         </Button>
+        {game.doubleToYou && (
+          <>
+            <Button onClick={() => game.respond(true)} className="bg-emerald-600 text-emerald-50 hover:bg-emerald-500">
+              Take
+            </Button>
+            <Button onClick={() => game.respond(false)} className="bg-red-600 text-red-50 hover:bg-red-500">
+              Drop
+            </Button>
+          </>
+        )}
         {game.selectedFrom !== null && (
           <Button onClick={game.clearSelection} className="bg-stone-600 text-stone-50 hover:bg-stone-500">
             Clear selection

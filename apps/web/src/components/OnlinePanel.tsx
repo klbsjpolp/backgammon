@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { opponent, pipCount } from '@backgammon/core';
+import { canDouble, opponent, pipCount } from '@backgammon/core';
 import { Board, type BoardController } from '@/components/Board';
 import { Button } from '@/components/Button';
 import { cn } from '@/lib/cn';
@@ -109,6 +109,7 @@ export const OnlinePanel = () => {
 
   const controller: BoardController = {
     state,
+    you: g.myPlayer ?? 'white',
     selectableFroms: g.selectableFroms,
     selectedFrom: g.selectedFrom,
     targets: g.targets,
@@ -156,7 +157,7 @@ export const OnlinePanel = () => {
         </Button>
         <Button
           onClick={g.double}
-          disabled={!(youTurn && state.phase === 'rolling')}
+          disabled={g.myPlayer == null || !canDouble(state, g.myPlayer)}
           className="bg-sky-500 hover:bg-sky-400"
         >
           Double

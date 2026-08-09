@@ -77,4 +77,39 @@ describe('BackgammonHost', () => {
     expect(restored.getState()).toEqual(host.getState());
     expect(restored.viewFor(0).legalMoves).toEqual(host.viewFor(0).legalMoves);
   });
+
+  it('restores the seating from the snapshot, not the instance it is restored into', () => {
+    // A snapshot is relayed to whichever client takes over as host, and that
+    // client may have built its own host with different seats.
+    const host = newHost([4, 9]);
+    const snap = host.snapshot();
+
+    const takeover = new BackgammonHost({ seating: [0, 1], rng: createRng(1) });
+    takeover.restore(snap);
+
+    expect(takeover.playerForSeat(4)).toBe('white');
+    expect(takeover.playerForSeat(9)).toBe('black');
+    expect(takeover.playerForSeat(0)).toBeUndefined();
+    expect(takeover.currentSeatIndex()).toBe(4);
+    expect(() => takeover.applyAction(9, { type: 'roll' })).toThrow(/not your turn/);
+  });
+
+  it('survives a snapshot that has been through JSON (string seat keys)', () => {
+    const host = newHost([2, 6]);
+    host.applyAction(2, { type: 'roll' });
+    const snap = JSON.parse(JSON.stringify(host.snapshot())) as ReturnType<BackgammonHost['snapshot']>;
+
+    const takeover = new BackgammonHost({ seating: [0, 1], rng: createRng(1) });
+    takeover.restore(snap);
+    expect(takeover.playerForSeat(2)).toBe('white');
+    expect(takeover.viewFor(2).legalMoves).toEqual(host.viewFor(2).legalMoves);
+  });
+
+  it('rejects a malformed snapshot', () => {
+    const host = newHost();
+    const snap = host.snapshot();
+    expect(() => host.restore({ ...snap, seating: [0] })).toThrow(/exactly two seats/);
+    expect(() => host.restore({ ...snap, players: { 0: 'white' } })).toThrow(/no color assigned/);
+    expect(() => host.restore({ ...snap, players: { 0: 'white', 1: 'white' } })).toThrow(/both colors/);
+  });
 });

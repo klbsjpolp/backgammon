@@ -17,6 +17,9 @@ import {
   playMove,
   respondDouble,
   roll,
+  shouldDouble,
+  shouldTakeDouble,
+  winProbability,
   type Board,
   type GameState,
   type Player,
@@ -168,6 +171,60 @@ describe('ai', () => {
     const exposed = makeBoard({ 12: 1, 6: -1 }); // black on 6 hits the 12-blot with a 6
     const safe = makeBoard({ 12: 1, 0: -1 }); // black on 0 has no direct shot
     expect(evaluateBoard(exposed, 'white')).toBeLessThan(evaluateBoard(safe, 'white'));
+  });
+});
+
+describe('ai cube strategy', () => {
+  /** A pure race: each side stacked on one point, nothing left to contest. */
+  const race = (whiteOff: number, blackOff: number, turn: Player = 'white'): GameState => ({
+    ...createInitialState(turn),
+    board: makeBoard({ 3: 15 - whiteOff, 20: -(15 - blackOff) }, {}, { white: whiteOff, black: blackOff }),
+  });
+
+  it('gives the opening position a near-even probability, edge to the player on roll', () => {
+    const state = createInitialState('white');
+    const p = winProbability(state, 'white');
+    expect(p).toBeGreaterThan(0.5);
+    expect(p).toBeLessThan(0.6);
+    // The two sides' estimates are complementary.
+    expect(p + winProbability(state, 'black')).toBeCloseTo(1, 5);
+  });
+
+  it('reports certainty once a side has borne all fifteen off', () => {
+    expect(winProbability(race(15, 4), 'white')).toBe(1);
+    expect(winProbability(race(15, 4), 'black')).toBe(0);
+  });
+
+  it('rises with the pip lead', () => {
+    const slight = winProbability(race(3, 0), 'white');
+    const large = winProbability(race(9, 0), 'white');
+    expect(slight).toBeLessThan(large);
+    expect(large).toBeGreaterThan(0.9);
+  });
+
+  it('does not double from the opening position', () => {
+    expect(shouldDouble(createInitialState('white'), 'white')).toBe(false);
+  });
+
+  it('doubles inside the window and holds back when too good', () => {
+    expect(shouldDouble(race(3, 0), 'white')).toBe(true);
+    // A commanding lead is worth playing on for the gammon rather than cashing.
+    expect(shouldDouble(race(9, 0), 'white')).toBe(false);
+  });
+
+  it('never doubles when it does not own the cube', () => {
+    const state = { ...race(3, 0), cube: { value: 2, owner: 'black' as Player } };
+    expect(canDouble(state, 'white')).toBe(false);
+    expect(shouldDouble(state, 'white')).toBe(false);
+  });
+
+  it('never doubles outside the rolling phase', () => {
+    expect(shouldDouble({ ...race(3, 0), phase: 'moving' }, 'white')).toBe(false);
+  });
+
+  it('drops a hopeless double and takes a playable one', () => {
+    expect(shouldTakeDouble(race(9, 0), 'black')).toBe(false);
+    expect(shouldTakeDouble(race(0, 0), 'black')).toBe(true);
   });
 });
 

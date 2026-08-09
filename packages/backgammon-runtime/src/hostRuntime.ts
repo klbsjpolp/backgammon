@@ -40,7 +40,7 @@ export interface HostOptions {
  */
 export class BackgammonHost {
   private state: GameState;
-  private readonly seating: number[];
+  private seating: number[] = [];
   private readonly seatToPlayer = new Map<number, Player>();
   private readonly playerToSeat = new Map<Player, number>();
   private readonly rng: Rng;
@@ -49,14 +49,10 @@ export class BackgammonHost {
     if (options.seating.length !== 2) {
       throw new Error('backgammon requires exactly two seats');
     }
-    this.seating = [...options.seating];
     this.rng = options.rng ?? Math.random;
     // First seat in seating order plays white, the second black.
-    const [whiteSeat, blackSeat] = this.seating;
-    this.seatToPlayer.set(whiteSeat, 'white');
-    this.seatToPlayer.set(blackSeat, 'black');
-    this.playerToSeat.set('white', whiteSeat);
-    this.playerToSeat.set('black', blackSeat);
+    const [whiteSeat, blackSeat] = options.seating;
+    this.setSeating(options.seating, { [whiteSeat]: 'white', [blackSeat]: 'black' });
     const startingPlayer =
       options.startingSeatIndex !== undefined
         ? (this.seatToPlayer.get(options.startingSeatIndex) ?? 'white')
@@ -128,8 +124,33 @@ export class BackgammonHost {
     };
   }
 
+  /**
+   * Adopt a snapshot wholesale. A snapshot can come from a *different* host
+   * instance (that is the point of `snapshotRestore`: whoever takes over as host
+   * after a disconnect rebuilds from it), so the seating and seat→color mapping
+   * are restored alongside the state rather than keeping this instance's own.
+   */
   restore(snapshot: HostSnapshot): void {
+    if (snapshot.seating.length !== 2) {
+      throw new Error('backgammon requires exactly two seats');
+    }
+    this.setSeating(snapshot.seating, snapshot.players);
     this.state = snapshot.state;
+  }
+
+  private setSeating(seating: number[], players: Record<number, Player>): void {
+    this.seating = [...seating];
+    this.seatToPlayer.clear();
+    this.playerToSeat.clear();
+    for (const seatIndex of this.seating) {
+      const player = players[seatIndex];
+      if (!player) throw new Error(`no color assigned to seat ${seatIndex}`);
+      this.seatToPlayer.set(seatIndex, player);
+      this.playerToSeat.set(player, seatIndex);
+    }
+    if (this.playerToSeat.size !== 2) {
+      throw new Error('seating must cover both colors exactly once');
+    }
   }
 
   private requireTurn(player: Player): void {
