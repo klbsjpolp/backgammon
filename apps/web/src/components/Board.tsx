@@ -36,13 +36,13 @@ const Checkers = ({ count }: CheckersProps) => {
   const color = count > 0 ? 'bg-stone-100 text-stone-900' : 'bg-stone-900 text-stone-100 ring-1 ring-stone-500';
   const shown = Math.min(n, 5);
   return (
-    <div className="flex flex-col items-center gap-[calc(var(--pt)*0.03)]">
+    <div className="flex flex-col items-center gap-board-stack">
       {Array.from({ length: shown }).map((_, i) => (
         <div
           key={i}
           className={cn(
-            'flex h-[var(--checker)] w-[var(--checker)] items-center justify-center rounded-full',
-            'text-[calc(var(--pt)*0.3)] leading-none font-bold',
+            'flex size-board-checker items-center justify-center rounded-full',
+            'text-board-checker leading-none font-bold',
             color,
           )}
         >
@@ -70,8 +70,8 @@ const Point = ({ index, count, orientation, selectable, selected, target, onClic
     aria-label={`point ${index}`}
     data-point={index}
     className={cn(
-      'flex h-[var(--pt-h)] w-[var(--pt)] flex-col items-center gap-[calc(var(--pt)*0.02)] rounded-md',
-      'border border-emerald-950/40 px-[1px] py-[calc(var(--pt)*0.04)] transition',
+      'flex h-board-depth w-board-point flex-col items-center gap-board-stack rounded-md',
+      'border border-emerald-950/40 px-px py-board-point-pad transition',
       orientation === 'bottom' && 'flex-col-reverse justify-start',
       index % 2 === 0 ? 'bg-emerald-800/40' : 'bg-emerald-900/50',
       selectable && 'cursor-pointer ring-2 ring-amber-400/70 hover:brightness-125',
@@ -79,7 +79,7 @@ const Point = ({ index, count, orientation, selectable, selected, target, onClic
       target && 'cursor-pointer ring-2 ring-sky-400 hover:brightness-125',
     )}
   >
-    <span className="board-label text-[length:var(--label)] leading-none text-emerald-200/60">{index}</span>
+    <span className="board-label text-board-label leading-none text-emerald-200/60">{index}</span>
     <Checkers count={count} />
   </button>
 );
@@ -97,17 +97,15 @@ const Tray = ({ label, value, active, onClick }: TrayProps) => (
     onClick={onClick}
     disabled={!onClick}
     className={cn(
-      'flex h-[calc(var(--pt)*1.75)] w-[calc(var(--pt)*1.6)] flex-col items-center justify-center',
+      'flex h-board-tray-depth w-board-tray flex-col items-center justify-center',
       'rounded-md border border-emerald-950/50 bg-emerald-950/40 text-emerald-100',
       active && 'cursor-pointer ring-2 ring-sky-400 hover:brightness-125',
     )}
   >
     {/* One block so the count and its caption turn back upright together. */}
-    <div className="board-label flex flex-col items-center gap-[2px]">
-      <span className="text-[calc(var(--pt)*0.55)] leading-none font-bold">{value}</span>
-      <span className="text-[length:var(--label)] leading-none tracking-wide text-emerald-300/70 uppercase">
-        {label}
-      </span>
+    <div className="board-label flex flex-col items-center gap-0.5">
+      <span className="text-board-count leading-none font-bold">{value}</span>
+      <span className="text-board-label leading-none tracking-wide text-emerald-300/70 uppercase">{label}</span>
     </div>
   </button>
 );
@@ -128,13 +126,13 @@ const Bar = ({ theirs, yours, selectable, selected, onClick }: BarProps) => (
     onClick={onClick}
     aria-label="bar"
     className={cn(
-      'flex w-[calc(var(--pt)*1.15)] flex-col items-center justify-center gap-[calc(var(--pt)*0.2)] self-stretch',
-      'rounded-md border border-emerald-950/60 bg-emerald-950/70 py-[calc(var(--pt)*0.1)]',
+      'flex w-board-bar flex-col items-center justify-center gap-board-bar-gap self-stretch',
+      'rounded-md border border-emerald-950/60 bg-emerald-950/70 py-board-bar-pad',
       (selectable || selected) && 'cursor-pointer ring-2 ring-amber-300',
     )}
   >
     <Checkers count={theirs} />
-    <span className="board-label text-[length:var(--label)] leading-none text-emerald-300/60 uppercase">bar</span>
+    <span className="board-label text-board-label leading-none text-emerald-300/60 uppercase">bar</span>
     <Checkers count={yours} />
   </button>
 );
@@ -167,13 +165,13 @@ export const Board = ({ controller }: { controller: BoardController }) => {
       <div className="board-fit">
         <div
           className={cn(
-            'board-frame flex items-stretch gap-[var(--board-gap)] rounded-xl border-2 border-amber-900/60',
-            'bg-emerald-900 p-[calc(var(--pt)*0.25)] shadow-2xl sm:border-4',
+            'board-frame flex items-stretch gap-board-gutter rounded-xl border-2 border-amber-900/60',
+            'bg-emerald-900 p-board-pad shadow-2xl sm:border-4',
           )}
         >
-          <div className="flex flex-col justify-between gap-[var(--board-gap)]">
-            <div className="flex gap-[var(--board-gap)]">{top.slice(0, 6).map((i) => renderPoint(i, 'top'))}</div>
-            <div className="flex gap-[var(--board-gap)]">{bottom.slice(0, 6).map((i) => renderPoint(i, 'bottom'))}</div>
+          <div className="flex flex-col justify-between gap-board-gutter">
+            <div className="flex gap-board-gutter">{top.slice(0, 6).map((i) => renderPoint(i, 'top'))}</div>
+            <div className="flex gap-board-gutter">{bottom.slice(0, 6).map((i) => renderPoint(i, 'bottom'))}</div>
           </div>
 
           <Bar
@@ -184,13 +182,13 @@ export const Board = ({ controller }: { controller: BoardController }) => {
             onClick={() => controller.clickPoint(BAR)}
           />
 
-          <div className="flex flex-col justify-between gap-[var(--board-gap)]">
-            <div className="flex gap-[var(--board-gap)]">{top.slice(6).map((i) => renderPoint(i, 'top'))}</div>
-            <div className="flex gap-[var(--board-gap)]">{bottom.slice(6).map((i) => renderPoint(i, 'bottom'))}</div>
+          <div className="flex flex-col justify-between gap-board-gutter">
+            <div className="flex gap-board-gutter">{top.slice(6).map((i) => renderPoint(i, 'top'))}</div>
+            <div className="flex gap-board-gutter">{bottom.slice(6).map((i) => renderPoint(i, 'bottom'))}</div>
           </div>
 
           {/* The near tray is always this client's, so either color can bear off. */}
-          <div className="flex flex-col justify-between gap-[var(--board-gap)]">
+          <div className="flex flex-col justify-between gap-board-gutter">
             <Tray label={`${them} off`} value={board.off[them]} />
             <Tray
               label={`${you} off`}
