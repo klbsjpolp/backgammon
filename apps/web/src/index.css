@@ -43,14 +43,41 @@ body {
   --avail-w: calc(100vw - 2.75rem);
   --avail-h: calc(100svh - 19rem);
   --pt: clamp(1rem, min(calc(var(--avail-w) / 17), calc(var(--avail-h) / 9.1)), 2.5rem);
-  --pt-h: calc(var(--pt) * 4.1);
-  --checker: calc(var(--pt) * 0.68);
-  --board-gap: calc(var(--pt) * 0.12);
-  --label: max(0.5rem, calc(var(--pt) * 0.22));
 
   position: relative;
   display: flex;
   justify-content: center;
+}
+
+/*
+ * Every length the board draws, as a ratio of --pt, in one place — the ratios are
+ * interlocking (12 points + bar + tray + gutters + padding have to add up to the
+ * 17 above, and two point depths plus a gutter to the 9.1), so they are worth
+ * reading together rather than scattered through the markup.
+ *
+ * `inline` is what makes this work: --pt lives on `.board-fit`, not on `:root`, so
+ * the utilities have to carry the expression and evaluate it on the element that
+ * inherits --pt. It also means nothing is emitted globally — only the utilities
+ * actually used by the board.
+ */
+@theme inline {
+  --spacing-board-point: var(--pt);
+  --spacing-board-depth: calc(var(--pt) * 4.1);
+  --spacing-board-checker: calc(var(--pt) * 0.68);
+  --spacing-board-bar: calc(var(--pt) * 1.15);
+  --spacing-board-tray: calc(var(--pt) * 1.6);
+  --spacing-board-tray-depth: calc(var(--pt) * 1.75);
+  --spacing-board-gutter: calc(var(--pt) * 0.12);
+  --spacing-board-stack: calc(var(--pt) * 0.03);
+  --spacing-board-pad: calc(var(--pt) * 0.25);
+  --spacing-board-point-pad: calc(var(--pt) * 0.04);
+  --spacing-board-bar-gap: calc(var(--pt) * 0.2);
+  --spacing-board-bar-pad: calc(var(--pt) * 0.1);
+
+  /* Floored, or the point numbers stop being legible on a small phone. */
+  --text-board-label: max(0.5rem, calc(var(--pt) * 0.22));
+  --text-board-checker: calc(var(--pt) * 0.3);
+  --text-board-count: calc(var(--pt) * 0.55);
 }
 
 /* Landscape phone: the board sits beside the controls, with little height to spare. */

@@ -56,7 +56,20 @@ phone in portrait. It is now derived from a single CSS length, `--pt` (the width
 point), computed in `apps/web/src/index.css` as the largest unit that fits both the
 width and the height the viewport still has free. Everything else — checkers, bar,
 trays, labels, gaps — is a multiple of `--pt`, so one number rescales the whole board
-and it never overflows.
+and it never overflows. This is the same shape as Tailwind's own spacing scale
+(`calc(var(--spacing) * n)`), with the base unit derived from the viewport rather than
+constant; a fixed scale with breakpoint steps cannot express "fill exactly what is
+left", which is the property that removes the overflow.
+
+Those multiples are named `board-*` tokens declared in **`@theme inline`**, so the
+markup reads `w-board-point` / `size-board-checker` / `gap-board-gutter` and contains no
+arithmetic — the interlocking ratios (12 points + bar + tray + gutters must add up to
+the 17 the width divisor assumes) all sit together in one block. `inline` is required
+rather than incidental: `--pt` is declared on `.board-fit`, not `:root`, so the
+utilities have to carry the expression and evaluate it on the element that inherits
+`--pt`. A plain `@theme` would resolve them against `:root`, where `--pt` does not
+exist. It also keeps the global surface empty — `inline` emits no variables, only the
+utilities the board actually uses.
 
 Three cases, all CSS-only (no resize observers, no JS breakpoints):
 
