@@ -7,8 +7,10 @@ const UP_TO_DATE_FLASH_MS = 4000;
 /** How long the post-update confirmation stays before it gets out of the way. */
 const UPDATED_NOTICE_MS = 6000;
 
+// No colour of its own: `Button` already supplies the accent pair, and the
+// quiet variants below override it.
 const smallButton =
-  'min-h-0 rounded px-2 py-1 text-xs font-semibold text-stone-900 transition disabled:cursor-not-allowed disabled:opacity-50';
+  'min-h-0 rounded px-2 py-1 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-50';
 
 /**
  * The running version, with the manual half of the update flow next to it:
@@ -36,10 +38,10 @@ export const VersionLine = ({
   }, [flashUpToDate]);
 
   return (
-    <footer className="flex w-full items-center justify-center gap-2 text-xs text-emerald-200/60">
+    <footer className="flex w-full items-center justify-center gap-2 text-xs text-muted">
       <span data-testid="app-version">Version {version}</span>
       {isUpdateAvailable ? (
-        <Button onClick={onUpdate} className={cn(smallButton, 'bg-amber-500 hover:bg-amber-400')}>
+        <Button onClick={onUpdate} className={cn(smallButton, 'bg-accent hover:bg-accent-hover')}>
           Update now
         </Button>
       ) : (
@@ -54,12 +56,12 @@ export const VersionLine = ({
             disabled={isChecking}
             className={cn(
               'touch-manipulation rounded px-2 py-1 underline underline-offset-2 transition select-none',
-              'hover:text-emerald-100 disabled:cursor-not-allowed disabled:opacity-50',
+              'hover:text-fg disabled:cursor-not-allowed disabled:opacity-50',
             )}
           >
             {isChecking ? 'Checking…' : 'Check for updates'}
           </button>
-          <span aria-live="polite" className="text-emerald-300/70">
+          <span aria-live="polite" className="text-positive">
             {flashUpToDate && !isChecking ? 'Up to date' : ''}
           </span>
         </>
@@ -84,18 +86,18 @@ export const UpdateBanner = ({
 }) => (
   <div
     data-testid="update-banner"
-    className="flex w-full flex-wrap items-center justify-between gap-2 rounded-lg bg-sky-950/70 px-4 py-2 text-sm text-sky-100"
+    className="flex w-full flex-wrap items-center justify-between gap-2 rounded-lg bg-info-soft px-4 py-2 text-sm text-info-soft-fg"
   >
     <span>
       {version ? `Version ${version} is available` : 'An update is available'} — it installs when this game ends.
     </span>
     <span className="flex items-center gap-2">
-      <Button onClick={onUpdate} className={cn(smallButton, 'bg-amber-500 hover:bg-amber-400')}>
+      <Button onClick={onUpdate} className={cn(smallButton, 'bg-accent hover:bg-accent-hover')}>
         Update now
       </Button>
       <Button
         onClick={onDismiss}
-        className={cn(smallButton, 'bg-transparent text-sky-100 underline underline-offset-2 hover:bg-sky-900/60')}
+        className={cn(smallButton, 'bg-transparent text-info-soft-fg underline underline-offset-2 hover:opacity-75')}
       >
         Later
       </Button>
@@ -121,14 +123,17 @@ export const UpdatedNotice = ({
   return (
     <div
       data-testid="updated-notice"
-      className="flex w-full items-center justify-between gap-2 rounded-lg bg-emerald-800/60 px-4 py-2 text-sm text-emerald-50"
+      className="flex w-full items-center justify-between gap-2 rounded-lg bg-positive-soft px-4 py-2 text-sm text-positive-soft-fg"
     >
       <span>
-        Updated to {version} <span className="text-emerald-200/70">(was {previousVersion})</span>
+        Updated to {version} <span className="opacity-70">(was {previousVersion})</span>
       </span>
       <Button
         onClick={onDismiss}
-        className={cn(smallButton, 'bg-transparent text-emerald-50 underline underline-offset-2 hover:bg-emerald-700')}
+        className={cn(
+          smallButton,
+          'bg-transparent text-positive-soft-fg underline underline-offset-2 hover:opacity-75',
+        )}
       >
         Dismiss
       </Button>
@@ -154,22 +159,22 @@ export const UpdateRequiredOverlay = ({
 }) => (
   <div
     data-testid="update-required-overlay"
-    className="fixed inset-0 z-50 flex items-center justify-center bg-emerald-950/90 px-4 py-6 backdrop-blur-sm"
+    className="fixed inset-0 z-50 flex items-center justify-center bg-canvas/90 px-4 py-6 backdrop-blur-sm"
   >
     <section
       role="alertdialog"
       aria-modal="true"
       aria-labelledby="update-required-title"
       aria-describedby="update-required-description"
-      className="w-full max-w-md rounded-xl bg-emerald-900 p-6 text-emerald-50 shadow-xl ring-1 ring-emerald-700"
+      className="w-full max-w-md rounded-xl bg-surface p-6 text-fg shadow-xl ring-1 ring-line"
     >
-      <h2 id="update-required-title" className="text-xl font-bold text-amber-300">
+      <h2 id="update-required-title" className="text-xl font-bold text-heading">
         Update required
       </h2>
-      <p id="update-required-description" className="mt-2 text-sm text-emerald-100/90">
+      <p id="update-required-description" className="mt-2 text-sm text-fg">
         This version is no longer supported. Reload to keep playing — a game in progress will be lost.
       </p>
-      <dl className="mt-4 rounded-lg bg-emerald-950/60 p-3 text-sm text-emerald-200/80">
+      <dl className="mt-4 rounded-lg bg-surface-soft p-3 text-sm text-muted">
         <div className="flex justify-between gap-4">
           <dt>Running</dt>
           <dd className="tabular-nums">{currentVersion}</dd>
