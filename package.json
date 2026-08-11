@@ -9,26 +9,42 @@
   },
   "scripts": {
     "build": "pnpm --filter @backgammon/core build && pnpm --filter @backgammon/runtime build && pnpm --filter @backgammon/web build",
+    "commit": "cz",
     "dev": "pnpm --filter @backgammon/web dev",
     "format": "prettier --write \"**/*.{ts,tsx,js,mjs,cjs,json,md,css,yml,yaml}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,mjs,cjs,json,md,css,yml,yaml}\"",
     "lint": "pnpm format:check && pnpm --filter @backgammon/core lint && pnpm --filter @backgammon/runtime lint && pnpm --filter @backgammon/web lint",
+    "prepare": "husky",
+    "release": "commit-and-tag-version",
+    "release:dry-run": "commit-and-tag-version --dry-run",
+    "release:first": "commit-and-tag-version --first-release",
     "typecheck": "pnpm --filter @backgammon/core typecheck && pnpm --filter @backgammon/runtime typecheck && pnpm --filter @backgammon/web typecheck",
     "test": "pnpm --filter @backgammon/core test && pnpm --filter @backgammon/runtime test && pnpm --filter @backgammon/web test",
     "test:coverage": "pnpm --filter @backgammon/core test:coverage && pnpm --filter @backgammon/runtime test:coverage && pnpm --filter @backgammon/web test:coverage"
   },
   "devDependencies": {
+    "@commitlint/cli": "^21.2.1",
+    "@commitlint/config-conventional": "^21.2.0",
     "@eslint/js": "^10.0.1",
     "@types/node": "^25.9.1",
     "@typescript-eslint/eslint-plugin": "^8.60.0",
     "@typescript-eslint/parser": "^8.60.0",
+    "commit-and-tag-version": "^13.1.2",
+    "commitizen": "^4.3.2",
+    "cz-conventional-changelog": "^3.3.0",
     "eslint": "^10.4.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.6.0",
+    "husky": "^9.1.7",
     "prettier": "^3.8.3",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.59.4"
+  },
+  "config": {
+    "commitizen": {
+      "path": "cz-conventional-changelog"
+    }
   },
   "packageManager": "pnpm@11.1.2+sha512.415a1cc25974731e75455c1468371be74c5aa5fb7621b50d4056d222451609f11412f23fd602e6169f1e060466641f798597e1be961a10688836a67b16569499"
 }

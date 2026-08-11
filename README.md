@@ -27,6 +27,36 @@ pnpm typecheck
 pnpm lint
 ```
 
+## Versioning
+
+The workspace version in the root `package.json` is the project version, and it is
+derived from the commit history — never edited by hand. Commits follow
+[Conventional Commits](https://www.conventionalcommits.org); `commit-and-tag-version`
+turns them into a semver bump, a `CHANGELOG.md` entry, and a `vX.Y.Z` tag.
+
+- `fix:` → patch, `feat:` → minor, `feat!:` / `BREAKING CHANGE:` → major
+  (while the version is below `1.0.0`, breaking changes bump the minor and
+  features bump the patch)
+- `chore:`, `docs:`, `refactor:`, `test:`, `ci:`, `build:`, `style:`, `perf:`
+  are valid types; only `feat`/`fix`/breaking ones move the version
+
+A `commit-msg` husky hook runs commitlint, so a non-conforming message is rejected
+locally. `pnpm commit` walks through a conforming message interactively.
+
+Releases are cut by the Deploy workflow on every push to `main`: it bumps the
+version, writes the changelog, tags, pushes the release commit (marked
+`[skip ci]` so it does not loop), builds and deploys that exact commit to Pages,
+and publishes the GitHub release. Set a `RELEASE_PUSH_TOKEN` secret if `main` is
+protected or the release push needs to trigger other workflows; otherwise the
+default `GITHUB_TOKEN` is used.
+
+To preview or run a release by hand:
+
+```bash
+pnpm release:dry-run   # show the next version and changelog entry, change nothing
+pnpm release           # bump, changelog, commit, tag locally
+```
+
 ## Status
 
 Full rules (bar/hit/bearing off, the use-both-dice rule, doubling cube,
