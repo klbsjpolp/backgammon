@@ -119,6 +119,21 @@ on `:root`:
 - `color-scheme` is set per theme, so the UA's own widgets (scrollbars, focus rings,
   form controls) follow along; Parchment is the only one that reports `light`.
 
+The board's state signals are held to WCAG's 3:1 for non-text UI against **both**
+point colours, and `contrast.test.ts` asserts it for every theme in the catalogue
+rather than leaving it to the eye. Two rules fall out of that and are worth knowing
+before adding a theme:
+
+- **A ring's emphasis is distance from the surface, and the direction depends on the
+  board.** On a dark felt "stronger" is lighter; on Parchment it is darker, because a
+  mid-toned point leaves no room above it. `--pick-strong` must out-contrast `--pick`,
+  not out-brighten it, which is the second thing the test checks.
+- **A checker's edge is drawn by whichever of its body and its rim can be seen.** A
+  pale checker on a dark point needs no rim; the same checker on cream, or a dark
+  checker on a dark felt, is invisible without one, so the rim carries the 3:1 alone.
+  Both dark themes needed their rims lifted for this — black checkers on a dark board
+  were 2.66 and 1.35 against their points.
+
 A small inline script in `index.html` applies the stored theme (and the matching
 `<meta name="theme-color">`) **before first paint**, so a reload does not flash
 Classic on its way to the chosen palette. It duplicates the storage key and the
