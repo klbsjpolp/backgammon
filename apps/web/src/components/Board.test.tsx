@@ -89,6 +89,18 @@ describe('Board', () => {
     expect(clickPoint).toHaveBeenCalledWith(-1); // BAR
   });
 
+  it('sizes the overflow count on a stacked point', () => {
+    const state = bearingOffState('white');
+    const points = [...state.board.points];
+    points[2] = 8; // more than the five checkers a point draws, so the count shows
+    render(<Board controller={controllerFor('white', { state: { ...state, board: { ...state.board, points } } })} />);
+
+    // The size has to survive `cn()` — merged next to the checker's text colour it
+    // was being classified as a colour and dropped, leaving the count at body size.
+    const count = within(screen.getByLabelText('point 2')).getByText('8');
+    expect(count.closest('div')?.className).toMatch(/text-board-checker/);
+  });
+
   it('shows the dice and the pips still to play while moving', () => {
     render(<Board controller={controllerFor('white')} />);
     expect(within(screen.getByLabelText('dice')).getByText(/⚅ ⚄/)).toBeDefined();

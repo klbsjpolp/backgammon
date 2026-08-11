@@ -21,6 +21,20 @@ describe('ConfirmButton', () => {
     expect(button().textContent).toBe('Leave game?');
   });
 
+  it('announces the armed state, which the pinned name would otherwise hide', () => {
+    render(<ConfirmButton label="Leave" confirmLabel="Leave game?" onConfirm={vi.fn()} />);
+    const status = screen.getByRole('status');
+
+    // Nothing to announce until the first tap arms it.
+    expect(status.textContent).toBe('');
+
+    fireEvent.click(button());
+    expect(status.textContent).toMatch(/leave: tap again to confirm/i);
+
+    fireEvent.click(button());
+    expect(status.textContent).toBe('');
+  });
+
   it('needs a second tap before it fires', () => {
     const onConfirm = vi.fn();
     render(<ConfirmButton label="Leave" onConfirm={onConfirm} />);
