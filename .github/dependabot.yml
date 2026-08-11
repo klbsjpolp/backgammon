@@ -1,0 +1,74 @@
+version: 2
+updates:
+  - package-ecosystem: 'npm'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+    # pnpm rejects lockfile entries younger than its 24h minimumReleaseAge;
+    # hold updates a few days so CI can install what Dependabot proposes.
+    cooldown:
+      default-days: 3
+    groups:
+      react:
+        patterns:
+          - 'react'
+          - 'react-dom'
+          - '@types/react'
+          - '@types/react-dom'
+      vite:
+        patterns:
+          - 'vite'
+          - '@vitejs/*'
+          - 'vite-plugin-*'
+          - '@vitest/*'
+          - 'vitest'
+          - 'esbuild'
+          - 'rollup'
+      typescript-eslint:
+        patterns:
+          - 'typescript'
+          - 'typescript-eslint'
+          - '@typescript-eslint/*'
+          - 'eslint'
+          - '@eslint/*'
+          - 'eslint-plugin-*'
+      tailwind:
+        patterns:
+          - 'tailwindcss'
+          - '@tailwindcss/*'
+          - 'postcss'
+          - 'autoprefixer'
+      aws-sdk:
+        patterns:
+          - '@aws-sdk/*'
+          - 'aws-sdk'
+      sentry:
+        patterns:
+          - '@sentry/*'
+      testing:
+        patterns:
+          - '@playwright/*'
+          - 'playwright'
+          - 'jsdom'
+          - '@testing-library/*'
+      commit-tooling:
+        patterns:
+          - '@commitlint/*'
+          - 'commitlint'
+          - 'commitizen'
+          - 'cz-*'
+          - 'commit-and-tag-version'
+          - 'husky'
+      minor-and-patch:
+        update-types:
+          - 'minor'
+          - 'patch'
+
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+    groups:
+      actions:
+        patterns:
+          - '*'
