@@ -38,12 +38,12 @@ export const LocalPanel = ({ applyPendingUpdate }: LocalPanelProps = {}) => {
       status={
         <div
           className={cn(
-            'flex w-full flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-lg bg-emerald-950/60 px-4 py-2 text-sm',
-            state.phase === 'gameOver' && 'bg-amber-900/40',
+            'flex w-full flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-lg bg-surface px-4 py-2 text-sm',
+            state.phase === 'gameOver' && 'bg-highlight-soft',
           )}
         >
           <span className="font-semibold capitalize">{status}</span>
-          <span className="text-emerald-200/70">
+          <span className="text-muted">
             cube ×{state.cube.value}
             {state.cube.owner ? ` (${state.cube.owner})` : ''} · pips W {pipCount(state.board, 'white')} / B{' '}
             {pipCount(state.board, 'black')}
@@ -62,24 +62,31 @@ export const LocalPanel = ({ applyPendingUpdate }: LocalPanelProps = {}) => {
               >
                 Roll
               </Button>
-              <Button onClick={game.double} disabled={!game.canHumanDouble} className="bg-sky-500 hover:bg-sky-400">
+              <Button
+                onClick={game.double}
+                disabled={!game.canHumanDouble}
+                className="bg-info text-info-fg hover:bg-info-hover"
+              >
                 Double
               </Button>
               {game.doubleToYou && (
                 <>
                   <Button
                     onClick={() => game.respond(true)}
-                    className="bg-emerald-600 text-emerald-50 hover:bg-emerald-500"
+                    className="bg-positive text-positive-fg hover:bg-positive-hover"
                   >
                     Take
                   </Button>
-                  <Button onClick={() => game.respond(false)} className="bg-red-600 text-red-50 hover:bg-red-500">
+                  <Button
+                    onClick={() => game.respond(false)}
+                    className="bg-danger text-danger-fg hover:bg-danger-hover"
+                  >
                     Drop
                   </Button>
                 </>
               )}
               {game.selectedFrom !== null && (
-                <Button onClick={game.clearSelection} className="bg-stone-600 text-stone-50 hover:bg-stone-500">
+                <Button onClick={game.clearSelection} className="bg-neutral text-neutral-fg hover:bg-neutral-hover">
                   Clear selection
                 </Button>
               )}
@@ -93,7 +100,7 @@ export const LocalPanel = ({ applyPendingUpdate }: LocalPanelProps = {}) => {
                 if (applyPendingUpdate?.()) return;
                 game.newGame();
               }}
-              className="bg-emerald-700 text-emerald-50 hover:bg-emerald-600"
+              className="bg-positive text-positive-fg hover:bg-positive-hover"
             />
           }
         />

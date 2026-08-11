@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import './theme/themes.css';
 
 /*
  * Landscape phones: plenty of width, almost no height. The page switches to a
@@ -6,10 +7,6 @@
  * the bottom edge of the screen.
  */
 @custom-variant compact (@media (orientation: landscape) and (max-height: 640px));
-
-:root {
-  color-scheme: dark;
-}
 
 html,
 body,
@@ -19,6 +16,9 @@ body,
 
 body {
   margin: 0;
+  /* Both from the theme layer, so the page repaints with the rest of the UI. */
+  background-color: var(--canvas);
+  color: var(--fg);
   font-family:
     ui-sans-serif,
     system-ui,

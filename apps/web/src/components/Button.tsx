@@ -8,9 +8,9 @@ export const Button = ({ className, ...props }: ButtonProps) => (
     type="button"
     className={cn(
       // min-h-11 keeps every control at the ~44px touch target phones need.
-      'inline-flex min-h-11 touch-manipulation items-center justify-center rounded-md bg-amber-500 px-4 py-2',
-      'text-sm font-semibold text-stone-900 transition select-none',
-      'hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-40',
+      'inline-flex min-h-11 touch-manipulation items-center justify-center rounded-md bg-accent px-4 py-2',
+      'text-sm font-semibold text-accent-fg transition select-none',
+      'hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-40',
       className,
     )}
     {...props}
@@ -63,7 +63,7 @@ export const ConfirmButton = ({
         // Reaching for another control is as good an answer as waiting it out.
         onBlur={() => setArmed(false)}
         // After `className`, so an armed button keeps its warning colour.
-        className={cn(className, armed && 'bg-red-600 text-red-50 hover:bg-red-500')}
+        className={cn(className, armed && 'bg-danger text-danger-fg hover:bg-danger-hover')}
         {...props}
       >
         {armed ? confirmLabel : label}

@@ -3,8 +3,26 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#0b3d2e" />
+    <meta name="theme-color" content="#03130d" />
     <title>Backgammon</title>
+    <script>
+      // Applies the remembered theme before the first paint, so a reload does not
+      // flash the default palette on its way to the chosen one. The key, the ids
+      // and the chrome colours are duplicated from src/theme/themes.ts; change
+      // them together.
+      (function () {
+        var colors = { classic: '#03130d', midnight: '#080b16', parchment: '#f5ecd9' };
+        var stored = null;
+        try {
+          stored = localStorage.getItem('backgammon:theme');
+        } catch (error) {
+          // Storage refused; the default below still applies.
+        }
+        var theme = Object.prototype.hasOwnProperty.call(colors, stored) ? stored : 'classic';
+        document.documentElement.dataset.theme = theme;
+        document.querySelector('meta[name="theme-color"]').setAttribute('content', colors[theme]);
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

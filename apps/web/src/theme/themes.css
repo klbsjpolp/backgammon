@@ -1,0 +1,259 @@
+/*
+ * The theme layer.
+ *
+ * Every colour the game draws comes from a semantic variable declared here —
+ * page chrome, action colours, and the board's own furniture. Components never
+ * name a palette colour (no `bg-emerald-900`, no `text-amber-300`), so a theme
+ * is exactly one block below plus one entry in `src/theme/themes.ts`.
+ *
+ * Two details are load-bearing:
+ *
+ * - The variables are declared on `[data-theme='…']`, not only on `:root`. Any
+ *   element can therefore open a scope in a different palette, which is what
+ *   lets the switcher paint a swatch of a theme that is *not* the active one —
+ *   it sets `data-theme` on the swatch itself and the variables resolve there.
+ * - The `@theme inline` block at the bottom maps them to Tailwind colour
+ *   utilities. `inline` matters: the utilities have to carry `var(--felt)` and
+ *   evaluate it on the element, or a nested `data-theme` scope could never
+ *   override anything.
+ *
+ * Alpha is baked into the values rather than left to `/60` modifiers in the
+ * markup: how translucent a point sits on the felt is a property of the theme,
+ * and a light theme wants different numbers than a dark one.
+ */
+
+/* --- Classic: green felt and brass, the tournament look ------------------- */
+:root,
+[data-theme='classic'] {
+  color-scheme: dark;
+
+  --canvas: #03130d;
+  --fg: #ecfdf5;
+  --muted: #9ecfbd;
+  --heading: #fcd34d;
+  --surface: #062a1f;
+  --surface-soft: #04211a;
+  --line: #1d5245;
+
+  --accent: #f59e0b;
+  --accent-hover: #fbbf24;
+  --accent-fg: #1c1917;
+  --info: #0ea5e9;
+  --info-hover: #38bdf8;
+  --info-fg: #082f49;
+  --positive: #059669;
+  --positive-hover: #10b981;
+  --positive-fg: #ecfdf5;
+  --danger: #dc2626;
+  --danger-hover: #ef4444;
+  --danger-fg: #fef2f2;
+  --neutral: #57534e;
+  --neutral-hover: #78716c;
+  --neutral-fg: #fafaf9;
+
+  --danger-soft: #4c1618;
+  --danger-soft-fg: #fee2e2;
+  --highlight-soft: #3a2410;
+
+  --board-frame: #5a3512;
+  --felt: #064e3b;
+  --point-even: #0b6a51;
+  --point-odd: #054635;
+  --point-line: #022c22;
+  --point-label: #7fbca8;
+  --bar: #03231a;
+  --bar-line: #022018;
+  --bar-label: #5fa48d;
+  --tray: #04241b;
+  --tray-line: #022c22;
+  --tray-fg: #d1fae5;
+  --tray-label: #57a487;
+  --checker-light: #f5f5f4;
+  --checker-light-fg: #1c1917;
+  --checker-light-line: #d6d3d1;
+  --checker-dark: #1c1917;
+  --checker-dark-fg: #f5f5f4;
+  --checker-dark-line: #78716c;
+
+  --pick: #f0b429;
+  --pick-strong: #fcd34d;
+  --move: #38bdf8;
+  --dice: #fde68a;
+}
+
+/* --- Midnight: cool indigo, for playing with the lights off --------------- */
+[data-theme='midnight'] {
+  color-scheme: dark;
+
+  --canvas: #080b16;
+  --fg: #e6e9f5;
+  --muted: #98a0c0;
+  --heading: #a5b4fc;
+  --surface: #141a2e;
+  --surface-soft: #111629;
+  --line: #2a3350;
+
+  --accent: #6366f1;
+  --accent-hover: #818cf8;
+  --accent-fg: #f5f6ff;
+  --info: #06b6d4;
+  --info-hover: #22d3ee;
+  --info-fg: #062b33;
+  --positive: #10b981;
+  --positive-hover: #34d399;
+  --positive-fg: #04231a;
+  --danger: #e11d48;
+  --danger-hover: #f43f5e;
+  --danger-fg: #fff1f3;
+  --neutral: #3b4463;
+  --neutral-hover: #4c577c;
+  --neutral-fg: #e6e9f5;
+
+  --danger-soft: #3d1524;
+  --danger-soft-fg: #ffd9e0;
+  --highlight-soft: #25254f;
+
+  --board-frame: #3a4370;
+  --felt: #131a30;
+  --point-even: #232d4d;
+  --point-odd: #182140;
+  --point-line: #0b1020;
+  --point-label: #8b95bd;
+  --bar: #0e1428;
+  --bar-line: #0a0f20;
+  --bar-label: #7f8ab5;
+  --tray: #101731;
+  --tray-line: #0a0f20;
+  --tray-fg: #e6e9f5;
+  --tray-label: #8b95bd;
+  --checker-light: #dfe4fb;
+  --checker-light-fg: #0f1428;
+  --checker-light-line: #9aa4d8;
+  --checker-dark: #0f1428;
+  --checker-dark-fg: #dfe4fb;
+  --checker-dark-line: #4c577c;
+
+  --pick: #818cf8;
+  --pick-strong: #c7d2fe;
+  --move: #22d3ee;
+  --dice: #c7d2fe;
+}
+
+/* --- Parchment: the one light theme — cream paper and a wooden board ------ */
+[data-theme='parchment'] {
+  color-scheme: light;
+
+  --canvas: #f5ecd9;
+  --fg: #3b2a18;
+  --muted: #7a6244;
+  --heading: #8a4b1d;
+  --surface: #e9dcc0;
+  --surface-soft: #efe4cd;
+  --line: #c9b48c;
+
+  --accent: #b45309;
+  --accent-hover: #92400e;
+  --accent-fg: #fff7ed;
+  --info: #0369a1;
+  --info-hover: #075985;
+  --info-fg: #f0f9ff;
+  --positive: #15803d;
+  --positive-hover: #166534;
+  --positive-fg: #f0fdf4;
+  --danger: #b91c1c;
+  --danger-hover: #991b1b;
+  --danger-fg: #fef2f2;
+  --neutral: #8a7355;
+  --neutral-hover: #6f5c43;
+  --neutral-fg: #fdf9f0;
+
+  --danger-soft: #f7d9d5;
+  --danger-soft-fg: #7f1d1d;
+  --highlight-soft: #f2dcae;
+
+  --board-frame: #7c4a21;
+  --felt: #e3cfa4;
+  --point-even: #c89a63;
+  --point-odd: #f0e2c4;
+  --point-line: #b08b57;
+  --point-label: #6b5334;
+  --bar: #d9c199;
+  --bar-line: #b08b57;
+  --bar-label: #6b5334;
+  --tray: #dcc79e;
+  --tray-line: #b08b57;
+  --tray-fg: #3b2a18;
+  --tray-label: #7a6244;
+  --checker-light: #fffaf0;
+  --checker-light-fg: #3b2a18;
+  --checker-light-line: #b08b57;
+  --checker-dark: #3f2d1c;
+  --checker-dark-fg: #f7ecd8;
+  --checker-dark-line: #8a6a43;
+
+  --pick: #b45309;
+  --pick-strong: #d97706;
+  --move: #0369a1;
+  --dice: #8a4b1d;
+}
+
+/*
+ * The utilities the markup actually uses: `bg-surface`, `text-muted`,
+ * `ring-move`, `border-point-line`, … Nothing is emitted globally — `inline`
+ * only generates the utilities, and each one carries the `var()` so it
+ * resolves against whichever `data-theme` scope it lands in.
+ */
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-heading: var(--heading);
+  --color-surface: var(--surface);
+  --color-surface-soft: var(--surface-soft);
+  --color-line: var(--line);
+
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-fg: var(--accent-fg);
+  --color-info: var(--info);
+  --color-info-hover: var(--info-hover);
+  --color-info-fg: var(--info-fg);
+  --color-positive: var(--positive);
+  --color-positive-hover: var(--positive-hover);
+  --color-positive-fg: var(--positive-fg);
+  --color-danger: var(--danger);
+  --color-danger-hover: var(--danger-hover);
+  --color-danger-fg: var(--danger-fg);
+  --color-neutral: var(--neutral);
+  --color-neutral-hover: var(--neutral-hover);
+  --color-neutral-fg: var(--neutral-fg);
+
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-soft-fg: var(--danger-soft-fg);
+  --color-highlight-soft: var(--highlight-soft);
+
+  --color-board-frame: var(--board-frame);
+  --color-felt: var(--felt);
+  --color-point-even: var(--point-even);
+  --color-point-odd: var(--point-odd);
+  --color-point-line: var(--point-line);
+  --color-point-label: var(--point-label);
+  --color-bar: var(--bar);
+  --color-bar-line: var(--bar-line);
+  --color-bar-label: var(--bar-label);
+  --color-tray: var(--tray);
+  --color-tray-line: var(--tray-line);
+  --color-tray-fg: var(--tray-fg);
+  --color-tray-label: var(--tray-label);
+  --color-checker-light: var(--checker-light);
+  --color-checker-light-fg: var(--checker-light-fg);
+  --color-checker-light-line: var(--checker-light-line);
+  --color-checker-dark: var(--checker-dark);
+  --color-checker-dark-fg: var(--checker-dark-fg);
+  --color-checker-dark-line: var(--checker-dark-line);
+
+  --color-pick: var(--pick);
+  --color-pick-strong: var(--pick-strong);
+  --color-move: var(--move);
+  --color-dice: var(--dice);
+}
