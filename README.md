@@ -57,6 +57,26 @@ pnpm release:dry-run   # show the next version and changelog entry, change nothi
 pnpm release           # bump, changelog, commit, tag locally
 ```
 
+## Updates
+
+The running version is shown in the footer, next to the manual half of the flow:
+**Check for updates** when nothing is pending, **Update now** once something is.
+
+Each deploy writes the released tag into `apps/web/public/runtime-config.json`,
+which ships beside the bundle rather than inside it — that is what lets an open
+tab notice a newer build. Tabs poll it every 10 minutes and whenever they come
+back to the foreground, then reload themselves onto the new version, but only
+where nothing is lost: never during a local game or while in an online room. A
+pending update is taken on the next **New game**, **Host a new game** or **Join**,
+since those discard the same state a reload would; until then a banner offers it.
+An automatic reload happens at most once per version, so a stale cache can't put
+the app in a reload loop — the buttons still force it.
+
+Set the repository variable `MINIMUM_SUPPORTED_VERSION` (or the Deploy workflow's
+`minimum_supported_version` input) to a release tag to make the update mandatory:
+older clients are blocked behind a "Update required" overlay and reload instead of
+playing on. Leave it empty for the normal, optional flow.
+
 ## Status
 
 Full rules (bar/hit/bearing off, the use-both-dice rule, doubling cube,
