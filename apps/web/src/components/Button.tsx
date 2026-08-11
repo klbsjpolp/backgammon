@@ -49,23 +49,38 @@ export const ConfirmButton = ({
   }, [armed]);
 
   return (
-    <Button
-      aria-label={label}
-      onClick={() => {
-        if (!armed) {
-          setArmed(true);
-          return;
-        }
-        setArmed(false);
-        onConfirm();
-      }}
-      // Reaching for another control is as good an answer as waiting it out.
-      onBlur={() => setArmed(false)}
-      // After `className`, so an armed button keeps its warning colour.
-      className={cn(className, armed && 'bg-red-600 text-red-50 hover:bg-red-500')}
-      {...props}
-    >
-      {armed ? confirmLabel : label}
-    </Button>
+    <>
+      <Button
+        aria-label={label}
+        onClick={() => {
+          if (!armed) {
+            setArmed(true);
+            return;
+          }
+          setArmed(false);
+          onConfirm();
+        }}
+        // Reaching for another control is as good an answer as waiting it out.
+        onBlur={() => setArmed(false)}
+        // After `className`, so an armed button keeps its warning colour.
+        className={cn(className, armed && 'bg-red-600 text-red-50 hover:bg-red-500')}
+        {...props}
+      >
+        {armed ? confirmLabel : label}
+      </Button>
+      {/*
+       * The accessible name is pinned to `label` so the action stays findable,
+       * which means arming is invisible to a screen reader: the swap to
+       * `confirmLabel` and the colour change are both sighted-only signals, and
+       * the first tap would read as a no-op. This announces it instead — without
+       * it the guard degrades into "press twice for no stated reason".
+       *
+       * `sr-only` is absolutely positioned, so it takes no room in the flex row
+       * or the grid the buttons sit in.
+       */}
+      <span role="status" className="sr-only">
+        {armed ? `${label}: tap again to confirm.` : ''}
+      </span>
+    </>
   );
 };
