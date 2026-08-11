@@ -68,12 +68,17 @@
   --tray-line: #022c22;
   --tray-fg: #d1fae5;
   --tray-label: #57a487;
+  /*
+   * The dark checker is nearly the felt's own luminance (2.66 on the light point,
+   * 1.61 on the dark one), so as with the pale checker on Parchment its rim is
+   * what draws the edge and has to carry the 3:1 on its own: 3.60 / 5.95.
+   */
   --checker-light: #f5f5f4;
   --checker-light-fg: #1c1917;
   --checker-light-line: #d6d3d1;
   --checker-dark: #1c1917;
   --checker-dark-fg: #f5f5f4;
-  --checker-dark-line: #78716c;
+  --checker-dark-line: #c4bfba;
 
   --pick: #f0b429;
   --pick-strong: #fcd34d;
@@ -126,12 +131,14 @@
   --tray-line: #0a0f20;
   --tray-fg: #e6e9f5;
   --tray-label: #8b95bd;
+  /* Same as Classic, and more so — the dark checker is 1.35 / 1.16 against the
+     points here, so the rim is the whole edge: 4.59 / 5.36. */
   --checker-light: #dfe4fb;
   --checker-light-fg: #0f1428;
   --checker-light-line: #9aa4d8;
   --checker-dark: #0f1428;
   --checker-dark-fg: #dfe4fb;
-  --checker-dark-line: #4c577c;
+  --checker-dark-line: #8b95bd;
 
   --pick: #818cf8;
   --pick-strong: #c7d2fe;
@@ -184,16 +191,29 @@
   --tray-line: #b08b57;
   --tray-fg: #3b2a18;
   --tray-label: #7a6244;
+  /*
+   * The pale checker's body clears neither point here (2.44 on the dark point,
+   * 1.23 on the light one), so unlike the dark themes its rim is what draws the
+   * boundary and has to carry the 3:1 itself: 3.53 / 7.00.
+   */
   --checker-light: #fffaf0;
   --checker-light-fg: #3b2a18;
-  --checker-light-line: #b08b57;
+  --checker-light-line: #6a3f1d;
   --checker-dark: #3f2d1c;
   --checker-dark-fg: #f7ecd8;
   --checker-dark-line: #8a6a43;
 
-  --pick: #b45309;
-  --pick-strong: #d97706;
-  --move: #0369a1;
+  /*
+   * The rings run *darker* than the dark themes' and `--pick-strong` is darker
+   * than `--pick`, which is the inversion a light board demands: emphasis is
+   * distance from the surface, and on cream that direction is down. Both have to
+   * clear 3:1 against both point colours, and the mid-toned `--point-even`
+   * (#c89a63) leaves no room above it — only below. Ratios against
+   * even / odd: pick 3.41 / 6.76, pick-strong 4.95 / 9.83, move 3.72 / 7.38.
+   */
+  --pick: #7d3708;
+  --pick-strong: #5a2208;
+  --move: #0c4a6e;
   --dice: #8a4b1d;
 }
 

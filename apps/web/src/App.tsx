@@ -41,25 +41,35 @@ export const App = () => {
         )}
       >
         {/*
-         * Phones put the title and both switches on one line; there is height to
-         * save, and a second row would push the board down by more than the
-         * board's own height budget allows for. `flex-wrap` is the escape hatch
-         * for the narrowest screens, where three controls genuinely do not fit.
+         * Phones put the title and both switches on one line, and this row must
+         * never become two: the portrait board budgets a fixed 22rem of page
+         * chrome in `index.css`, so a second row is ~36px the board never gets
+         * back and the controls under it fall past the fold.
+         *
+         * Rather than tune the widths until they happen to fit — which depends on
+         * the system font's metrics, so it can only ever be true of the phones you
+         * measured — the row is nowrap and the title is the part that gives. It
+         * needs `min-w-0` to be allowed to shrink at all (a flex item will not go
+         * below its content otherwise), and then it ellipsises. Losing the tail of
+         * a heading the browser tab already shows beats losing the board.
          */}
         <div
           className={cn(
             'flex w-full flex-col items-center gap-3',
-            'max-sm:flex-row max-sm:flex-wrap max-sm:justify-between max-sm:gap-2',
+            'max-sm:flex-row max-sm:justify-between max-sm:gap-2',
             'compact:flex-row compact:justify-between compact:gap-2',
           )}
         >
-          <header className="text-center">
-            <h1 className="text-3xl font-bold tracking-tight text-heading max-sm:text-lg compact:text-xl">
+          <header className="min-w-0 text-center">
+            <h1 className="truncate text-3xl font-bold tracking-tight text-heading max-sm:text-base compact:text-xl">
               Backgammon
             </h1>
           </header>
 
-          <div className="flex items-center gap-2 max-sm:gap-1.5">
+          {/* Never the item that gives: without `shrink-0` the row stays one line
+              but the mode buttons wrap their own labels instead, which costs the
+              same height. */}
+          <div className="flex shrink-0 items-center gap-2">
             <div className="inline-flex rounded-lg bg-surface p-1 text-sm">
               {(['local', 'online'] as const).map((m) => (
                 <button
@@ -68,7 +78,7 @@ export const App = () => {
                   onClick={() => setMode(m)}
                   className={cn(
                     'touch-manipulation rounded-md px-4 py-1.5 font-semibold capitalize transition select-none',
-                    'max-sm:px-3',
+                    'max-sm:px-2',
                     mode === m ? 'bg-accent text-accent-fg' : 'text-muted hover:text-fg',
                   )}
                 >
