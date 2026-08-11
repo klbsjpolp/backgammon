@@ -5,7 +5,16 @@ import { Controls, GameLayout } from '@/components/GameLayout';
 import { cn } from '@/lib/cn';
 import { useLocalGame } from '@/useLocalGame';
 
-export const LocalPanel = () => {
+interface LocalPanelProps {
+  /**
+   * Applies a deployed update, if one is pending, instead of starting the new
+   * game — the reload comes up on a fresh game anyway. Returns true when it took
+   * over.
+   */
+  applyPendingUpdate?: () => boolean;
+}
+
+export const LocalPanel = ({ applyPendingUpdate }: LocalPanelProps = {}) => {
   const game = useLocalGame();
   const { state } = game;
 
@@ -80,7 +89,10 @@ export const LocalPanel = () => {
             <ConfirmButton
               label="New game"
               confirmLabel="Start over?"
-              onConfirm={game.newGame}
+              onConfirm={() => {
+                if (applyPendingUpdate?.()) return;
+                game.newGame();
+              }}
               className="bg-emerald-700 text-emerald-50 hover:bg-emerald-600"
             />
           }

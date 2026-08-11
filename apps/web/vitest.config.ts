@@ -2,10 +2,15 @@ import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { workspaceVersionTag } from './version';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
+  // Mirrors the app build so the version the UI renders is a real one in tests.
+  define: {
+    __APP_VERSION__: JSON.stringify(workspaceVersionTag()),
+  },
   plugins: [react()],
   resolve: {
     alias: {

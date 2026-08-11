@@ -1,12 +1,32 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
+import { UpdateBanner, UpdateRequiredOverlay, UpdatedNotice, VersionLine } from '@/components/AppUpdates';
 import { LocalPanel } from '@/components/LocalPanel';
 import { OnlinePanel } from '@/components/OnlinePanel';
 import { cn } from '@/lib/cn';
+import { useAppUpdates } from '@/useAppUpdates';
 
 type Mode = 'local' | 'online';
 
 export const App = () => {
   const [mode, setMode] = useState<Mode>('local');
+  const [isOnlineBusy, setIsOnlineBusy] = useState(false);
+
+  // A local game is always live on screen, so an automatic reload would throw it
+  // away; online only has something to lose once a room is joined. Either way the
+  // update lands on the next deliberate start — see `applyPendingUpdate`.
+  const updates = useAppUpdates({ deferUpdate: mode === 'local' || isOnlineBusy });
+  const { applyUpdate, isUpdateAvailable, isUpdateRequired } = updates;
+
+  /**
+   * Starting a game is a lossless moment: whatever a reload would have discarded
+   * is being discarded anyway. Returns true when the reload is under way, so the
+   * caller drops the start it was about to perform.
+   */
+  const applyPendingUpdate = useCallback((): boolean => {
+    if (!isUpdateAvailable && !isUpdateRequired) return false;
+    applyUpdate();
+    return true;
+  }, [applyUpdate, isUpdateAvailable, isUpdateRequired]);
 
   return (
     <div
@@ -48,7 +68,44 @@ export const App = () => {
         </div>
       </div>
 
-      {mode === 'local' ? <LocalPanel /> : <OnlinePanel />}
+      {updates.justUpdatedFrom && (
+        <UpdatedNotice
+          version={updates.currentVersion}
+          previousVersion={updates.justUpdatedFrom}
+          onDismiss={updates.dismissJustUpdated}
+        />
+      )}
+
+      {updates.shouldShowUpdateBanner && (
+        <UpdateBanner
+          version={updates.latestVersion}
+          onUpdate={updates.applyUpdate}
+          onDismiss={updates.dismissUpdate}
+        />
+      )}
+
+      {mode === 'local' ? (
+        <LocalPanel applyPendingUpdate={applyPendingUpdate} />
+      ) : (
+        <OnlinePanel applyPendingUpdate={applyPendingUpdate} onBusyChange={setIsOnlineBusy} />
+      )}
+
+      <VersionLine
+        version={updates.currentVersion}
+        isUpdateAvailable={updates.isUpdateAvailable}
+        isChecking={updates.isChecking}
+        onCheck={updates.checkNow}
+        onUpdate={updates.applyUpdate}
+      />
+
+      {updates.isUpdateRequired && updates.minimumSupportedVersion && (
+        <UpdateRequiredOverlay
+          currentVersion={updates.currentVersion}
+          minimumVersion={updates.minimumSupportedVersion}
+          latestVersion={updates.latestVersion}
+          onUpdate={updates.applyUpdate}
+        />
+      )}
     </div>
   );
 };

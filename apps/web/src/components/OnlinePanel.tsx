@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { canDouble, opponent, pipCount } from '@backgammon/core';
 import { Board, type BoardController } from '@/components/Board';
 import { Button, ConfirmButton } from '@/components/Button';
@@ -17,16 +17,41 @@ const Banner = ({ children, tone = 'info' }: { children: React.ReactNode; tone?:
   </div>
 );
 
-export const OnlinePanel = () => {
+interface OnlinePanelProps {
+  /**
+   * Applies a deployed update, if one is pending, instead of entering a room —
+   * better now than reloading a player out of a room code they just shared.
+   * Returns true when it took over.
+   */
+  applyPendingUpdate?: () => boolean;
+  /** Reports whether a reload would cost the player their seat in a room. */
+  onBusyChange?: (busy: boolean) => void;
+}
+
+export const OnlinePanel = ({ applyPendingUpdate, onBusyChange }: OnlinePanelProps = {}) => {
   const g = useOnlineGame();
   const [joinCode, setJoinCode] = useState('');
+  const isInRoom = g.status !== 'idle' && g.status !== 'error';
+
+  useEffect(() => {
+    onBusyChange?.(isInRoom);
+  }, [isInRoom, onBusyChange]);
+
+  // Leaving online mode entirely leaves nothing to protect.
+  useEffect(() => () => onBusyChange?.(false), [onBusyChange]);
 
   // --- Not connected: create or join ---------------------------------------
   if (g.status === 'idle' || g.status === 'error') {
     return (
       <div className="flex w-full max-w-sm flex-col items-stretch gap-4">
         {g.error && <Banner tone="error">{g.error}</Banner>}
-        <Button onClick={() => void g.hostRoom()} className="bg-emerald-600 text-emerald-50 hover:bg-emerald-500">
+        <Button
+          onClick={() => {
+            if (applyPendingUpdate?.()) return;
+            void g.hostRoom();
+          }}
+          className="bg-emerald-600 text-emerald-50 hover:bg-emerald-500"
+        >
           Host a new game
         </Button>
         <div className="flex items-center gap-2">
@@ -37,7 +62,13 @@ export const OnlinePanel = () => {
             aria-label="Room code"
             className="min-w-0 flex-1 rounded-md bg-emerald-950/60 px-3 py-2 text-sm uppercase tracking-widest text-emerald-50 outline-none ring-1 ring-emerald-700 focus:ring-amber-400"
           />
-          <Button onClick={() => void g.joinRoom(joinCode.trim())} disabled={joinCode.trim().length === 0}>
+          <Button
+            onClick={() => {
+              if (applyPendingUpdate?.()) return;
+              void g.joinRoom(joinCode.trim());
+            }}
+            disabled={joinCode.trim().length === 0}
+          >
             Join
           </Button>
         </div>

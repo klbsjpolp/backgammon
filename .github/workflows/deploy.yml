@@ -2,14 +2,21 @@ name: Deploy
 
 # Cuts a semver release from the conventional commits on main (version bump,
 # CHANGELOG, tag), then builds the web app from that release commit and deploys
-# it to GitHub Pages. Online play connects to the shared realtime-infra server
-# via the VITE_BACKGAMMON_API_URL secret (point it at the same server skip-bo
-# uses).
+# it to GitHub Pages, publishing the released tag in runtime-config.json so tabs
+# already open can update themselves. Online play connects to the shared
+# realtime-infra server via the VITE_BACKGAMMON_API_URL secret (point it at the
+# same server skip-bo uses).
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      minimum_supported_version:
+        description: 'Oldest release tag still allowed to run (e.g. v1.4.0); blank leaves updates optional'
+        type: string
+        required: false
+        default: ''
 
 permissions:
   contents: write
@@ -72,10 +79,32 @@ jobs:
       - uses: ./.github/actions/setup-node
       - uses: actions/configure-pages@v6
 
+      # Read by the running app to notice it is out of date. It ships next to
+      # the bundle instead of inside it, so an open tab can poll for the version
+      # the deploy is serving. Leave MINIMUM_SUPPORTED_VERSION unset for optional
+      # updates; set it to a tag to force older clients to reload.
+      - name: Generate runtime config
+        shell: bash
+        env:
+          APP_VERSION: ${{ needs.release.outputs.release_tag }}
+          MINIMUM_SUPPORTED_VERSION: ${{ inputs.minimum_supported_version || vars.MINIMUM_SUPPORTED_VERSION }}
+        run: |
+          node <<'EOF'
+          const fs = require('node:fs');
+
+          const payload = {
+            appVersion: process.env.APP_VERSION ?? '',
+            minimumSupportedVersion: process.env.MINIMUM_SUPPORTED_VERSION ?? '',
+          };
+
+          fs.writeFileSync('apps/web/public/runtime-config.json', `${JSON.stringify(payload, null, 2)}\n`);
+          EOF
+
       - name: Build
         run: pnpm build
         env:
           NODE_ENV: production
+          VITE_APP_VERSION: ${{ needs.release.outputs.release_tag }}
           VITE_BACKGAMMON_API_URL: ${{ secrets.VITE_BACKGAMMON_API_URL }}
 
       - name: Upload Pages artifact
