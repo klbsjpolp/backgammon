@@ -1,8 +1,10 @@
 name: Deploy
 
-# Builds the web app and deploys it to GitHub Pages. Online play connects to the
-# shared realtime-infra server via the VITE_BACKGAMMON_API_URL secret (point it
-# at the same server skip-bo uses).
+# Cuts a semver release from the conventional commits on main (version bump,
+# CHANGELOG, tag), then builds the web app from that release commit and deploys
+# it to GitHub Pages. Online play connects to the shared realtime-infra server
+# via the VITE_BACKGAMMON_API_URL secret (point it at the same server skip-bo
+# uses).
 
 on:
   push:
@@ -10,7 +12,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -19,10 +21,54 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  release:
+    # The release commit carries [skip ci], so it does not re-trigger this
+    # workflow; the actor guard covers a manual re-run on top of one.
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    outputs:
+      release_sha: ${{ steps.release_meta.outputs.release_sha }}
+      release_tag: ${{ steps.release_meta.outputs.release_tag }}
+      release_version: ${{ steps.release_meta.outputs.release_version }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0 # Full history is required for conventional-commit version calculation
+          # A PAT lets the release push trigger downstream workflows and pass
+          # branch protection; the default token is enough without one.
+          token: ${{ secrets.RELEASE_PUSH_TOKEN || github.token }}
+      - uses: ./.github/actions/setup-node
+
+      - name: Configure git author
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Create release commit and tag
+        shell: bash
+        run: pnpm release -- --no-verify
+
+      - name: Push release commit and tag
+        shell: bash
+        run: git push --follow-tags origin HEAD:main
+
+      - name: Capture release metadata
+        id: release_meta
+        shell: bash
+        run: |
+          echo "release_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          echo "release_tag=$(git describe --tags --abbrev=0)" >> "$GITHUB_OUTPUT"
+          echo "release_version=$(node -p 'require(\"./package.json\").version')" >> "$GITHUB_OUTPUT"
+
   build:
+    needs: release
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.release.outputs.release_sha }}
       - uses: ./.github/actions/setup-node
       - uses: actions/configure-pages@v6
 
@@ -47,3 +93,14 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
+
+  github-release:
+    needs: [release, deploy]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ needs.release.outputs.release_tag }}
+          name: ${{ needs.release.outputs.release_tag }}
+          generate_release_notes: true
