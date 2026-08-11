@@ -51,6 +51,10 @@
   --neutral-hover: #78716c;
   --neutral-fg: #fafaf9;
 
+  --info-soft: #08283a;
+  --info-soft-fg: #bae6fd;
+  --positive-soft: #0a3b2c;
+  --positive-soft-fg: #d1fae5;
   --danger-soft: #4c1618;
   --danger-soft-fg: #fee2e2;
   --highlight-soft: #3a2410;
@@ -114,6 +118,10 @@
   --neutral-hover: #4c577c;
   --neutral-fg: #e6e9f5;
 
+  --info-soft: #0b2f3c;
+  --info-soft-fg: #a5f3fc;
+  --positive-soft: #0c3a2c;
+  --positive-soft-fg: #a7f3d0;
   --danger-soft: #3d1524;
   --danger-soft-fg: #ffd9e0;
   --highlight-soft: #25254f;
@@ -174,6 +182,10 @@
   --neutral-hover: #6f5c43;
   --neutral-fg: #fdf9f0;
 
+  --info-soft: #d6e6f2;
+  --info-soft-fg: #0b3a56;
+  --positive-soft: #d8ecd9;
+  --positive-soft-fg: #14532d;
   --danger-soft: #f7d9d5;
   --danger-soft-fg: #7f1d1d;
   --highlight-soft: #f2dcae;
@@ -248,6 +260,10 @@
   --color-neutral-hover: var(--neutral-hover);
   --color-neutral-fg: var(--neutral-fg);
 
+  --color-info-soft: var(--info-soft);
+  --color-info-soft-fg: var(--info-soft-fg);
+  --color-positive-soft: var(--positive-soft);
+  --color-positive-soft-fg: var(--positive-soft-fg);
   --color-danger-soft: var(--danger-soft);
   --color-danger-soft-fg: var(--danger-soft-fg);
   --color-highlight-soft: var(--highlight-soft);
