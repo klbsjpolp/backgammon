@@ -25,7 +25,7 @@ export const GameLayout = ({ status, board, controls, hint }: GameLayoutProps) =
     <div className="compact:col-start-1 compact:row-span-3 compact:row-start-1">{board}</div>
     <div className="w-full compact:col-start-2 compact:row-start-2">{controls}</div>
     {/* Landscape has no height to spare once take/drop show up: the hint goes first. */}
-    <p className="text-center text-xs text-emerald-200/60 compact:hidden">{hint}</p>
+    <p className="text-center text-xs text-muted compact:hidden">{hint}</p>
   </div>
 );
 
@@ -51,7 +51,7 @@ export const ControlRow = ({ className, children }: { className?: string; childr
 export const Controls = ({ primary, danger }: { primary: React.ReactNode; danger: React.ReactNode }) => (
   <div className="flex w-full flex-col items-center gap-3">
     <ControlRow className="w-full">{primary}</ControlRow>
-    <ControlRow className="w-full max-w-xs border-t border-emerald-800/60 pt-3 compact:max-w-none compact:grid-cols-1">
+    <ControlRow className="w-full max-w-xs border-t border-line pt-3 compact:max-w-none compact:grid-cols-1">
       {danger}
     </ControlRow>
   </div>

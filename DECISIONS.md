@@ -91,6 +91,41 @@ blur. On a phone they are a thumb-width from the board and a stray tap used to b
 unrecoverable. Every button carries a 44px minimum touch target, and the page reserves
 `env(safe-area-inset-bottom)`.
 
+## Themes
+
+Three themes ship: **Classic** (green felt and brass, the original look),
+**Midnight** (indigo, dark) and **Parchment** (cream paper and a wooden board — the
+one light theme). The choice is remembered in `localStorage` under
+`backgammon:theme`.
+
+Everything hangs off one CSS layer, `apps/web/src/theme/themes.css`. Each theme is a
+single block of semantic variables — `--surface`, `--muted`, `--danger`, `--felt`,
+`--point-even`, `--checker-light`, `--pick`, … — and `@theme inline` maps them to
+Tailwind utilities (`bg-surface`, `ring-pick`, `border-point-line`). No component
+names a palette colour any more, so a fourth theme is one block plus one entry in
+`themes.ts`; nothing else changes. Alpha is baked into the values rather than left
+to `/60` modifiers in the markup, because how translucent a point sits on the felt
+is a property of the theme and a light theme wants different numbers than a dark one.
+
+Two consequences of declaring the variables on `[data-theme='…']` rather than only
+on `:root`:
+
+- The **switcher** is three swatches, each drawn _in_ the theme it selects: the
+  swatch sets `data-theme` on itself, so the variables resolve inside it and you see
+  the felt and accent you would get instead of a legend to decode. It also fits the
+  header on a phone, where the mode switch has already eaten most of the width —
+  a second header row would push the board past the height budget in
+  `--avail-h`.
+- `color-scheme` is set per theme, so the UA's own widgets (scrollbars, focus rings,
+  form controls) follow along; Parchment is the only one that reports `light`.
+
+A small inline script in `index.html` applies the stored theme (and the matching
+`<meta name="theme-color">`) **before first paint**, so a reload does not flash
+Classic on its way to the chosen palette. It duplicates the storage key and the
+theme ids from `themes.ts` on purpose — it has to run before any module loads.
+Storage failures (Safari private browsing) degrade to "the theme switches but is
+not remembered" rather than throwing.
+
 ## Stack
 
 - Same primary libraries as skip-bo: React 19, Vite 8, Tailwind 4, Vitest 4, zod 4,
@@ -135,6 +170,6 @@ unrecoverable. Every button carries a 44px minimum touch target, and the page re
 - Stronger AI still possible: checker play is a full move-sequence search with a shot-aware
   evaluation, and cube decisions come off a heuristic win-probability estimate — neither is
   equity-based, and rollouts would beat both.
-- PWA, Sentry, theme system, Playwright e2e.
+- PWA, Sentry, Playwright e2e.
 - Online polish: reconnection/resume parity with skip-bo, richer lobby (names, kicking),
   animation/drag-and-drop (v1 uses click-to-move).

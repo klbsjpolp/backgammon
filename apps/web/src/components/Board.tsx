@@ -33,7 +33,12 @@ interface CheckersProps {
 const Checkers = ({ count }: CheckersProps) => {
   const n = Math.abs(count);
   if (n === 0) return null;
-  const color = count > 0 ? 'bg-stone-100 text-stone-900' : 'bg-stone-900 text-stone-100 ring-1 ring-stone-500';
+  // Both colours carry a rim: on a light theme a pale checker on a pale point is
+  // otherwise only an edgeless smudge.
+  const color =
+    count > 0
+      ? 'bg-checker-light text-checker-light-fg ring-checker-light-line'
+      : 'bg-checker-dark text-checker-dark-fg ring-checker-dark-line';
   const shown = Math.min(n, 5);
   return (
     <div className="flex flex-col items-center gap-board-stack">
@@ -42,7 +47,7 @@ const Checkers = ({ count }: CheckersProps) => {
           key={i}
           className={cn(
             'flex size-board-checker items-center justify-center rounded-full',
-            'text-board-checker leading-none font-bold',
+            'text-board-checker leading-none font-bold ring-1',
             color,
           )}
         >
@@ -71,15 +76,15 @@ const Point = ({ index, count, orientation, selectable, selected, target, onClic
     data-point={index}
     className={cn(
       'flex h-board-depth w-board-point flex-col items-center gap-board-stack rounded-md',
-      'border border-emerald-950/40 px-px py-board-point-pad transition',
+      'border border-point-line px-px py-board-point-pad transition',
       orientation === 'bottom' && 'flex-col-reverse justify-start',
-      index % 2 === 0 ? 'bg-emerald-800/40' : 'bg-emerald-900/50',
-      selectable && 'cursor-pointer ring-2 ring-amber-400/70 hover:brightness-125',
-      selected && 'ring-2 ring-amber-300 brightness-125',
-      target && 'cursor-pointer ring-2 ring-sky-400 hover:brightness-125',
+      index % 2 === 0 ? 'bg-point-even' : 'bg-point-odd',
+      selectable && 'cursor-pointer ring-2 ring-pick hover:brightness-125',
+      selected && 'ring-2 ring-pick-strong brightness-125',
+      target && 'cursor-pointer ring-2 ring-move hover:brightness-125',
     )}
   >
-    <span className="board-label text-board-label leading-none text-emerald-200/60">{index}</span>
+    <span className="board-label text-board-label leading-none text-point-label">{index}</span>
     <Checkers count={count} />
   </button>
 );
@@ -98,14 +103,14 @@ const Tray = ({ label, value, active, onClick }: TrayProps) => (
     disabled={!onClick}
     className={cn(
       'flex h-board-tray-depth w-board-tray flex-col items-center justify-center',
-      'rounded-md border border-emerald-950/50 bg-emerald-950/40 text-emerald-100',
-      active && 'cursor-pointer ring-2 ring-sky-400 hover:brightness-125',
+      'rounded-md border border-tray-line bg-tray text-tray-fg',
+      active && 'cursor-pointer ring-2 ring-move hover:brightness-125',
     )}
   >
     {/* One block so the count and its caption turn back upright together. */}
     <div className="board-label flex flex-col items-center gap-0.5">
       <span className="text-board-count leading-none font-bold">{value}</span>
-      <span className="text-board-label leading-none tracking-wide text-emerald-300/70 uppercase">{label}</span>
+      <span className="text-board-label leading-none tracking-wide text-tray-label uppercase">{label}</span>
     </div>
   </button>
 );
@@ -127,12 +132,12 @@ const Bar = ({ theirs, yours, selectable, selected, onClick }: BarProps) => (
     aria-label="bar"
     className={cn(
       'flex w-board-bar flex-col items-center justify-center gap-board-bar-gap self-stretch',
-      'rounded-md border border-emerald-950/60 bg-emerald-950/70 py-board-bar-pad',
-      (selectable || selected) && 'cursor-pointer ring-2 ring-amber-300',
+      'rounded-md border border-bar-line bg-bar py-board-bar-pad',
+      (selectable || selected) && 'cursor-pointer ring-2 ring-pick-strong',
     )}
   >
     <Checkers count={theirs} />
-    <span className="board-label text-board-label leading-none text-emerald-300/60 uppercase">bar</span>
+    <span className="board-label text-board-label leading-none text-bar-label uppercase">bar</span>
     <Checkers count={yours} />
   </button>
 );
@@ -165,8 +170,8 @@ export const Board = ({ controller }: { controller: BoardController }) => {
       <div className="board-fit">
         <div
           className={cn(
-            'board-frame flex items-stretch gap-board-gutter rounded-xl border-2 border-amber-900/60',
-            'bg-emerald-900 p-board-pad shadow-2xl sm:border-4',
+            'board-frame flex items-stretch gap-board-gutter rounded-xl border-2 border-board-frame',
+            'bg-felt p-board-pad shadow-2xl sm:border-4',
           )}
         >
           <div className="flex flex-col justify-between gap-board-gutter">
@@ -200,14 +205,14 @@ export const Board = ({ controller }: { controller: BoardController }) => {
         </div>
       </div>
 
-      <div className="flex h-7 items-center gap-3 text-2xl text-amber-200 compact:h-6 compact:text-xl">
+      <div className="flex h-7 items-center gap-3 text-2xl text-dice compact:h-6 compact:text-xl">
         {state.roll && state.phase !== 'rolling' ? (
           <span aria-label="dice">
             {die(state.roll[0])} {die(state.roll[1])}
           </span>
         ) : null}
         {state.remaining.length > 0 && (
-          <span className="text-sm text-emerald-200/80">remaining: {state.remaining.join(', ')}</span>
+          <span className="text-sm text-muted">remaining: {state.remaining.join(', ')}</span>
         )}
       </div>
     </div>

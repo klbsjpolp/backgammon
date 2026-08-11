@@ -10,7 +10,7 @@ const Banner = ({ children, tone = 'info' }: { children: React.ReactNode; tone?:
   <div
     className={cn(
       'w-full rounded-lg px-4 py-2 text-sm',
-      tone === 'error' ? 'bg-red-900/50 text-red-100' : 'bg-emerald-950/60 text-emerald-100',
+      tone === 'error' ? 'bg-danger-soft text-danger-soft-fg' : 'bg-surface text-fg',
     )}
   >
     {children}
@@ -50,7 +50,7 @@ export const OnlinePanel = ({ applyPendingUpdate, onBusyChange }: OnlinePanelPro
             if (applyPendingUpdate?.()) return;
             void g.hostRoom();
           }}
-          className="bg-emerald-600 text-emerald-50 hover:bg-emerald-500"
+          className="bg-positive text-positive-fg hover:bg-positive-hover"
         >
           Host a new game
         </Button>
@@ -60,7 +60,7 @@ export const OnlinePanel = ({ applyPendingUpdate, onBusyChange }: OnlinePanelPro
             onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
             placeholder="Room code"
             aria-label="Room code"
-            className="min-w-0 flex-1 rounded-md bg-emerald-950/60 px-3 py-2 text-sm uppercase tracking-widest text-emerald-50 outline-none ring-1 ring-emerald-700 focus:ring-amber-400"
+            className="min-w-0 flex-1 rounded-md bg-surface px-3 py-2 text-sm uppercase tracking-widest text-fg outline-none ring-1 ring-line focus:ring-accent"
           />
           <Button
             onClick={() => {
@@ -88,10 +88,10 @@ export const OnlinePanel = ({ applyPendingUpdate, onBusyChange }: OnlinePanelPro
     return (
       <div className="flex w-full max-w-sm flex-col items-stretch gap-4">
         <Banner>
-          Room code: <span className="font-mono text-lg tracking-widest text-amber-300">{g.session?.roomCode}</span>
-          <span className="ml-2 text-emerald-300/70">— share it with your opponent</span>
+          Room code: <span className="font-mono text-lg tracking-widest text-heading">{g.session?.roomCode}</span>
+          <span className="ml-2 text-muted">— share it with your opponent</span>
         </Banner>
-        <ul className="flex flex-col gap-1 rounded-lg bg-emerald-950/40 p-3 text-sm">
+        <ul className="flex flex-col gap-1 rounded-lg bg-surface-soft p-3 text-sm">
           {seats.map((seat) => (
             <li key={seat.seatIndex} className="flex items-center justify-between">
               <span>
@@ -99,7 +99,7 @@ export const OnlinePanel = ({ applyPendingUpdate, onBusyChange }: OnlinePanelPro
                 {seat.seatIndex === g.session?.seatIndex ? ' (you)' : ''}
                 {seat.displayName ? ` — ${seat.displayName}` : ''}
               </span>
-              <span className={cn('text-xs', seat.readyState === 'ready' ? 'text-emerald-300' : 'text-emerald-200/50')}>
+              <span className={cn('text-xs', seat.readyState === 'ready' ? 'text-positive' : 'text-muted')}>
                 {seat.readyState}
               </span>
             </li>
@@ -111,7 +111,7 @@ export const OnlinePanel = ({ applyPendingUpdate, onBusyChange }: OnlinePanelPro
             <Button
               onClick={g.start}
               disabled={readyCount < 2}
-              className="bg-emerald-600 text-emerald-50 hover:bg-emerald-500"
+              className="bg-positive text-positive-fg hover:bg-positive-hover"
             >
               Start game
             </Button>
@@ -120,7 +120,7 @@ export const OnlinePanel = ({ applyPendingUpdate, onBusyChange }: OnlinePanelPro
             label="Leave"
             confirmLabel="Leave room?"
             onConfirm={g.leave}
-            className="bg-stone-600 text-stone-50 hover:bg-stone-500"
+            className="bg-neutral text-neutral-fg hover:bg-neutral-hover"
           />
         </div>
       </div>
@@ -139,7 +139,7 @@ export const OnlinePanel = ({ applyPendingUpdate, onBusyChange }: OnlinePanelPro
           label="Leave"
           confirmLabel="Leave room?"
           onConfirm={g.leave}
-          className="bg-stone-600 text-stone-50 hover:bg-stone-500"
+          className="bg-neutral text-neutral-fg hover:bg-neutral-hover"
         />
       </div>
     );
@@ -177,12 +177,12 @@ export const OnlinePanel = ({ applyPendingUpdate, onBusyChange }: OnlinePanelPro
           {g.status === 'disconnected' && <Banner tone="error">{g.error ?? 'Connection lost.'}</Banner>}
           <div
             className={cn(
-              'flex w-full flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-lg bg-emerald-950/60 px-4 py-2 text-sm',
-              state.phase === 'gameOver' && 'bg-amber-900/40',
+              'flex w-full flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-lg bg-surface px-4 py-2 text-sm',
+              state.phase === 'gameOver' && 'bg-highlight-soft',
             )}
           >
             <span className="font-semibold capitalize">{status}</span>
-            <span className="text-emerald-200/70">
+            <span className="text-muted">
               cube ×{state.cube.value} · pips W {pipCount(state.board, 'white')} / B {pipCount(state.board, 'black')}
             </span>
           </div>
@@ -203,7 +203,7 @@ export const OnlinePanel = ({ applyPendingUpdate, onBusyChange }: OnlinePanelPro
               <Button
                 onClick={g.double}
                 disabled={g.myPlayer == null || !canDouble(state, g.myPlayer)}
-                className="bg-sky-500 hover:bg-sky-400"
+                className="bg-info text-info-fg hover:bg-info-hover"
               >
                 Double
               </Button>
@@ -211,11 +211,11 @@ export const OnlinePanel = ({ applyPendingUpdate, onBusyChange }: OnlinePanelPro
                 <>
                   <Button
                     onClick={() => g.respond(true)}
-                    className="bg-emerald-600 text-emerald-50 hover:bg-emerald-500"
+                    className="bg-positive text-positive-fg hover:bg-positive-hover"
                   >
                     Take
                   </Button>
-                  <Button onClick={() => g.respond(false)} className="bg-red-600 text-red-50 hover:bg-red-500">
+                  <Button onClick={() => g.respond(false)} className="bg-danger text-danger-fg hover:bg-danger-hover">
                     Drop
                   </Button>
                 </>
@@ -227,7 +227,7 @@ export const OnlinePanel = ({ applyPendingUpdate, onBusyChange }: OnlinePanelPro
               label="Leave"
               confirmLabel="Leave game?"
               onConfirm={g.leave}
-              className="bg-stone-600 text-stone-50 hover:bg-stone-500"
+              className="bg-neutral text-neutral-fg hover:bg-neutral-hover"
             />
           }
         />

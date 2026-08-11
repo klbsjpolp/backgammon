@@ -89,6 +89,9 @@ gammon/backgammon scoring) with two modes:
   (create/join a room by code). The board is drawn from each seat's point of view, so
   both colors see their home board bottom-right and bear off onto their own tray.
 
+Three themes — **Classic**, **Midnight** and **Parchment** — switch from the header
+and are remembered between visits.
+
 Online requires `@klbsjpolp/realtime-core` to be published to npm and
 `VITE_BACKGAMMON_API_URL` to point at the relay server. Until the package is
 published, a temporary `file:` override in `pnpm-workspace.yaml` resolves it from a
