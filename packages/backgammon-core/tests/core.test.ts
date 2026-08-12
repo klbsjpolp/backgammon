@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   applyAiTurn,
+  applyLegalMove,
   applyMove,
   applyRoll,
   BAR,
@@ -378,5 +379,21 @@ describe('engine invariants', () => {
       s = playMove(s, moves[Math.floor(rng() * moves.length)]);
     }
     expect(checked).toBeGreaterThan(200);
+  });
+});
+
+describe('applyLegalMove — the unchecked fast path', () => {
+  it('refuses a die that is not among the remaining ones', () => {
+    const state = movingState(createInitialBoard(), 'white', [3, 5]);
+    const legal = currentLegalMoves(state)[0];
+    // Splicing at indexOf === -1 overlaps the two slices, so `remaining` grew to
+    // [3, 3, 5]: a die nobody rolled, and a turn that could never end.
+    expect(() => applyLegalMove(state, { ...legal, die: 6 })).toThrow(/not among the remaining dice/);
+  });
+
+  it('still consumes the right die when there are duplicates', () => {
+    const state = movingState(createInitialBoard(), 'white', [3, 3, 3, 3]);
+    const after = applyLegalMove(state, currentLegalMoves(state)[0]);
+    expect(after.remaining).toEqual([3, 3, 3]);
   });
 });

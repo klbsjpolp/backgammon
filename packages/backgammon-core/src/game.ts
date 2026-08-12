@@ -89,8 +89,16 @@ export const roll = (state: GameState, rng: Rng = Math.random): GameState => app
  * {@link playMove}, which validates first.
  */
 export const applyLegalMove = (state: GameState, move: Move): GameState => {
-  const board = applyMove(state.board, state.turn, move);
   const idx = state.remaining.indexOf(move.die);
+  // Not defensive padding: at -1 the two slices below overlap and `remaining`
+  // *grows*, handing the mover a die they never rolled and a turn that cannot
+  // end. This is the one thing the fast path cannot skip checking, and it costs
+  // the `indexOf` it was going to do anyway.
+  if (idx === -1) {
+    throw new Error(`die ${move.die} is not among the remaining dice [${state.remaining.join(', ')}]`);
+  }
+
+  const board = applyMove(state.board, state.turn, move);
   const remaining = state.remaining.slice(0, idx).concat(state.remaining.slice(idx + 1));
   let next: GameState = { ...state, board, remaining };
 
