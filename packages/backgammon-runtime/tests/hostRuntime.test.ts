@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createInitialState, createRng } from '@backgammon/core';
-import { BackgammonHost, parseGameState } from '../src/index.js';
+import { BackgammonHost, parseGameState, parseHostSnapshot } from '../src/index.js';
 
 const newHost = (seating = [0, 1], seed = 7) =>
   new BackgammonHost({ seating, config: { startingPlayer: 'white' }, rng: createRng(seed) });
@@ -136,5 +136,48 @@ describe('relayed state parsing', () => {
     expect(parseGameState({ ...good, phase: 'sleeping' })).toBeNull();
     expect(parseGameState({ ...good, roll: [7, 1] })).toBeNull();
     expect(parseGameState({ ...good, remaining: [1, 1, 1, 1, 1] })).toBeNull();
+  });
+});
+
+describe('snapshots that should not be resumed from', () => {
+  const validState = () => JSON.parse(JSON.stringify(createInitialState('white'))) as unknown;
+
+  it('refuses a seating that leaves a seat without a colour', () => {
+    expect(parseHostSnapshot({ state: validState(), seating: [0, 1], players: {} })).toBeNull();
+    expect(parseHostSnapshot({ state: validState(), seating: [0, 1], players: { 0: 'white' } })).toBeNull();
+    // Both seats the same colour is a seating no game can be played from.
+    expect(parseHostSnapshot({ state: validState(), seating: [0, 1], players: { 0: 'white', 1: 'white' } })).toBeNull();
+  });
+
+  it('leaves the host as it was when a restore is rejected', () => {
+    const host = newHost([0, 1]);
+    host.applyAction(0, { type: 'roll' });
+    const before = host.getState();
+
+    // `setSeating` used to clear the live maps before validating, so a failed
+    // restore left the host with no colours and every later action throwing.
+    expect(() => host.restore({ state: before, seating: [0, 1], players: {} })).toThrow(/no color assigned/);
+
+    expect(host.playerForSeat(0)).toBe('white');
+    expect(host.playerForSeat(1)).toBe('black');
+    expect(host.getState()).toEqual(before);
+    expect(() => host.applyAction(0, { type: 'move', from: 23, to: 22, die: 1 })).not.toThrow(/unknown seat/);
+  });
+});
+
+describe('frames from an older build', () => {
+  it('accepts a state serialized before `noPlay` existed', () => {
+    const legacy = JSON.parse(JSON.stringify(createInitialState('white'))) as Record<string, unknown>;
+    delete legacy.noPlay;
+
+    // A host on the previous release relaying to a guest on this one is ordinary:
+    // updates are deferred while a game is in progress. Rejecting the key would
+    // drop every frame that host sends and freeze the guest for the whole game.
+    const parsed = parseGameState(legacy);
+    expect(parsed).not.toBeNull();
+    expect(parsed?.noPlay).toBeNull();
+
+    const snapshot = { state: legacy, seating: [0, 1], players: { 0: 'white', 1: 'black' } };
+    expect(parseHostSnapshot(snapshot)?.state.noPlay).toBeNull();
   });
 });

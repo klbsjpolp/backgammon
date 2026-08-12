@@ -134,22 +134,40 @@ export class BackgammonHost {
     if (snapshot.seating.length !== 2) {
       throw new Error('backgammon requires exactly two seats');
     }
+    // Seating first: it is the part that can be rejected, and `setSeating` only
+    // commits once it knows it will succeed, so a throw here leaves both the
+    // seating and the state exactly as they were.
     this.setSeating(snapshot.seating, snapshot.players);
     this.state = snapshot.state;
   }
 
+  /**
+   * Builds the seat maps first and only then commits them.
+   *
+   * It used to clear the live maps before validating, so a snapshot that failed
+   * halfway left the host with no colours at all — `playerForSeat` returning
+   * undefined and every later action throwing `unknown seat`. A host that
+   * refuses a bad snapshot has to still be the host it was.
+   */
   private setSeating(seating: number[], players: Record<number, Player>): void {
+    const seatToPlayer = new Map<number, Player>();
+    const playerToSeat = new Map<Player, number>();
+    for (const seatIndex of seating) {
+      const player = players[seatIndex];
+      if (!player) throw new Error(`no color assigned to seat ${seatIndex}`);
+      seatToPlayer.set(seatIndex, player);
+      playerToSeat.set(player, seatIndex);
+    }
+    if (playerToSeat.size !== 2) {
+      throw new Error('seating must cover both colors exactly once');
+    }
+
     this.seating = [...seating];
     this.seatToPlayer.clear();
     this.playerToSeat.clear();
-    for (const seatIndex of this.seating) {
-      const player = players[seatIndex];
-      if (!player) throw new Error(`no color assigned to seat ${seatIndex}`);
+    for (const [seatIndex, player] of seatToPlayer) {
       this.seatToPlayer.set(seatIndex, player);
       this.playerToSeat.set(player, seatIndex);
-    }
-    if (this.playerToSeat.size !== 2) {
-      throw new Error('seating must cover both colors exactly once');
     }
   }
 
