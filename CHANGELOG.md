@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.1.7](https://github.com/klbsjpolp/backgammon/compare/v0.1.6...v0.1.7) (2026-08-12)
+
+### Features
+
+* **web:** add a theme system with three themes and a persistent switcher ([2164e41](https://github.com/klbsjpolp/backgammon/commit/2164e41ed69c07d7741eaa33e5c5f6e8bfacbf2d))
+
+### Bug Fixes
+
+* **web:** carry the theme layer through main's update flow ([48147a8](https://github.com/klbsjpolp/backgammon/commit/48147a84329604256eff9aee5c226dfa75338f50))
+* **web:** meet 3:1 contrast on the board and keep the header to one row ([4808296](https://github.com/klbsjpolp/backgammon/commit/480829617474070d9434c92bd8639b96860b736c)), references [#c89a63](https://github.com/klbsjpolp/backgammon/issues/c89a63) [#b08b57](https://github.com/klbsjpolp/backgammon/issues/b08b57) [#6a3f1d](https://github.com/klbsjpolp/backgammon/issues/6a3f1d)
 ## [0.1.6](https://github.com/klbsjpolp/backgammon/compare/v0.1.5...v0.1.6) (2026-08-11)
 ## [0.1.5](https://github.com/klbsjpolp/backgammon/compare/v0.1.4...v0.1.5) (2026-08-11)
 
