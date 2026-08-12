@@ -100,7 +100,9 @@ describe('LocalPanel', () => {
     const offered: GameState = { ...createInitialState('white'), phase: 'doubleOffered', doubleOfferedBy: 'white' };
     renderPanel({ state: offered, doubleToYou: false });
 
-    expect(screen.getByText(/white offers a double/i)).toBeDefined();
+    // Your own offer: named as yours, and without the stake — you are not the
+    // one deciding about it.
+    expect(screen.getByText(/you offer a double$/i)).toBeDefined();
     expect(screen.queryByRole('button', { name: /take/i })).toBeNull();
   });
 
@@ -122,6 +124,30 @@ describe('LocalPanel', () => {
       result: { winner: 'white', kind: 'backgammon', points: 3, cubeValue: 1 },
     };
     renderPanel({ state: won });
-    expect(screen.getByText(/white wins a backgammon — 3 points/i)).toBeDefined();
+    // You are white, so the result is addressed to you rather than narrated.
+    expect(screen.getByText(/you win a backgammon — 3 points/i)).toBeDefined();
+  });
+});
+
+describe('LocalPanel — a roll nobody could play', () => {
+  const withNoPlay = (player: 'white' | 'black'): GameState => ({
+    ...createInitialState(player === 'white' ? 'black' : 'white'),
+    noPlay: { player, roll: [6, 5] },
+  });
+
+  it('says what the AI rolled when it could not move', () => {
+    renderPanel({ state: withNoPlay('black'), isHumanTurn: true });
+    // The turn passed straight back, so this is the only trace of the roll.
+    expect(screen.getByText(/AI rolled 6-5 and could not move/i)).toBeDefined();
+  });
+
+  it('says so about your own roll too', () => {
+    renderPanel({ state: withNoPlay('white'), isHumanTurn: false });
+    expect(screen.getByText(/you rolled 6-5 and could not move/i)).toBeDefined();
+  });
+
+  it('says nothing when the last roll was playable', () => {
+    renderPanel();
+    expect(screen.queryByText(/could not move/i)).toBeNull();
   });
 });
