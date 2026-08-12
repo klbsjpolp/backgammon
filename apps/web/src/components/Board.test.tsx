@@ -28,7 +28,8 @@ const controllerFor = (you: Player, overrides: Partial<BoardController> = {}): B
 });
 
 /** Point indices in DOM order — the board reads left-to-right, top row then bottom. */
-const renderedPoints = () => screen.getAllByLabelText(/^point \d+$/).map((el) => Number(el.dataset.point));
+const renderedPoints = () =>
+  screen.getAllByLabelText(/^point \d+,/).map((el) => Number((el as HTMLElement).dataset.point));
 
 describe('Board', () => {
   it('renders all 24 points for either side', () => {
@@ -85,7 +86,7 @@ describe('Board', () => {
       />,
     );
 
-    fireEvent.click(screen.getByLabelText('bar'));
+    fireEvent.click(screen.getByLabelText(/^bar,/));
     expect(clickPoint).toHaveBeenCalledWith(-1); // BAR
   });
 
@@ -97,7 +98,7 @@ describe('Board', () => {
 
     // The size has to survive `cn()` — merged next to the checker's text colour it
     // was being classified as a colour and dropped, leaving the count at body size.
-    const count = within(screen.getByLabelText('point 2')).getByText('8');
+    const count = within(screen.getByLabelText(/^point 3,/)).getByText('8');
     expect(count.closest('div')?.className).toMatch(/text-board-checker/);
   });
 
@@ -108,5 +109,57 @@ describe('Board', () => {
     const dice = within(screen.getByLabelText('dice'));
     expect(dice.getByText('⚅')).toBeDefined();
     expect(dice.getByText('⚄')).toBeDefined();
+  });
+});
+
+describe('Board — what it says out loud', () => {
+  it('numbers the points the way the player counts them, from either side', () => {
+    // The engine's array index is 0..23 in white's direction; a player counts
+    // 1..24 from their own home, so the two sides disagree on every point.
+    const { unmount } = render(<Board controller={controllerFor('white')} />);
+    // White's ace point is index 0 — the one it bears off from.
+    expect(screen.getByLabelText(/^point 1,/).dataset.point).toBe('0');
+    expect(screen.getByLabelText(/^point 24,/).dataset.point).toBe('23');
+    unmount();
+
+    render(<Board controller={controllerFor('black')} />);
+    // Black bears off past index 23, so that is *its* ace point.
+    expect(screen.getByLabelText(/^point 1,/).dataset.point).toBe('23');
+    expect(screen.getByLabelText(/^point 24,/).dataset.point).toBe('0');
+  });
+
+  it('reads out who is standing on a point and how many', () => {
+    render(<Board controller={controllerFor('white')} />);
+    expect(screen.getByLabelText(/^point 3, 3 white checkers/)).toBeDefined();
+    expect(screen.getByLabelText(/^point 22, 3 black checkers/)).toBeDefined();
+    expect(screen.getByLabelText(/^point 2, empty/)).toBeDefined();
+  });
+
+  it('says which points are in play and leaves the rest out of the tab order', () => {
+    render(<Board controller={controllerFor('white')} />);
+
+    const held = screen.getByLabelText(/^point 3, .*holding the checker to move/);
+    expect(held.getAttribute('aria-pressed')).toBe('true');
+    expect(held.getAttribute('tabindex')).toBeNull();
+
+    // An empty point is still readable, but tabbing past 24 of them to reach the
+    // two you can play is not a keyboard story.
+    const idle = screen.getByLabelText(/^point 2, empty/);
+    expect(idle.getAttribute('aria-disabled')).toBe('true');
+    expect(idle.getAttribute('tabindex')).toBe('-1');
+  });
+
+  it('counts the bar and the trays in their names', () => {
+    const state = bearingOffState('white');
+    render(
+      <Board
+        controller={controllerFor('white', {
+          state: { ...state, board: { ...state.board, bar: { white: 2, black: 1 } } },
+        })}
+      />,
+    );
+
+    expect(screen.getByLabelText(/^bar, 2 of your checkers, 1 of theirs/)).toBeDefined();
+    expect(screen.getByRole('button', { name: /white off, 12 of 15 borne off/i })).toBeDefined();
   });
 });

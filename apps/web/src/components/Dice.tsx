@@ -49,8 +49,10 @@ export const Dice = ({ state, className }: { state: GameState; className?: strin
       ))}
       {state.remaining.length > 0 && (
         // The pips carry this to anyone who can see them; screen readers get the
-        // list they used to read off the board.
-        <span className="sr-only">
+        // list they used to read off the board. Live, because a roll landing is
+        // the one thing on this page that happens without being asked for —
+        // polite, so it waits its turn rather than cutting off the status line.
+        <span aria-live="polite" className="sr-only">
           <span>remaining: </span>
           {state.remaining.join(', ')}
         </span>

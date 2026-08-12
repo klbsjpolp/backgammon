@@ -1,5 +1,5 @@
 import { createPortal } from 'react-dom';
-import { BAR, OFF, opponent, type GameState, type Player } from '@backgammon/core';
+import { BAR, CHECKERS_PER_SIDE, OFF, POINT_COUNT, opponent, type GameState, type Player } from '@backgammon/core';
 import { Dice } from '@/components/Dice';
 import { useDiceSlot } from '@/components/diceSlot';
 import { cn } from '@/lib/cn';
@@ -28,6 +28,24 @@ const rowsFor = (you: Player): { top: number[]; bottom: number[] } =>
 
 /** Signed checker count (as {@link Checkers} wants it) for one player's off-board pile. */
 const signedFor = (player: Player, count: number): number => (player === 'white' ? count : -count);
+
+/**
+ * The number a player counts this point by: 1 is the point you bear off from,
+ * 24 the one furthest away. Each player numbers from their own home, so the two
+ * disagree on every point — which is what the board is for.
+ *
+ * The array index underneath (0..23, white's direction) is the engine's, and
+ * showing it was a leak: no backgammon board has a 0-point, and half of them
+ * were counting the wrong way for whoever was reading.
+ */
+const pointNumber = (you: Player, index: number): number => (you === 'white' ? index + 1 : POINT_COUNT - index);
+
+/** How a point reads out loud: who is standing on it, and how many. */
+const describeOccupancy = (count: number): string => {
+  if (count === 0) return 'empty';
+  const n = Math.abs(count);
+  return `${n} ${count > 0 ? 'white' : 'black'} checker${n === 1 ? '' : 's'}`;
+};
 
 interface CheckersProps {
   count: number; // signed: + white, - black
@@ -64,6 +82,8 @@ const Checkers = ({ count }: CheckersProps) => {
 
 interface PointProps {
   index: number;
+  /** The point's number in the viewer's own numbering — what is drawn and read. */
+  number: number;
   count: number;
   orientation: 'top' | 'bottom';
   selectable: boolean;
@@ -72,26 +92,52 @@ interface PointProps {
   onClick: () => void;
 }
 
-const Point = ({ index, count, orientation, selectable, selected, target, onClick }: PointProps) => (
-  <button
-    type="button"
-    onClick={onClick}
-    aria-label={`point ${index}`}
-    data-point={index}
-    className={cn(
-      'flex h-board-depth w-board-point flex-col items-center gap-board-stack rounded-md',
-      'border border-point-line px-px py-board-point-pad transition',
-      orientation === 'bottom' && 'flex-col-reverse justify-start',
-      index % 2 === 0 ? 'bg-point-even' : 'bg-point-odd',
-      selectable && 'cursor-pointer ring-2 ring-pick hover:brightness-125',
-      selected && 'ring-2 ring-pick-strong brightness-125',
-      target && 'cursor-pointer ring-2 ring-move hover:brightness-125',
-    )}
-  >
-    <span className="board-label text-board-label leading-none text-point-label">{index}</span>
-    <Checkers count={count} />
-  </button>
-);
+/**
+ * The ring colours say selectable / held / reachable to anyone who can see them.
+ * Everything below is the same three states said out loud, plus the occupancy a
+ * sighted player reads off the checkers themselves — without it a point
+ * announced as "point 13, button" and nothing else, which is not a board.
+ */
+const Point = ({ index, number, count, orientation, selectable, selected, target, onClick }: PointProps) => {
+  const playable = selectable || selected || target;
+  const role = selected
+    ? ', holding the checker to move'
+    : selectable
+      ? ', has a checker you can move'
+      : target
+        ? ', where the held checker can go'
+        : '';
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={`point ${number}, ${describeOccupancy(count)}${role}`}
+      aria-pressed={selectable || selected ? selected : undefined}
+      // Not `disabled`: the point still has to be readable, and a disabled
+      // button drops out of the accessible tree in some readers. This keeps it
+      // reachable to a screen reader while a Tab lands only on the points that
+      // can actually be played.
+      aria-disabled={playable ? undefined : true}
+      tabIndex={playable ? undefined : -1}
+      data-point={index}
+      className={cn(
+        'flex h-board-depth w-board-point flex-col items-center gap-board-stack rounded-md',
+        'border border-point-line px-px py-board-point-pad transition',
+        orientation === 'bottom' && 'flex-col-reverse justify-start',
+        index % 2 === 0 ? 'bg-point-even' : 'bg-point-odd',
+        selectable && 'cursor-pointer ring-2 ring-pick hover:brightness-125',
+        selected && 'ring-2 ring-pick-strong brightness-125',
+        target && 'cursor-pointer ring-2 ring-move hover:brightness-125',
+      )}
+    >
+      <span aria-hidden className="board-label text-board-label leading-none text-point-label">
+        {number}
+      </span>
+      <Checkers count={count} />
+    </button>
+  );
+};
 
 interface TrayProps {
   label: string;
@@ -105,6 +151,10 @@ const Tray = ({ label, value, active, onClick }: TrayProps) => (
     type="button"
     onClick={onClick}
     disabled={!onClick}
+    // The count and the caption are two elements, so the default accessible name
+    // comes out as the bare "12 white off"; spelling it out says what the number
+    // counts and what is left to bear off.
+    aria-label={`${label}, ${value} of ${CHECKERS_PER_SIDE} borne off`}
     className={cn(
       'flex h-board-tray-depth w-board-tray flex-col items-center justify-center',
       'rounded-md border border-tray-line bg-tray text-tray-fg',
@@ -133,7 +183,15 @@ const Bar = ({ theirs, yours, selectable, selected, onClick }: BarProps) => (
   <button
     type="button"
     onClick={onClick}
-    aria-label="bar"
+    aria-label={
+      // Being on the bar decides the whole turn — nothing else may move until it
+      // is entered — so the count belongs in the name, not just in the pips.
+      `bar, ${Math.abs(yours)} of your checkers, ${Math.abs(theirs)} of theirs` +
+      (selected ? ', holding the checker to enter' : selectable ? ', you must enter from here' : '')
+    }
+    aria-pressed={selectable || selected ? selected : undefined}
+    aria-disabled={selectable || selected ? undefined : true}
+    tabIndex={selectable || selected ? undefined : -1}
     className={cn(
       'flex w-board-bar flex-col items-center justify-center gap-board-bar-gap self-stretch',
       'rounded-md border border-bar-line bg-bar py-board-bar-pad',
@@ -157,6 +215,7 @@ export const Board = ({ controller }: { controller: BoardController }) => {
     <Point
       key={index}
       index={index}
+      number={pointNumber(you, index)}
       count={board.points[index]}
       orientation={orientation}
       selectable={selectableFroms.includes(index)}

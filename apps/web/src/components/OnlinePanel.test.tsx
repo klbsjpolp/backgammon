@@ -135,7 +135,7 @@ describe('OnlinePanel', () => {
     it('draws the board from the seat point of view', () => {
       renderPanel(playing());
       expect(screen.getByText(/you play black/i)).toBeDefined();
-      const points = screen.getAllByLabelText(/^point \d+$/);
+      const points = screen.getAllByLabelText(/^point \d+,/);
       expect(points).toHaveLength(24);
       // Black's home board is drawn bottom-right, next to its own tray, and it
       // is black's tray — not white's — that this seat can bear off onto.
