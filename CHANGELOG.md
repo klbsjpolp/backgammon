@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.1.9](https://github.com/klbsjpolp/backgammon/compare/v0.1.8...v0.1.9) (2026-08-12)
+
+### Features
+
+* **web:** move the dice into the header row beside the title ([dd4f2f9](https://github.com/klbsjpolp/backgammon/commit/dd4f2f9c8bccf8afac01be80c497c49087212d74))
 ## [0.1.8](https://github.com/klbsjpolp/backgammon/compare/v0.1.7...v0.1.8) (2026-08-12)
 
 ### Bug Fixes
