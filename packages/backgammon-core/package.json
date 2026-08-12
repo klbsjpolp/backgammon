@@ -14,9 +14,6 @@
     "test:coverage": "vitest run --coverage --coverage.reporter=lcovonly --coverage.reporter=text-summary",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
-  "dependencies": {
-    "immer": "^11.1.8"
-  },
   "devDependencies": {
     "@vitest/coverage-v8": "^4.1.7",
     "vite": "^8.2.1",

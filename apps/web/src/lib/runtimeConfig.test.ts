@@ -43,3 +43,22 @@ describe('fetchRuntimeConfig', () => {
     await expect(fetchRuntimeConfig()).resolves.toBeNull();
   });
 });
+
+describe('fetchRuntimeConfig — payloads it should not trust', () => {
+  it('drops fields that are not version strings instead of throwing', async () => {
+    // These used to reach compareVersions and blow up inside the caller's .then.
+    stubFetch(async () => ({
+      ok: true,
+      json: async () => ({ appVersion: 12, minimumSupportedVersion: { tag: 'v1' } }),
+    }));
+    await expect(fetchRuntimeConfig()).resolves.toEqual({
+      appVersion: undefined,
+      minimumSupportedVersion: undefined,
+    });
+  });
+
+  it('treats a non-object body as no answer at all', async () => {
+    stubFetch(async () => ({ ok: true, json: async () => 'v1.2.3' }));
+    await expect(fetchRuntimeConfig()).resolves.toBeNull();
+  });
+});

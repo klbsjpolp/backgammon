@@ -2,7 +2,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import path from 'node:path';
-import { workspaceVersionTag } from './version';
+import { workspaceVersionTag } from './version.ts';
 
 export default defineConfig(({ mode }) => ({
   base: mode === 'production' ? '/backgammon/' : '/',
