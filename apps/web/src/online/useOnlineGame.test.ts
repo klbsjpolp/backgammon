@@ -223,6 +223,27 @@ describe('useOnlineGame', () => {
     expect(result.current.error).toMatch(/could not be restored/i);
   });
 
+  it('reports a snapshot the host refuses instead of swallowing the throw', async () => {
+    const { result } = renderHook(() => useOnlineGame());
+    await startGame(result, 0);
+    const before = result.current.state;
+
+    // A snapshot leaving seat 1 without a colour used to parse, then throw
+    // inside `restore` — a throw that unwound into ws.onmessage's catch and
+    // vanished, leaving the host with no seat map and every later action
+    // failing with `unknown seat`. It is now refused before it gets there.
+    socket().emit({
+      type: 'snapshotRestore',
+      payload: { state: before, seating: [0, 1], players: { 0: 'white' } },
+    });
+
+    expect(result.current.state).toEqual(before);
+    expect(result.current.error).toMatch(/could not be restored/i);
+    // Still the host it was: rolling has to keep working.
+    act(() => result.current.rollDice());
+    await waitFor(() => expect(result.current.state?.phase).toBe('moving'));
+  });
+
   it('rebuilds from a snapshot restore', async () => {
     const { result } = renderHook(() => useOnlineGame());
     await startGame(result, 0);
@@ -302,6 +323,23 @@ describe('useOnlineGame', () => {
 
       expect(result.current.state).toEqual(moving);
       expect(result.current.status).toBe('playing');
+    });
+
+    it('renders a view from a host running an older build', async () => {
+      const { result } = renderHook(() => useOnlineGame());
+      await startAsGuest(result);
+
+      const { createInitialState, applyRoll } = await import('@backgammon/core');
+      const moving = applyRoll(createInitialState('black'), [3, 1]);
+      const legacy = JSON.parse(JSON.stringify(moving)) as Record<string, unknown>;
+      delete legacy.noPlay; // what every build before `noPlay` serializes
+
+      socket().emit({ type: 'relayed', fromSeat: 0, kind: 'view', payload: legacy });
+
+      // Requiring the key would reject every frame that host sends and leave the
+      // guest's board frozen for the rest of the game, with nothing said.
+      await waitFor(() => expect(result.current.state?.phase).toBe('moving'));
+      expect(result.current.state?.noPlay).toBeNull();
     });
 
     it('ends on the relayed game-over view', async () => {

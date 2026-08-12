@@ -43,7 +43,17 @@ export const gameStateSchema = z.object({
   remaining: z.array(dieSchema).max(4),
   cube: z.object({ value: z.number().int().positive(), owner: playerSchema.nullable() }),
   doubleOfferedBy: playerSchema.nullable(),
-  noPlay: z.object({ player: playerSchema, roll: rollSchema }).nullable(),
+  // Absent, not just null, from every build that predates it. A host running the
+  // previous release and a guest running this one is an ordinary situation —
+  // updates are deferred while a game is in progress and the banner is
+  // dismissible — and requiring the key would reject *every* frame that host
+  // sends, freezing the guest's board for the rest of the game. The transform is
+  // what keeps the parsed result assignable to `GameState`, which is the check
+  // that keeps this schema honest.
+  noPlay: z
+    .object({ player: playerSchema, roll: rollSchema })
+    .nullish()
+    .transform((value) => value ?? null),
   result: z
     .object({
       winner: playerSchema,
@@ -70,14 +80,28 @@ export const parseGameState = (payload: unknown): GameState | null => {
 
 /**
  * The shape of a {@link HostSnapshot}. Seat indices are whatever the server
- * hands out, so they are only required to be non-negative integers; the host's
- * own `restore` is what insists the seating and the colours line up.
+ * hands out, so they are only required to be non-negative integers — but the
+ * seating and the colours do have to line up, because a snapshot that parses is
+ * one the caller is about to resume the whole game from.
  */
-export const hostSnapshotSchema = z.object({
-  state: gameStateSchema,
-  seating: z.array(z.number().int().min(0)).length(2),
-  players: z.record(z.string(), playerSchema),
-});
+export const hostSnapshotSchema = z
+  .object({
+    state: gameStateSchema,
+    seating: z.array(z.number().int().min(0)).length(2),
+    players: z.record(z.string(), playerSchema),
+  })
+  // A well-formed record is not a usable seating: `{}` satisfies the shape and
+  // then leaves the host with no colour for either seat. Parsing has to answer
+  // the question the caller is actually asking — can this snapshot be resumed
+  // from — so the cross-field check belongs here rather than after the fact.
+  .refine(
+    ({ seating, players }) => seating.every((seat) => players[seat] !== undefined),
+    'every seat must be assigned a colour',
+  )
+  .refine(
+    ({ seating, players }) => new Set(seating.map((seat) => players[seat])).size === 2,
+    'the two seats must hold different colours',
+  );
 
 /** Parses a relayed snapshot, or returns null when it is not one. */
 export const parseHostSnapshot = (payload: unknown): HostSnapshot | null => {

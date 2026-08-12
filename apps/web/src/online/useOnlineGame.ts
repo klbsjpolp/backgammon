@@ -154,7 +154,15 @@ export const useOnlineGame = (): OnlineGame => {
             // `GameState` and blank the page. Dropping it leaves the last good
             // board on screen, and the next broadcast repairs it.
             const state = parseGameState(msg.payload);
-            if (!state) return;
+            if (!state) {
+              // Unless it does not: a host whose frames systematically fail to
+              // parse — an incompatibility rather than a corrupt packet — sends
+              // nothing but bad frames, and the board simply stops moving. That
+              // silence is the worst version of this failure, so it leaves a
+              // trace even though the recovery is to wait.
+              console.warn('Dropped a relayed view that could not be parsed', msg.payload);
+              return;
+            }
             setGameState(state);
             setStatus(state.phase === 'gameOver' ? 'gameOver' : 'playing');
           }
@@ -170,7 +178,18 @@ export const useOnlineGame = (): OnlineGame => {
               setError('The game state could not be restored.');
               return;
             }
-            hostRef.current.restore(snapshot);
+            try {
+              hostRef.current.restore(snapshot);
+            } catch (e) {
+              // The schema above already rejects every snapshot the host itself
+              // would refuse, so nothing is expected to land here. It is guarded
+              // anyway because the alternative is invisible: an uncaught throw
+              // unwinds into `ws.onmessage`'s catch and is read as a malformed
+              // frame, leaving a game that has silently stopped advancing. If
+              // the two ever drift apart, this is what says so.
+              setError(e instanceof Error ? e.message : 'The game state could not be restored.');
+              return;
+            }
             broadcastState();
           }
           return;
