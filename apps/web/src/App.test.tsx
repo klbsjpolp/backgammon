@@ -26,7 +26,7 @@ describe('App', () => {
     expect(screen.getByRole('heading', { name: /backgammon/i })).toBeDefined();
     expect(screen.getByText(/white to roll/i)).toBeDefined();
     // 24 points are rendered.
-    expect(screen.getAllByLabelText(/^point \d+$/)).toHaveLength(24);
+    expect(screen.getAllByLabelText(/^point \d+,/)).toHaveLength(24);
   });
 
   it('rolls into the moving phase', async () => {
