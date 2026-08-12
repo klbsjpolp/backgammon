@@ -1,6 +1,6 @@
 import type { Board, GameState, Move, Player } from './types.js';
 import { CHECKERS_PER_SIDE, checkersOn, opponent, pipCount } from './board.js';
-import { canDouble, currentLegalMoves, playMove } from './game.js';
+import { applyLegalMove, canDouble, currentLegalMoves } from './game.js';
 
 const inHomeBoard = (player: Player, index: number): boolean => (player === 'white' ? index <= 5 : index >= 18);
 
@@ -100,7 +100,7 @@ export const chooseTurn = (state: GameState): Move[] => {
     for (const move of moves) {
       if (nodes++ > MAX_NODES) return;
       acc.push(move);
-      search(playMove(s, move), acc);
+      search(applyLegalMove(s, move), acc);
       acc.pop();
     }
   };
@@ -112,8 +112,9 @@ export const chooseTurn = (state: GameState): Move[] => {
 /** Apply the AI's full chosen turn, returning the resulting state. */
 export const applyAiTurn = (state: GameState): GameState => {
   let s = state;
+  // The sequence came out of `chooseTurn`, which only ever walks legal moves.
   for (const move of chooseTurn(state)) {
-    s = playMove(s, move);
+    s = applyLegalMove(s, move);
   }
   return s;
 };

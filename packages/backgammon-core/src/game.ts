@@ -1,6 +1,6 @@
 import type { GameResult, GameState, Move, Player, WinKind } from './types.js';
 import { CHECKERS_PER_SIDE, checkersOn, createInitialBoard, opponent } from './board.js';
-import { applyMove, legalMoves } from './moves.js';
+import { applyMove, isLegalMove, legalMoves } from './moves.js';
 
 export type Rng = () => number;
 
@@ -28,6 +28,7 @@ export const createInitialState = (startingPlayer: Player = 'white'): GameState 
   remaining: [],
   cube: { value: 1, owner: null },
   doubleOfferedBy: null,
+  noPlay: null,
   result: null,
 });
 
@@ -67,9 +68,11 @@ export const applyRoll = (state: GameState, roll: [number, number]): GameState =
   if (state.phase !== 'rolling') return state;
   const [d1, d2] = roll;
   const remaining = d1 === d2 ? [d1, d1, d1, d1] : [d1, d2];
-  const moving: GameState = { ...state, roll, remaining, phase: 'moving' };
+  // A player's own new roll answers whatever their last one failed to do.
+  const noPlay = state.noPlay?.player === state.turn ? null : state.noPlay;
+  const moving: GameState = { ...state, roll, remaining, phase: 'moving', noPlay };
   if (legalMoves(moving.board, moving.turn, remaining).length === 0) {
-    return endTurn(moving);
+    return { ...endTurn(moving), noPlay: { player: state.turn, roll } };
   }
   return moving;
 };
@@ -77,13 +80,18 @@ export const applyRoll = (state: GameState, roll: [number, number]): GameState =
 /** Convenience: roll the dice with an RNG and apply them. */
 export const roll = (state: GameState, rng: Rng = Math.random): GameState => applyRoll(state, rollDice(rng));
 
-/** Play one checker move, consuming its die. Ends the turn or the game as needed. */
-export const playMove = (state: GameState, move: Move): GameState => {
-  if (state.phase !== 'moving') return state;
-
+/**
+ * Play a move that is already known to be legal, consuming its die.
+ *
+ * The fast path, for callers that took the move straight out of
+ * {@link currentLegalMoves} and would otherwise pay to regenerate the same list
+ * — the AI search does this at every node. Anything else should use
+ * {@link playMove}, which validates first.
+ */
+export const applyLegalMove = (state: GameState, move: Move): GameState => {
   const board = applyMove(state.board, state.turn, move);
   const idx = state.remaining.indexOf(move.die);
-  const remaining = idx === -1 ? state.remaining : state.remaining.slice(0, idx).concat(state.remaining.slice(idx + 1));
+  const remaining = state.remaining.slice(0, idx).concat(state.remaining.slice(idx + 1));
   let next: GameState = { ...state, board, remaining };
 
   if (board.off[state.turn] === CHECKERS_PER_SIDE) {
@@ -95,6 +103,23 @@ export const playMove = (state: GameState, move: Move): GameState => {
     next = endTurn(next);
   }
   return next;
+};
+
+/**
+ * Play one checker move, consuming its die. Ends the turn or the game as needed.
+ *
+ * The move is checked against the legal set first. Applying an unchecked move
+ * cannot fail loudly — it just writes a board that the rules can no longer
+ * produce (a die that was never rolled goes unconsumed and the turn never ends;
+ * landing on a made point overwrites the checkers standing there) — so an
+ * illegal move throws rather than quietly corrupting the game.
+ */
+export const playMove = (state: GameState, move: Move): GameState => {
+  if (state.phase !== 'moving') return state;
+  if (!isLegalMove(state.board, state.turn, state.remaining, move)) {
+    throw new Error(`illegal move: ${move.from} -> ${move.to} with die ${move.die}`);
+  }
+  return applyLegalMove(state, move);
 };
 
 // --- Doubling cube ---------------------------------------------------------

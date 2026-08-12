@@ -1,6 +1,6 @@
 import type { Board, Move, Player } from './types.js';
 import { BAR, OFF } from './types.js';
-import { cloneBoard, opponent } from './board.js';
+import { checkersOn, cloneBoard, opponent } from './board.js';
 
 /**
  * Normalized frame: the mover's checkers are positive and travel 23 -> 0, the
@@ -171,7 +171,20 @@ const removeChecker = (board: Board, player: Player, index: number): void => {
   board.points[index] += player === 'white' ? -1 : 1;
 };
 
-/** Apply a single validated move, returning a new board (the input is untouched). */
+/** Is `move` one of the moves legal right now? Compared by shape, not identity. */
+export const isLegalMove = (board: Board, player: Player, remaining: number[], move: Move): boolean =>
+  legalMoves(board, player, remaining).some((m) => m.from === move.from && m.to === move.to && m.die === move.die);
+
+/**
+ * Apply a single move, returning a new board (the input is untouched).
+ *
+ * Whether the move hits is read off the board rather than taken from `move.hit`:
+ * the flag is an output of {@link legalMoves} describing what the move will do,
+ * and honouring it as an input let a caller with a stale or hand-built move
+ * silently delete a whole point's worth of checkers. Callers that have not
+ * checked the move against {@link legalMoves} should go through `playMove`,
+ * which validates.
+ */
 export const applyMove = (board: Board, player: Player, move: Move): Board => {
   const next = cloneBoard(board);
   const opp = opponent(player);
@@ -184,7 +197,7 @@ export const applyMove = (board: Board, player: Player, move: Move): Board => {
     return next;
   }
 
-  if (move.hit) {
+  if (checkersOn(next, opp, move.to) === 1) {
     // Clear the opponent blot and send it to the bar.
     next.points[move.to] = 0;
     next.bar[opp] += 1;
