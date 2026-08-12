@@ -24,7 +24,7 @@ describe('App', () => {
   it('renders the board and opening status', () => {
     render(<App />);
     expect(screen.getByRole('heading', { name: /backgammon/i })).toBeDefined();
-    expect(screen.getByText(/white to roll/i)).toBeDefined();
+    expect(screen.getByText(/white to roll/i, { ignore: '.sr-only' })).toBeDefined();
     // 24 points are rendered.
     expect(screen.getAllByLabelText(/^point \d+,/)).toHaveLength(24);
   });
@@ -32,7 +32,7 @@ describe('App', () => {
   it('rolls into the moving phase', async () => {
     render(<App />);
     fireEvent.click(screen.getByRole('button', { name: /^roll$/i }));
-    expect(await screen.findByText(/to move/i)).toBeDefined();
+    expect(await screen.findByText(/to move/i, { ignore: '.sr-only' })).toBeDefined();
   });
 
   it('shows the running version', () => {

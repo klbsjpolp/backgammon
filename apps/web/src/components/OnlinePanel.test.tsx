@@ -204,7 +204,7 @@ describe('OnlinePanel', () => {
         ...playing({ state: won, view: { state: won, you: 'black', yourTurn: false, legalMoves: [] } }),
         status: 'gameOver',
       });
-      expect(screen.getByText(/you win a gammon — 4 points/i)).toBeDefined();
+      expect(screen.getByText(/you win a gammon — 4 points/i, { ignore: '.sr-only' })).toBeDefined();
     });
 
     it('warns when the connection drops mid-game', () => {

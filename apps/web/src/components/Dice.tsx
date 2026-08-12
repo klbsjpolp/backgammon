@@ -48,11 +48,12 @@ export const Dice = ({ state, className }: { state: GameState; className?: strin
         </span>
       ))}
       {state.remaining.length > 0 && (
-        // The pips carry this to anyone who can see them; screen readers get the
-        // list they used to read off the board. Live, because a roll landing is
-        // the one thing on this page that happens without being asked for —
-        // polite, so it waits its turn rather than cutting off the status line.
-        <span aria-live="polite" className="sr-only">
+        // The pips carry this to anyone who can see them; a screen reader that
+        // lands here reads the list instead. Deliberately *not* a live region:
+        // this element only exists once a roll has landed, so it enters the DOM
+        // with its content and would never announce anyway. Saying it is the
+        // job of the one region that is always mounted — see `TurnStatus`.
+        <span className="sr-only">
           <span>remaining: </span>
           {state.remaining.join(', ')}
         </span>
