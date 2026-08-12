@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { createRng } from '@backgammon/core';
-import { BackgammonHost } from '../src/index.js';
+import { createInitialState, createRng } from '@backgammon/core';
+import { BackgammonHost, parseGameState } from '../src/index.js';
 
 const newHost = (seating = [0, 1], seed = 7) =>
   new BackgammonHost({ seating, config: { startingPlayer: 'white' }, rng: createRng(seed) });
@@ -111,5 +111,30 @@ describe('BackgammonHost', () => {
     expect(() => host.restore({ ...snap, seating: [0] })).toThrow(/exactly two seats/);
     expect(() => host.restore({ ...snap, players: { 0: 'white' } })).toThrow(/no color assigned/);
     expect(() => host.restore({ ...snap, players: { 0: 'white', 1: 'white' } })).toThrow(/both colors/);
+  });
+});
+
+describe('relayed state parsing', () => {
+  it('accepts a state the host produced', () => {
+    const host = new BackgammonHost({ seating: [0, 1], rng: () => 0.5 });
+    host.applyAction(0, { type: 'roll' });
+    // Round-trips the wire exactly: JSON is what a guest actually receives.
+    const onTheWire: unknown = JSON.parse(JSON.stringify(host.getState()));
+    expect(parseGameState(onTheWire)).toEqual(host.getState());
+  });
+
+  it('rejects payloads a guest could not draw', () => {
+    const good = createInitialState('white');
+    expect(parseGameState(good)).not.toBeNull();
+
+    expect(parseGameState(null)).toBeNull();
+    expect(parseGameState({})).toBeNull();
+    expect(parseGameState('{"board":1}')).toBeNull();
+    // A short board is the one that used to reach the renderer and blank the page.
+    expect(parseGameState({ ...good, board: { ...good.board, points: [1, 2, 3] } })).toBeNull();
+    expect(parseGameState({ ...good, turn: 'green' })).toBeNull();
+    expect(parseGameState({ ...good, phase: 'sleeping' })).toBeNull();
+    expect(parseGameState({ ...good, roll: [7, 1] })).toBeNull();
+    expect(parseGameState({ ...good, remaining: [1, 1, 1, 1, 1] })).toBeNull();
   });
 });
