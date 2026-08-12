@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.1.8](https://github.com/klbsjpolp/backgammon/compare/v0.1.7...v0.1.8) (2026-08-12)
+
+### Bug Fixes
+
+* **web:** give the board the room a phone actually has ([ea23f3c](https://github.com/klbsjpolp/backgammon/commit/ea23f3c232f677e2266b1943f7dd601a57b156c2))
 ## [0.1.7](https://github.com/klbsjpolp/backgammon/compare/v0.1.6...v0.1.7) (2026-08-12)
 
 ### Features
