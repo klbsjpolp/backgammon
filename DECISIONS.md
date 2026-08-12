@@ -99,15 +99,28 @@ to play on a phone:
   deepest case instead would cost the whole board ~20% for a case that arises on two or
   three points at a time. Two point depths plus the gutters and padding are what the
   height divisor (8.6) counts.
-- **The page chrome was measured, not guessed.** The dice moved out of the column the
-  board is drawn in and into the empty strip beside it (portrait pays for a matching
-  empty strip on the other side, so the board stays centred; landscape has no width to
-  waste on symmetry), the status line and the header row were tightened, and the version
-  footer is dropped in landscape. What is left is what `--avail-h` / `--avail-w` reserve,
-  down from 22rem to 18.5rem in portrait and from 7.5rem to 3.5rem in landscape.
+- **The page chrome was measured, not guessed.** The dice moved out of the board's own
+  column and up into the header row beside the title — the one row every layout already
+  pays for — the status line and the header row were tightened, and the version footer is
+  dropped in landscape. What is left is what `--avail-h` / `--avail-w` reserve, down from
+  22rem to 18.5rem in portrait and from 7.5rem to 3.5rem in landscape, and the board now
+  has the full width of the screen (portrait) or of everything but the sidebar
+  (landscape) to be drawn in.
+
+  Anything riding in that row still costs the board height, so the dice are drawn as
+  **pips with the ones already played faded**, rather than spelled out beside a
+  "remaining: 6, 5" line: the same information in a third of the width, and four pips on
+  doubles say what four moves are coming better than the text did. The title is the item
+  that gives when a narrow phone runs out of row, as it already was for the switches; the
+  slot reserves its width so that a roll landing does not re-truncate the heading
+  mid-turn. The board still owns the dice — only it knows what was rolled — and portals
+  them into the slot, falling back to drawing them under itself when there is none.
 
 Between them the checkers came out ~85% larger in landscape and ~40% in portrait on a
-modern phone, with the page still fitting the viewport exactly (no scroll). The
+modern phone, with the page still fitting the viewport exactly (no scroll). Where the
+screen's height is what binds — a tall phone, either way up — the board is already using
+every pixel of it and the last round bought nothing; the width it freed shows up on the
+phones where width was the limit instead, ~15% on a small landscape screen. The
 reservations subtract `env(safe-area-inset-*)` where the padding they stand for does:
 the page is `viewport-fit=cover`, so a board that claims its full width in landscape
 would otherwise claim the notch as well.

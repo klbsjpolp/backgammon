@@ -1,4 +1,7 @@
+import { createPortal } from 'react-dom';
 import { BAR, OFF, opponent, type GameState, type Player } from '@backgammon/core';
+import { Dice } from '@/components/Dice';
+import { useDiceSlot } from '@/components/diceSlot';
 import { cn } from '@/lib/cn';
 
 /** Minimal surface the board needs; satisfied by both the local and online games. */
@@ -143,13 +146,12 @@ const Bar = ({ theirs, yours, selectable, selected, onClick }: BarProps) => (
   </button>
 );
 
-const die = (n: number) => '⚀⚁⚂⚃⚄⚅'[n - 1] ?? '?';
-
 export const Board = ({ controller }: { controller: BoardController }) => {
   const { state, you, selectableFroms, selectedFrom, targets } = controller;
   const board = state.board;
   const them = opponent(you);
   const { top, bottom } = rowsFor(you);
+  const diceSlot = useDiceSlot();
 
   const renderPoint = (index: number, orientation: 'top' | 'bottom') => (
     <Point
@@ -167,23 +169,7 @@ export const Board = ({ controller }: { controller: BoardController }) => {
   return (
     // `touch-manipulation` keeps a quick double tap on two points from zooming
     // the page instead of playing the move.
-    //
-    // A phone leaves the board a strip of empty width on either side (the turned
-    // board in portrait, the sidebar layout in landscape) and no height at all, so
-    // the dice move into that strip. A row under the board costs the board ~2px of
-    // point size, which is the one thing a phone cannot spare.
-    <div
-      className={cn(
-        'flex touch-manipulation flex-col items-center gap-2 select-none',
-        'max-sm:flex-row max-sm:gap-1 compact:flex-row compact:gap-1',
-      )}
-    >
-      {/* Portrait has width to spare on both sides of the turned board, so it pays
-          for the empty twin of the dice strip and keeps the board centred under the
-          status line. Landscape does not: there the board sits a strip off centre in
-          a column that is already wider than it. */}
-      <div aria-hidden className="hidden w-12 max-sm:block compact:hidden" />
-
+    <div className="flex touch-manipulation flex-col items-center select-none">
       <div className="board-fit">
         <div
           className={cn(
@@ -222,27 +208,14 @@ export const Board = ({ controller }: { controller: BoardController }) => {
         </div>
       </div>
 
-      <div
-        className={cn(
-          'flex h-7 items-center gap-3 text-2xl text-dice',
-          'max-sm:h-auto max-sm:w-12 max-sm:flex-col max-sm:gap-1 max-sm:text-center',
-          'compact:h-auto compact:w-12 compact:flex-col compact:gap-1 compact:text-center',
-        )}
-      >
-        {state.roll && state.phase !== 'rolling' ? (
-          <span aria-label="dice">
-            {die(state.roll[0])} {die(state.roll[1])}
-          </span>
-        ) : null}
-        {state.remaining.length > 0 && (
-          <span className="text-sm text-muted max-sm:text-xs compact:text-xs">
-            {/* The strip is a checker or two wide: the word does not fit beside the
-                board, and under two dice the bare numbers read the same anyway. */}
-            <span className="max-sm:sr-only compact:sr-only">remaining: </span>
-            {state.remaining.join(', ')}
-          </span>
-        )}
-      </div>
+      {/*
+       * The dice belong to the header row, which every layout already pays for —
+       * drawn under or beside the board they cost it the height or the width that
+       * sets how big a checker can be. The board still owns them (only it knows
+       * what was rolled), so they are portalled into the slot the header exposes;
+       * with no slot — a `<Board>` rendered on its own — they stay under it.
+       */}
+      {diceSlot ? createPortal(<Dice state={state} />, diceSlot) : <Dice state={state} className="mt-2 text-2xl" />}
     </div>
   );
 };
