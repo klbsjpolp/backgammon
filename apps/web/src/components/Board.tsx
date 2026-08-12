@@ -41,7 +41,8 @@ const Checkers = ({ count }: CheckersProps) => {
       : 'bg-checker-dark text-checker-dark-fg ring-checker-dark-line';
   const shown = Math.min(n, 5);
   return (
-    <div className="flex flex-col items-center gap-board-stack">
+    // `board-stack` is what lets the deepest stacks overlap — see index.css.
+    <div className="board-stack flex flex-col items-center gap-board-stack">
       {Array.from({ length: shown }).map((_, i) => (
         <div
           key={i}
@@ -166,7 +167,23 @@ export const Board = ({ controller }: { controller: BoardController }) => {
   return (
     // `touch-manipulation` keeps a quick double tap on two points from zooming
     // the page instead of playing the move.
-    <div className="flex touch-manipulation flex-col items-center gap-2 select-none">
+    //
+    // A phone leaves the board a strip of empty width on either side (the turned
+    // board in portrait, the sidebar layout in landscape) and no height at all, so
+    // the dice move into that strip. A row under the board costs the board ~2px of
+    // point size, which is the one thing a phone cannot spare.
+    <div
+      className={cn(
+        'flex touch-manipulation flex-col items-center gap-2 select-none',
+        'max-sm:flex-row max-sm:gap-1 compact:flex-row compact:gap-1',
+      )}
+    >
+      {/* Portrait has width to spare on both sides of the turned board, so it pays
+          for the empty twin of the dice strip and keeps the board centred under the
+          status line. Landscape does not: there the board sits a strip off centre in
+          a column that is already wider than it. */}
+      <div aria-hidden className="hidden w-12 max-sm:block compact:hidden" />
+
       <div className="board-fit">
         <div
           className={cn(
@@ -205,14 +222,25 @@ export const Board = ({ controller }: { controller: BoardController }) => {
         </div>
       </div>
 
-      <div className="flex h-7 items-center gap-3 text-2xl text-dice compact:h-6 compact:text-xl">
+      <div
+        className={cn(
+          'flex h-7 items-center gap-3 text-2xl text-dice',
+          'max-sm:h-auto max-sm:w-12 max-sm:flex-col max-sm:gap-1 max-sm:text-center',
+          'compact:h-auto compact:w-12 compact:flex-col compact:gap-1 compact:text-center',
+        )}
+      >
         {state.roll && state.phase !== 'rolling' ? (
           <span aria-label="dice">
             {die(state.roll[0])} {die(state.roll[1])}
           </span>
         ) : null}
         {state.remaining.length > 0 && (
-          <span className="text-sm text-muted">remaining: {state.remaining.join(', ')}</span>
+          <span className="text-sm text-muted max-sm:text-xs compact:text-xs">
+            {/* The strip is a checker or two wide: the word does not fit beside the
+                board, and under two dice the bare numbers read the same anyway. */}
+            <span className="max-sm:sr-only compact:sr-only">remaining: </span>
+            {state.remaining.join(', ')}
+          </span>
         )}
       </div>
     </div>

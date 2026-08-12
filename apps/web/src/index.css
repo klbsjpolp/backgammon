@@ -35,14 +35,14 @@ body {
  * so it scales to whatever room the viewport actually has instead of overflowing
  * a phone. Everything else — checkers, bar, trays, labels — is a multiple of it.
  *
- * A board is ~17 × --pt wide and ~9.1 × --pt tall (12 points + bar + tray + gaps
+ * A board is ~17 × --pt wide and ~8.6 × --pt tall (12 points + bar + tray + gaps
  * + padding), hence the two divisors: `--pt` is the largest unit that fits both
  * the width and the height still available once the page chrome is counted.
  */
 .board-fit {
   --avail-w: calc(100vw - 2.75rem);
   --avail-h: calc(100svh - 19rem);
-  --pt: clamp(1rem, min(calc(var(--avail-w) / 17), calc(var(--avail-h) / 9.1)), 2.5rem);
+  --pt: clamp(1rem, min(calc(var(--avail-w) / 17), calc(var(--avail-h) / 8.6)), 2.5rem);
 
   position: relative;
   display: flex;
@@ -52,7 +52,7 @@ body {
 /*
  * Every length the board draws, as a ratio of --pt, in one place — the ratios are
  * interlocking (12 points + bar + tray + gutters + padding have to add up to the
- * 17 above, and two point depths plus a gutter to the 9.1), so they are worth
+ * 17 above, and two point depths plus a gutter to the 8.6), so they are worth
  * reading together rather than scattered through the markup.
  *
  * `inline` is what makes this work: --pt lives on `.board-fit`, not on `:root`, so
@@ -62,8 +62,14 @@ body {
  */
 @theme inline {
   --spacing-board-point: var(--pt);
-  --spacing-board-depth: calc(var(--pt) * 4.1);
-  --spacing-board-checker: calc(var(--pt) * 0.68);
+  --spacing-board-depth: calc(var(--pt) * 3.85);
+  /*
+   * A checker all but fills its point — the wide margin it used to leave was the
+   * single biggest waste of the little room a phone has. The second term keeps it
+   * inside the point's own border and padding, which are fixed pixels and so eat
+   * a growing share of the width as --pt gets small.
+   */
+  --spacing-board-checker: min(calc(var(--pt) * 0.85), calc(var(--pt) - 4px));
   --spacing-board-bar: calc(var(--pt) * 1.15);
   --spacing-board-tray: calc(var(--pt) * 1.6);
   --spacing-board-tray-depth: calc(var(--pt) * 1.75);
@@ -80,11 +86,37 @@ body {
   --text-board-count: calc(var(--pt) * 0.55);
 }
 
+/*
+ * A point is 3.85 × --pt deep, which is not enough for five checkers now that a
+ * checker is 0.85 of a point wide — so the deepest stacks overlap, the way a
+ * physical stack of checkers does. Sizing the point for five flat checkers
+ * instead would cost every point ~20% of its width, on every board, to lay out a
+ * case that only occurs on a couple of points at a time.
+ *
+ * `:has` counts the stack in CSS so the ratios stay here with the others: four
+ * checkers only need the gap closed, five need real overlap (the rules are in
+ * that order because a stack of five matches both).
+ */
+.board-stack:has(> :nth-child(4)) > * + * {
+  margin-top: calc(var(--pt) * -0.03);
+}
+
+.board-stack:has(> :nth-child(5)) > * + * {
+  margin-top: calc(var(--pt) * -0.25);
+}
+
 /* Landscape phone: the board sits beside the controls, with little height to spare. */
 @media (orientation: landscape) and (max-height: 640px) {
   .board-fit {
-    --avail-w: calc(100vw - 16rem);
-    --avail-h: calc(100svh - 7.5rem);
+    /* The narrowest the sidebar goes (11rem), the dice strip beside the board, the
+       grid gap and the page padding. The sidebar gives up its extra width to the
+       board on a narrow phone, where this is the binding constraint; on a wider one
+       the height below is what limits the board and the sidebar keeps its 15rem. */
+    --avail-w: calc(100vw - 17.25rem - env(safe-area-inset-left) - env(safe-area-inset-right));
+    /* One header row and the gaps around it — everything else was moved out of
+       the column the board sits in. The inset is the home indicator, which the
+       page pads for and the board therefore cannot draw on. */
+    --avail-h: calc(100svh - 3.5rem - env(safe-area-inset-bottom));
   }
 }
 
@@ -98,11 +130,17 @@ body {
  */
 @media (orientation: portrait) and (max-width: 640px) {
   .board-fit {
-    --avail-w: calc(100svh - 22rem);
-    --avail-h: calc(100vw - 1rem);
+    /* Header, status line, both control rows, the hint and the version line —
+       all of it trimmed to earn the board back the height it is drawn from, plus
+       the home indicator the page pads for at the bottom. */
+    --avail-w: calc(100svh - 18.5rem - env(safe-area-inset-bottom));
+    /* Page padding plus the dice strip on one side of the turned board and its
+       empty twin on the other. Portrait is nowhere near this limit — the height
+       above is what the board is drawn from — so the symmetry is free. */
+    --avail-h: calc(100vw - 8.5rem);
     /* A rotation does not change the space an element takes in layout, so the
        wrapper has to reserve the turned footprint itself. */
-    width: calc(var(--pt) * 9.1);
+    width: calc(var(--pt) * 8.6);
     height: calc(var(--pt) * 17);
   }
 

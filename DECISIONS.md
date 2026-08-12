@@ -85,6 +85,33 @@ Three cases, all CSS-only (no resize observers, no JS breakpoints):
   and clear-selection still fit; the hint line is dropped.
 - **Anything roomier**: unchanged — `--pt` caps at the original 40px.
 
+`--pt` is only ever as large as the room left over, so every fixed thing on the page is
+paid for by the checkers. Three rounds of that, after the board still came out too small
+to play on a phone:
+
+- **A checker fills its point** (0.85 × `--pt`, less the point's own border and padding,
+  which are fixed pixels and so eat a growing share as `--pt` shrinks). The 0.68 it used
+  to be left a margin all the way around every checker — the single largest waste on the
+  board, and the one nothing else could buy back.
+- **Deep stacks overlap**, so a point is 3.85 × `--pt` deep rather than the ~4.6 five
+  full-size checkers laid flat would need. `.board-stack` counts its own children with
+  `:has()` and closes the gap at four, overlaps at five; sizing every point for the
+  deepest case instead would cost the whole board ~20% for a case that arises on two or
+  three points at a time. Two point depths plus the gutters and padding are what the
+  height divisor (8.6) counts.
+- **The page chrome was measured, not guessed.** The dice moved out of the column the
+  board is drawn in and into the empty strip beside it (portrait pays for a matching
+  empty strip on the other side, so the board stays centred; landscape has no width to
+  waste on symmetry), the status line and the header row were tightened, and the version
+  footer is dropped in landscape. What is left is what `--avail-h` / `--avail-w` reserve,
+  down from 22rem to 18.5rem in portrait and from 7.5rem to 3.5rem in landscape.
+
+Between them the checkers came out ~85% larger in landscape and ~40% in portrait on a
+modern phone, with the page still fitting the viewport exactly (no scroll). The
+reservations subtract `env(safe-area-inset-*)` where the padding they stand for does:
+the page is `viewport-fit=cover`, so a board that claims its full width in landscape
+would otherwise claim the notch as well.
+
 Destructive controls (**new game**, **leave**) are separated from the primary row and are
 `ConfirmButton`s: one tap arms, a second confirms, and it disarms after four seconds or on
 blur. On a phone they are a thumb-width from the board and a stray tap used to be
