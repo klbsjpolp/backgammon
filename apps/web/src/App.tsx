@@ -37,7 +37,14 @@ export const App = () => {
           'mx-auto flex min-h-full w-full max-w-3xl flex-col items-center gap-4 px-4 py-4 text-fg',
           // Keep the bottom row of controls clear of the home indicator / gesture bar.
           'pb-[calc(1rem+env(safe-area-inset-bottom))]',
-          'compact:max-w-none compact:gap-2 compact:py-2',
+          // The page is `viewport-fit=cover`, so in landscape the notch eats into
+          // 100vw. It never used to matter — nothing came near the edge — but the
+          // board now claims the width it is given, and would claim that too.
+          'pl-[calc(1rem+env(safe-area-inset-left))] pr-[calc(1rem+env(safe-area-inset-right))]',
+          // Every gap here is height the board does not get: on a phone the page
+          // is scaled around the board, not the other way round.
+          'max-sm:gap-2 max-sm:py-2',
+          'compact:max-w-none compact:gap-1 compact:py-1',
         )}
       >
         {/*
@@ -61,7 +68,7 @@ export const App = () => {
           )}
         >
           <header className="min-w-0 text-center">
-            <h1 className="truncate text-3xl font-bold tracking-tight text-heading max-sm:text-base compact:text-xl">
+            <h1 className="truncate text-3xl font-bold tracking-tight text-heading max-sm:text-base compact:text-base">
               Backgammon
             </h1>
           </header>
@@ -79,6 +86,7 @@ export const App = () => {
                   className={cn(
                     'touch-manipulation rounded-md px-4 py-1.5 font-semibold capitalize transition select-none',
                     'max-sm:px-2',
+                    'compact:px-2 compact:py-0.5',
                     mode === m ? 'bg-accent text-accent-fg' : 'text-muted hover:text-fg',
                   )}
                 >
@@ -113,13 +121,17 @@ export const App = () => {
           <OnlinePanel applyPendingUpdate={applyPendingUpdate} onBusyChange={setIsOnlineBusy} />
         )}
 
-        <VersionLine
-          version={updates.currentVersion}
-          isUpdateAvailable={updates.isUpdateAvailable}
-          isChecking={updates.isChecking}
-          onCheck={updates.checkNow}
-          onUpdate={updates.applyUpdate}
-        />
+        {/* A landscape phone has no height to give a footer; the same line is one
+            rotation away, and an update that matters still banners itself. */}
+        <div className="w-full compact:hidden">
+          <VersionLine
+            version={updates.currentVersion}
+            isUpdateAvailable={updates.isUpdateAvailable}
+            isChecking={updates.isChecking}
+            onCheck={updates.checkNow}
+            onUpdate={updates.applyUpdate}
+          />
+        </div>
 
         {updates.isUpdateRequired && updates.minimumSupportedVersion && (
           <UpdateRequiredOverlay

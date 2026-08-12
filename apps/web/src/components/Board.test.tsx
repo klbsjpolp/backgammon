@@ -104,6 +104,8 @@ describe('Board', () => {
   it('shows the dice and the pips still to play while moving', () => {
     render(<Board controller={controllerFor('white')} />);
     expect(within(screen.getByLabelText('dice')).getByText(/⚅ ⚄/)).toBeDefined();
-    expect(screen.getByText(/remaining: 6, 5/)).toBeDefined();
+    // "remaining:" is its own element — it is `sr-only` in the narrow strip the
+    // dice sit in on a phone — so the line has to be read whole.
+    expect(screen.getByText('remaining:').parentElement?.textContent).toBe('remaining: 6, 5');
   });
 });
