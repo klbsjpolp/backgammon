@@ -72,5 +72,22 @@ export interface GameState {
   cube: DoublingCube;
   /** When phase === 'doubleOffered', the player who offered the double. */
   doubleOfferedBy: Player | null;
+  /**
+   * A roll that could not be played at all — every die blocked, most often a
+   * failed entry from the bar — and so passed the turn straight back.
+   *
+   * The turn state alone cannot carry this: passing the turn clears `roll`, so
+   * without it the dice are gone before anything has drawn them and the player
+   * is told nothing except that it is suddenly the opponent's move. It stays set
+   * until the player who rolled it rolls again, which keeps it on screen for the
+   * whole of the opponent's reply rather than flashing past.
+   */
+  noPlay: NoPlay | null;
   result: GameResult | null;
+}
+
+/** A roll that had no legal move, kept so the UI can say so. */
+export interface NoPlay {
+  player: Player;
+  roll: [number, number];
 }

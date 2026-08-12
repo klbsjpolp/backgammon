@@ -6,10 +6,12 @@ import {
   BAR,
   OFF,
   canDouble,
+  checkersOn,
   chooseTurn,
   createInitialBoard,
   createInitialState,
   createRng,
+  currentLegalMoves,
   evaluateBoard,
   legalMoves,
   offerDouble,
@@ -241,5 +243,140 @@ describe('full game simulation', () => {
     expect(s.phase).toBe('gameOver');
     expect(s.result).not.toBeNull();
     expect(s.board.off[s.result!.winner]).toBe(15);
+  });
+});
+
+describe('illegal moves', () => {
+  it('refuses a move that is not in the legal set', () => {
+    const state = movingState(createInitialBoard(), 'white', [3, 1]);
+    // Index 11 is a made black point; before validation this overwrote all five
+    // of its checkers with one white one and sent a single checker to the bar.
+    expect(() => playMove(state, { from: 23, to: 11, die: 3, hit: true })).toThrow(/illegal move/);
+  });
+
+  it('refuses a die that was never rolled', () => {
+    const state = movingState(createInitialBoard(), 'white', [3, 1]);
+    // This one consumed nothing, so the turn could never end.
+    expect(() => playMove(state, { from: 23, to: 17, die: 6, hit: false })).toThrow(/illegal move/);
+  });
+
+  it('reads the hit off the board rather than trusting the caller', () => {
+    const board = makeBoard({ 10: 1, 7: -2 });
+    // `hit: true` against a made point: honouring it would delete both checkers.
+    const after = applyMove(board, 'white', { from: 10, to: 7, die: 3, hit: true });
+    expect(after.points[7]).toBe(-1); // black keeps its point, white joins nothing
+    expect(after.bar.black).toBe(0);
+  });
+});
+
+describe('a roll with no legal move', () => {
+  /** White is on the bar and black owns all six entry points. */
+  const danced = () => {
+    const board = makeBoard({ 23: -2, 22: -2, 21: -2, 20: -2, 19: -2, 18: -2, 0: 13 }, { white: 2 });
+    return applyRoll({ ...createInitialState('white'), board }, [3, 4]);
+  };
+
+  it('passes the turn and remembers the roll nobody could play', () => {
+    const after = danced();
+    expect(after.turn).toBe('black');
+    expect(after.phase).toBe('rolling');
+    // Without this the dice were discarded before the UI could draw them.
+    expect(after.noPlay).toEqual({ player: 'white', roll: [3, 4] });
+  });
+
+  it('keeps it through the opponent reply and clears it on the next own roll', () => {
+    const blackRolled = applyRoll(danced(), [6, 5]);
+    // Still on screen while the opponent plays, which is the point of holding it.
+    expect(blackRolled.noPlay).toEqual({ player: 'white', roll: [3, 4] });
+
+    // White's turn comes round again, this time on a board it can play.
+    const backToWhite: GameState = {
+      ...blackRolled,
+      board: createInitialBoard(),
+      turn: 'white',
+      phase: 'rolling',
+      roll: null,
+      remaining: [],
+    };
+    expect(applyRoll(backToWhite, [6, 5]).noPlay).toBeNull();
+  });
+});
+
+describe('engine invariants', () => {
+  const totalFor = (board: Board, player: Player): number => {
+    let n = board.bar[player] + board.off[player];
+    for (let i = 0; i < 24; i++) n += checkersOn(board, player, i);
+    return n;
+  };
+
+  it('conserves thirty checkers and never mixes colours on a point', () => {
+    // Random legal play, which is the only way to reach the awkward positions
+    // (dancing off a closed board, forced bear-offs) that hand-written cases miss.
+    for (let seed = 1; seed <= 25; seed++) {
+      const rng = createRng(seed * 7919);
+      let s = createInitialState(seed % 2 ? 'white' : 'black');
+      for (let guard = 0; guard < 1500 && s.phase !== 'gameOver'; guard++) {
+        if (s.phase === 'rolling') {
+          s = roll(s, rng);
+          continue;
+        }
+        const moves = currentLegalMoves(s);
+        expect(moves.length, `seed ${seed}: moving phase with nothing to play`).toBeGreaterThan(0);
+        s = playMove(s, moves[Math.floor(rng() * moves.length)]);
+
+        expect(totalFor(s.board, 'white')).toBe(15);
+        expect(totalFor(s.board, 'black')).toBe(15);
+        for (let i = 0; i < 24; i++) {
+          expect(
+            checkersOn(s.board, 'white', i) === 0 || checkersOn(s.board, 'black', i) === 0,
+            `seed ${seed}: point ${i} holds both colours`,
+          ).toBe(true);
+        }
+      }
+      expect(s.phase, `seed ${seed} never finished`).toBe('gameOver');
+      expect(s.board.off[s.result!.winner]).toBe(15);
+    }
+  });
+
+  it('only offers moves that belong to a longest sequence', () => {
+    // The use-both-dice rule, checked against a brute force that shares no code
+    // with the filter under test.
+    const longest = (board: Board, player: Player, dice: number[]): number => {
+      if (dice.length === 0) return 0;
+      let best = 0;
+      for (const die of new Set(dice)) {
+        const rest = dice.slice();
+        rest.splice(rest.indexOf(die), 1);
+        // A single die on its own is never filtered, so this enumerates freely.
+        for (const m of legalMoves(board, player, [die])) {
+          best = Math.max(best, 1 + longest(applyMove(board, player, m), player, rest));
+        }
+      }
+      return best;
+    };
+
+    const rng = createRng(20260812);
+    let s = createInitialState('white');
+    let checked = 0;
+    for (let guard = 0; guard < 3000 && checked < 250; guard++) {
+      if (s.phase === 'gameOver') s = createInitialState('white');
+      if (s.phase === 'rolling') {
+        s = roll(s, rng);
+        continue;
+      }
+      const moves = currentLegalMoves(s);
+      const max = longest(s.board, s.turn, s.remaining);
+      for (const m of moves) {
+        const rest = s.remaining.slice();
+        rest.splice(rest.indexOf(m.die), 1);
+        expect(
+          1 + longest(applyMove(s.board, s.turn, m), s.turn, rest),
+          `${JSON.stringify(m)} does not reach the ${max}-die maximum`,
+        ).toBe(max);
+        checked++;
+      }
+      s = playMove(s, moves[Math.floor(rng() * moves.length)]);
+    }
+    expect(checked).toBeGreaterThan(200);
   });
 });
