@@ -92,6 +92,11 @@ gammon/backgammon scoring) with two modes:
 Three themes — **Classic**, **Midnight** and **Parchment** — switch from the header
 and are remembered between visits.
 
+The board is playable by keyboard and readable by a screen reader: points are numbered
+the way the player on that side counts them, they announce what is standing on them and
+what part they play in the move being made, and only the points actually in play sit in
+the tab order. Rolls and turn changes are announced through polite live regions.
+
 Online requires `@klbsjpolp/realtime-core` to be published to npm and
 `VITE_BACKGAMMON_API_URL` to point at the relay server. Until the package is
 published, a temporary `file:` override in `pnpm-workspace.yaml` resolves it from a

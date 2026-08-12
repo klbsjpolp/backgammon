@@ -42,12 +42,100 @@ you think and record it" instruction). Open questions are at the bottom.
   gammon beats cashing) and `shouldTakeDouble` uses a take point of 0.22, a little under the
   textbook 25% to account for owning the cube after taking.
 
+## Trust boundaries
+
+Three places take input that the rest of the code cannot vouch for, and each is
+now checked at the edge rather than assumed correct further in.
+
+- **`playMove` validates.** It used to apply whatever `Move` it was handed. An
+  illegal one could not fail loudly — it wrote a board the rules can no longer
+  produce and play carried on from there: a die that was never rolled went
+  unconsumed (so the turn could never end), and landing on a made point
+  overwrote every checker standing on it, which is checkers _deleted_ from a
+  game whose whole invariant is that there are thirty of them. Nothing reached
+  it that way in practice — the host looks moves up in the legal set and the
+  hooks only offer what the generator returned — but "no caller does this" is
+  not a property anything was checking, and the failure mode was silent
+  corruption rather than an error. `playMove` now checks the move against
+  `legalMoves` and throws otherwise. `applyMove` reads whether a move hits off
+  the board instead of trusting `Move.hit`, which is an _output_ of the
+  generator describing what the move will do, not an instruction to it.
+
+  The AI search would pay for that check at every node, having just taken its
+  move out of `currentLegalMoves` — so `applyLegalMove` is the unchecked path,
+  documented as being for callers that did exactly that, and `playMove` is
+  validate-then-`applyLegalMove`. The one caller that could go either way is the
+  host, which keeps the validating one: it is the online trust boundary, it pays
+  the cost once per network action rather than once per search node, and it
+  should stay correct even if the lookup above it ever drifts.
+
+- **Relayed state is parsed, in both directions.** The host already refused to
+  apply any action a guest sent that was not legal (`backgammonActionSchema` and
+  `BackgammonHost`); the other direction had nothing. A guest rendered whatever
+  arrived as `msg.payload as GameState`, so a truncated or malformed frame
+  reached the board as `undefined` and took the page down with it.
+  `gameStateSchema` and `hostSnapshotSchema` in `@backgammon/runtime` close
+  that: a view that does not parse is dropped and the last good board stays on
+  screen, and a snapshot that does not parse is refused rather than resumed
+  from. They check that the state is _renderable_, not that it is reachable by
+  legal play — the host stays authoritative over what is true. The declared
+  return types of `parseGameState` and `parseHostSnapshot` are what keep them in
+  step with the types: add a field to `GameState` and forget the schema, and it
+  stops compiling.
+
+- **An `ErrorBoundary` wraps the app.** React unmounts the whole tree when a
+  render throws, so anything that got past the two checks above still showed as
+  a blank white page with no way out but the browser's own reload — on a phone,
+  indistinguishable from the app being broken for good.
+
+## A roll nobody can play
+
+Rolling into a position with no legal move — usually a failed entry from the bar
+— passes the turn straight back, and passing it clears `roll`. The dice were
+therefore gone before anything had drawn them: the player was told nothing at
+all and simply found that it was suddenly not their move. The same in reverse
+hid the AI's dances completely.
+
+`GameState.noPlay` carries the roll that could not be played, and the status line
+says so. It is held until the player who rolled it rolls again, rather than being
+cleared by the next roll of any kind, so it stays up for the whole of the
+opponent's reply instead of flashing past inside the AI's think time.
+
+## Accessibility
+
+The board was a grid of 27 buttons that all announced the same way and all sat in
+the tab order, whether or not they could be played, saying nothing about what was
+standing on them. It now reads as a board:
+
+- Every point names its occupancy (`point 13, 5 white checkers`) and its role in
+  the move being made — holding the checker, having one you can move, or being
+  somewhere it can go. The bar counts both sides in its name, since being on it
+  decides the entire turn.
+- Points that are not in play are `aria-disabled` and out of the tab order, so a
+  Tab lands on the two or three points that can actually be played rather than
+  on all 24. They stay in the accessible tree — a screen reader still reads the
+  whole board — which is why this is `aria-disabled` and `tabIndex={-1}` rather
+  than `disabled`, which drops the button out of the tree in some readers.
+- The status line and the dice are polite live regions, so a roll landing and a
+  turn changing are announced rather than only drawn. Polite, not assertive: a
+  turn change is worth hearing, not worth interrupting for.
+
+The colour side of this was already covered — `contrast.test.ts` holds every
+theme to WCAG 3:1 for the board's state rings — which is what makes the gap
+worth closing: the palette was being checked and the semantics were not.
+
 ## Board orientation
 
 The board is drawn from the point of view of whoever is looking at it: `BoardController`
 carries a `you` color, and black's layout is white's mirrored across the middle so that
 **both players see their own home board bottom-right, next to their own bear-off tray**.
 The near tray is always the viewer's, which is what lets either color bear off.
+
+The points are **numbered the way the viewer counts them** — 1 is the point they bear off
+from, 24 the furthest away — so the two players disagree about every point, which is how a
+real board works. What was drawn before was the engine's array index (0..23, always in
+white's direction): no backgammon board has a 0-point, and for black every number was
+counting the wrong way.
 
 ## Phone layout
 
@@ -189,6 +277,14 @@ not remembered" rather than throwing.
   (rolling → moving → doubleOffered → gameOver) is already owned by `@backgammon/core`
   as pure transitions, so the web app drives it with a thin React hook instead of
   duplicating the machine in XState. Revisit if the online turn loop needs it.
+- **The two game modes share their chrome.** `TurnStatus` and `TurnControls` are
+  what the local and online panels have in common; both used to write the status
+  string, the status bar and the roll/double/take/drop cluster out for
+  themselves, which is exactly how they drifted — only the local one named the
+  cube's owner, and only the local one spelled out the stake when a double was
+  offered to you, though neither is a local concern. What is genuinely different
+  is the wiring, and that is what the props are. The panels are the two hooks
+  and the pieces they hand to `GameLayout`, nothing else.
 
 ## Online / realtime-infra integration
 
@@ -227,4 +323,13 @@ not remembered" rather than throwing.
   equity-based, and rollouts would beat both.
 - PWA, Sentry, Playwright e2e.
 - Online polish: reconnection/resume parity with skip-bo, richer lobby (names, kicking),
-  animation/drag-and-drop (v1 uses click-to-move).
+  animation/drag-and-drop (v1 uses click-to-move). A dropped socket still ends the
+  game for that seat: `useOnlineGame` reports `disconnected` and stops there,
+  though the seat token it would need to resume is sitting in `sessionRef`.
+- The `dist/` output of `@backgammon/core` and `@backgammon/runtime` is built by
+  `pnpm build` and consumed by nothing: both packages point `exports` at their
+  TypeScript sources, which is what lets the web app's dev server and HMR reach
+  into them. The build is therefore a second type-check of what `pnpm typecheck`
+  already checks. Left as it is on purpose — pointing `exports` at `dist` would
+  buy nothing until one of these packages is published, and would cost the
+  source-level dev loop.
