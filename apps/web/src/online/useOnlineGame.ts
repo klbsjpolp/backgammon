@@ -4,10 +4,11 @@ import {
   BackgammonHost,
   backgammonActionSchema,
   backgammonGameConfigSchema,
+  parseGameState,
+  parseHostSnapshot,
   serializeView,
   type BackgammonAction,
   type BackgammonView,
-  type HostSnapshot,
 } from '@backgammon/runtime';
 import { canDouble, opponent, type GameState, type Player } from '@backgammon/core';
 import { createOnlineRoom, joinOnlineRoom } from './api';
@@ -148,15 +149,28 @@ export const useOnlineGame = (): OnlineGame => {
               }
             }
           } else if (msg.kind === 'view' && !isHostRef.current) {
-            const state = msg.payload as GameState;
+            // Everything off the wire is untrusted, the host's own frames
+            // included: an unparseable one used to reach the board as a
+            // `GameState` and blank the page. Dropping it leaves the last good
+            // board on screen, and the next broadcast repairs it.
+            const state = parseGameState(msg.payload);
+            if (!state) return;
             setGameState(state);
             setStatus(state.phase === 'gameOver' ? 'gameOver' : 'playing');
           }
           return;
         }
         case 'snapshotRestore': {
+          // Taking over as host after a disconnect: the snapshot decides what
+          // the game *is* from here on, so a bad one is worth refusing outright
+          // rather than resuming from a board nobody can play.
           if (isHostRef.current && hostRef.current && msg.payload) {
-            hostRef.current.restore(msg.payload as HostSnapshot);
+            const snapshot = parseHostSnapshot(msg.payload);
+            if (!snapshot) {
+              setError('The game state could not be restored.');
+              return;
+            }
+            hostRef.current.restore(snapshot);
             broadcastState();
           }
           return;

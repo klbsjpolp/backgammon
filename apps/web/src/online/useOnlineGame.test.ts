@@ -210,6 +210,19 @@ describe('useOnlineGame', () => {
     expect(result.current.state).toEqual(before);
   });
 
+  it('refuses a snapshot it cannot parse rather than resuming from it', async () => {
+    const { result } = renderHook(() => useOnlineGame());
+    await startGame(result, 0);
+    act(() => result.current.rollDice());
+    await waitFor(() => expect(result.current.state?.phase).toBe('moving'));
+    const before = result.current.state;
+
+    socket().emit({ type: 'snapshotRestore', payload: { seating: [0, 1], state: { board: null } } });
+
+    expect(result.current.state).toEqual(before);
+    expect(result.current.error).toMatch(/could not be restored/i);
+  });
+
   it('rebuilds from a snapshot restore', async () => {
     const { result } = renderHook(() => useOnlineGame());
     await startGame(result, 0);
@@ -265,6 +278,30 @@ describe('useOnlineGame', () => {
       expect(relayed?.payload).toMatchObject({ type: 'move', from });
       // The guest does not move its own board; it waits for the host's view.
       expect(result.current.state).toEqual(moving);
+    });
+
+    it('keeps the last good board when a relayed view is not one', async () => {
+      const { result } = renderHook(() => useOnlineGame());
+      await startAsGuest(result);
+
+      const { createInitialState, applyRoll } = await import('@backgammon/core');
+      const moving = applyRoll(createInitialState('black'), [3, 1]);
+      socket().emit({ type: 'relayed', fromSeat: 0, kind: 'view', payload: moving });
+      await waitFor(() => expect(result.current.state?.phase).toBe('moving'));
+
+      // Each of these used to be rendered as a GameState, which took the page
+      // down rather than the frame.
+      socket().emit({ type: 'relayed', fromSeat: 0, kind: 'view', payload: null });
+      socket().emit({ type: 'relayed', fromSeat: 0, kind: 'view', payload: { phase: 'moving' } });
+      socket().emit({
+        type: 'relayed',
+        fromSeat: 0,
+        kind: 'view',
+        payload: { ...moving, board: { ...moving.board, points: [1, 2] } },
+      });
+
+      expect(result.current.state).toEqual(moving);
+      expect(result.current.status).toBe('playing');
     });
 
     it('ends on the relayed game-over view', async () => {
