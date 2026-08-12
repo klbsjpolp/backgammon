@@ -55,3 +55,13 @@ describe('Dice', () => {
     expect(screen.queryByLabelText('dice')).toBeNull();
   });
 });
+
+describe('Dice — what it does not claim to do', () => {
+  it('holds no live region of its own', () => {
+    // It is unmounted until a roll lands, so any region inside it would enter
+    // the DOM together with its content and never announce. Saying the roll is
+    // `TurnStatus`'s job, from a region that is always mounted.
+    const { container } = render(<Dice state={moving([6, 5], [6, 5])} />);
+    expect(container.querySelectorAll('[aria-live]')).toHaveLength(0);
+  });
+});

@@ -50,6 +50,22 @@ const describeNoPlay = ({ state, you, opponentLabel }: TurnStatusProps): string 
   return `${subject} rolled ${roll[0]}-${roll[1]} and could not move`;
 };
 
+/**
+ * What is worth hearing, as one string. The dice belong in it because the board
+ * is where they are drawn and the board has nothing permanently on screen to
+ * announce them from — `<Dice>` is unmounted entirely until a roll lands.
+ */
+const describeAloud = (props: TurnStatusProps): string => {
+  const { state } = props;
+  const parts = [describeTurn(props)];
+  if (state.phase === 'moving' && state.roll) {
+    parts.push(`rolled ${state.roll[0]}-${state.roll[1]}, ${state.remaining.join(', ')} left to play`);
+  }
+  const noPlay = describeNoPlay(props);
+  if (noPlay) parts.push(noPlay);
+  return parts.join('. ');
+};
+
 export const TurnStatus = (props: TurnStatusProps) => {
   const { state } = props;
   const noPlay = describeNoPlay(props);
@@ -62,23 +78,29 @@ export const TurnStatus = (props: TurnStatusProps) => {
         state.phase === 'gameOver' && 'bg-highlight-soft',
       )}
     >
-      {/*
-       * Polite, not assertive: a turn change is worth hearing, but not worth
-       * cutting off whatever the player is already being read.
-       */}
-      <span aria-live="polite" className="font-semibold capitalize">
-        {describeTurn(props)}
-      </span>
+      <span className="font-semibold capitalize">{describeTurn(props)}</span>
       <span className="text-muted">
         cube ×{state.cube.value}
         {state.cube.owner ? ` (${state.cube.owner})` : ''} · pips W {pipCount(state.board, 'white')} / B{' '}
         {pipCount(state.board, 'black')}
       </span>
-      {noPlay && (
-        <span aria-live="polite" className="w-full text-muted first-letter:capitalize">
-          {noPlay}
-        </span>
-      )}
+      {noPlay && <span className="w-full text-muted first-letter:capitalize">{noPlay}</span>}
+
+      {/*
+       * One region for the whole game, and always mounted — that is the part
+       * that matters. A live region has to be in the accessible tree *before*
+       * its content changes for the change to be announced; one that appears
+       * together with its text is silent in NVDA, JAWS and VoiceOver alike,
+       * which is what the conditionally-rendered regions here and in `<Dice>`
+       * were. The visible spans above carry no `aria-live` of their own, so
+       * this is also the only thing that speaks.
+       *
+       * Polite: a turn changing is worth hearing, not worth cutting off
+       * whatever the player is already being read.
+       */}
+      <span aria-live="polite" className="sr-only">
+        {describeAloud(props)}
+      </span>
     </div>
   );
 };

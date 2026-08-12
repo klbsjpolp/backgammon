@@ -64,7 +64,11 @@ now checked at the edge rather than assumed correct further in.
   The AI search would pay for that check at every node, having just taken its
   move out of `currentLegalMoves` — so `applyLegalMove` is the unchecked path,
   documented as being for callers that did exactly that, and `playMove` is
-  validate-then-`applyLegalMove`. The one caller that could go either way is the
+  validate-then-`applyLegalMove`. "Unchecked" has one exception: it still
+  insists the die is among the remaining ones, because at `indexOf === -1` the
+  two slices that remove it overlap and `remaining` _grows_ instead — handing
+  the mover a die nobody rolled and a turn that cannot end. That check costs the
+  `indexOf` it was already doing. The one caller that could go either way is the
   host, which keeps the validating one: it is the online trust boundary, it pays
   the cost once per network action rather than once per search node, and it
   should stay correct even if the lookup above it ever drifts.
@@ -82,6 +86,25 @@ now checked at the edge rather than assumed correct further in.
   return types of `parseGameState` and `parseHostSnapshot` are what keep them in
   step with the types: add a field to `GameState` and forget the schema, and it
   stops compiling.
+
+  **A schema on a wire is also a compatibility contract**, which is the easier
+  half to get wrong. Both ends are versioned independently and updates are
+  deferred while a game is in progress, so a host on the previous release
+  talking to a guest on the current one is ordinary rather than exotic. A field
+  this project _adds_ must therefore be tolerated as absent — `noPlay` is
+  `.nullish().transform((v) => v ?? null)`, not `.nullable()`, because requiring
+  the key would have rejected every frame an older host sends and frozen the
+  guest's board for the rest of the game. A dropped frame is also `console.warn`ed:
+  "the next broadcast repairs it" is true of a corrupt packet and false of an
+  incompatibility, and the silent version of that failure is the worst one to
+  debug.
+
+  A snapshot answers a harder question than a view — not "can this be drawn" but
+  "can the game be resumed from this" — so `hostSnapshotSchema` checks across
+  fields that the seating and the colours line up. `BackgammonHost.setSeating`
+  builds its maps and only then commits them, so a host that refuses a snapshot
+  is still the host it was; it used to clear the live maps before validating and
+  leave itself with no colours at all.
 
 - **An `ErrorBoundary` wraps the app.** React unmounts the whole tree when a
   render throws, so anything that got past the two checks above still showed as
@@ -116,9 +139,19 @@ standing on them. It now reads as a board:
   on all 24. They stay in the accessible tree — a screen reader still reads the
   whole board — which is why this is `aria-disabled` and `tabIndex={-1}` rather
   than `disabled`, which drops the button out of the tree in some readers.
-- The status line and the dice are polite live regions, so a roll landing and a
-  turn changing are announced rather than only drawn. Polite, not assertive: a
-  turn change is worth hearing, not worth interrupting for.
+- **One** polite live region carries everything worth hearing — whose turn it
+  is, what was rolled and what is left of it, and a roll nobody could play. It
+  is `sr-only` and always mounted, and the visible spans carry no `aria-live` of
+  their own, so nothing is said twice.
+
+  Always mounted is the load-bearing part. A live region has to be in the
+  accessible tree _before_ its content changes for the change to be announced;
+  one that appears together with its text is silent in NVDA, JAWS and VoiceOver
+  alike. The first cut of this put `aria-live` on the no-play line and inside
+  `<Dice>`, both conditionally rendered — and `<Dice>` is unmounted altogether
+  until a roll lands, so it could never announce the roll that mounts it. That
+  is why the dice are spoken from the status line rather than from the component
+  that draws them: the board has nothing permanently on screen to say them from.
 
 The colour side of this was already covered — `contrast.test.ts` holds every
 theme to WCAG 3:1 for the board's state rings — which is what makes the gap
