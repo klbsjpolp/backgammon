@@ -101,11 +101,12 @@ describe('Board', () => {
     expect(count.closest('div')?.className).toMatch(/text-board-checker/);
   });
 
-  it('shows the dice and the pips still to play while moving', () => {
+  it('falls back to drawing the dice itself when there is no header slot', () => {
     render(<Board controller={controllerFor('white')} />);
-    expect(within(screen.getByLabelText('dice')).getByText(/⚅ ⚄/)).toBeDefined();
-    // "remaining:" is its own element — it is `sr-only` in the narrow strip the
-    // dice sit in on a phone — so the line has to be read whole.
-    expect(screen.getByText('remaining:').parentElement?.textContent).toBe('remaining: 6, 5');
+    // With a slot (the app) they are portalled into the header instead — see
+    // `Dice.test.tsx` for what they say. Here the board keeps them.
+    const dice = within(screen.getByLabelText('dice'));
+    expect(dice.getByText('⚅')).toBeDefined();
+    expect(dice.getByText('⚄')).toBeDefined();
   });
 });

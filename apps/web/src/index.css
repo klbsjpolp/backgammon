@@ -108,11 +108,11 @@ body {
 /* Landscape phone: the board sits beside the controls, with little height to spare. */
 @media (orientation: landscape) and (max-height: 640px) {
   .board-fit {
-    /* The narrowest the sidebar goes (11rem), the dice strip beside the board, the
-       grid gap and the page padding. The sidebar gives up its extra width to the
-       board on a narrow phone, where this is the binding constraint; on a wider one
-       the height below is what limits the board and the sidebar keeps its 15rem. */
-    --avail-w: calc(100vw - 17.25rem - env(safe-area-inset-left) - env(safe-area-inset-right));
+    /* The narrowest the sidebar goes (11rem), the grid gap and the page padding.
+       The sidebar gives up its extra width to the board on a narrow phone, where
+       this is the binding constraint; on a wider one the height below is what
+       limits the board and the sidebar keeps its 15rem. */
+    --avail-w: calc(100vw - 14.25rem - env(safe-area-inset-left) - env(safe-area-inset-right));
     /* One header row and the gaps around it — everything else was moved out of
        the column the board sits in. The inset is the home indicator, which the
        page pads for and the board therefore cannot draw on. */
@@ -134,10 +134,11 @@ body {
        all of it trimmed to earn the board back the height it is drawn from, plus
        the home indicator the page pads for at the bottom. */
     --avail-w: calc(100svh - 18.5rem - env(safe-area-inset-bottom));
-    /* Page padding plus the dice strip on one side of the turned board and its
-       empty twin on the other. Portrait is nowhere near this limit — the height
-       above is what the board is drawn from — so the symmetry is free. */
-    --avail-h: calc(100vw - 8.5rem);
+    /* The page padding, and nothing else: with the dice up in the header row the
+       turned board has the full width of the screen to be deep in. A narrow phone
+       is the one that notices — this is what limits it, where a tall one is
+       limited by the height above. */
+    --avail-h: calc(100vw - 2rem - env(safe-area-inset-left) - env(safe-area-inset-right));
     /* A rotation does not change the space an element takes in layout, so the
        wrapper has to reserve the turned footprint itself. */
     width: calc(var(--pt) * 8.6);
