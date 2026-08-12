@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
-import { canDouble, opponent, pipCount } from '@backgammon/core';
+import { canDouble, opponent } from '@backgammon/core';
 import { Board, type BoardController } from '@/components/Board';
 import { Button, ConfirmButton } from '@/components/Button';
 import { Controls, GameLayout } from '@/components/GameLayout';
+import { TurnControls } from '@/components/TurnControls';
+import { TurnStatus } from '@/components/TurnStatus';
 import { cn } from '@/lib/cn';
 import { useOnlineGame } from '@/online/useOnlineGame';
 
@@ -158,70 +160,27 @@ export const OnlinePanel = ({ applyPendingUpdate, onBusyChange }: OnlinePanelPro
   const doubleToMe =
     state.phase === 'doubleOffered' && g.myPlayer != null && state.doubleOfferedBy === opponent(g.myPlayer);
 
-  const status = (() => {
-    if (state.phase === 'gameOver' && state.result) {
-      const { winner, kind, points } = state.result;
-      const mine = winner === g.myPlayer;
-      return `${mine ? 'You win' : `${winner} wins`} a ${kind} — ${points} point${points === 1 ? '' : 's'}`;
-    }
-    if (state.phase === 'doubleOffered') return `${state.doubleOfferedBy} offers a double`;
-    const verb = state.phase === 'rolling' ? 'to roll' : 'to move';
-    return `${state.turn} ${verb}${youTurn ? ' (you)' : ''}`;
-  })();
-
   return (
     <GameLayout
       hint={`You play ${g.myPlayer}. Click a checker, then its destination.`}
       status={
         <div className="flex w-full flex-col gap-2">
           {g.status === 'disconnected' && <Banner tone="error">{g.error ?? 'Connection lost.'}</Banner>}
-          <div
-            className={cn(
-              'flex w-full flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-lg bg-surface px-4 py-2 text-sm',
-              'max-sm:px-3 max-sm:py-1 max-sm:text-xs compact:px-3 compact:py-1 compact:text-xs',
-              state.phase === 'gameOver' && 'bg-highlight-soft',
-            )}
-          >
-            <span className="font-semibold capitalize">{status}</span>
-            <span className="text-muted">
-              cube ×{state.cube.value} · pips W {pipCount(state.board, 'white')} / B {pipCount(state.board, 'black')}
-            </span>
-          </div>
+          <TurnStatus state={state} you={controller.you} />
         </div>
       }
       board={<Board controller={controller} />}
       controls={
         <Controls
           primary={
-            <>
-              <Button
-                onClick={g.rollDice}
-                disabled={!(youTurn && state.phase === 'rolling')}
-                className="min-w-28 text-base compact:col-span-2"
-              >
-                Roll
-              </Button>
-              <Button
-                onClick={g.double}
-                disabled={g.myPlayer == null || !canDouble(state, g.myPlayer)}
-                className="bg-info text-info-fg hover:bg-info-hover"
-              >
-                Double
-              </Button>
-              {doubleToMe && (
-                <>
-                  <Button
-                    onClick={() => g.respond(true)}
-                    className="bg-positive text-positive-fg hover:bg-positive-hover"
-                  >
-                    Take
-                  </Button>
-                  <Button onClick={() => g.respond(false)} className="bg-danger text-danger-fg hover:bg-danger-hover">
-                    Drop
-                  </Button>
-                </>
-              )}
-            </>
+            <TurnControls
+              canRoll={youTurn && state.phase === 'rolling'}
+              canDouble={g.myPlayer != null && canDouble(state, g.myPlayer)}
+              isDoubleToYou={doubleToMe}
+              onRoll={g.rollDice}
+              onDouble={g.double}
+              onRespond={g.respond}
+            />
           }
           danger={
             <ConfirmButton
