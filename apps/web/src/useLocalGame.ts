@@ -15,6 +15,7 @@ import {
   type Move,
   type Player,
 } from '@backgammon/core';
+import { useAutoRoll } from '@/useAutoRoll';
 
 const HUMAN: Player = 'white';
 const AI: Player = 'black';
@@ -29,9 +30,14 @@ export interface LocalGame {
   selectedFrom: number | null;
   targets: number[];
   isHumanTurn: boolean;
+  /** The human is the one who has yet to roll — what Roll and auto-roll both wait on. */
+  canRoll: boolean;
   canHumanDouble: boolean;
   /** True while the AI has a double pending the human's take/drop answer. */
   doubleToYou: boolean;
+  /** Roll for the human automatically, instead of waiting for the Roll button. */
+  autoRoll: boolean;
+  setAutoRoll: (value: boolean) => void;
   newGame: () => void;
   rollDice: () => void;
   clickPoint: (index: number) => void;
@@ -43,6 +49,7 @@ export interface LocalGame {
 export const useLocalGame = (): LocalGame => {
   const [state, setState] = useState<GameState>(() => createInitialState(HUMAN));
   const [selectedFrom, setSelectedFrom] = useState<number | null>(null);
+  const [autoRoll, setAutoRoll] = useState(false);
 
   const isHumanTurn = state.turn === HUMAN;
 
@@ -99,6 +106,9 @@ export const useLocalGame = (): LocalGame => {
     [isHumanTurn, state.phase, selectedFrom, selectableFroms, legalMoves],
   );
 
+  const canRoll = isHumanTurn && state.phase === 'rolling';
+  useAutoRoll(autoRoll, canRoll, rollDice);
+
   // Drive the AI: offer a double when the cube is right, roll, play its whole
   // turn, or answer a human double offer.
   useEffect(() => {
@@ -142,8 +152,11 @@ export const useLocalGame = (): LocalGame => {
     selectedFrom,
     targets,
     isHumanTurn,
+    canRoll,
     canHumanDouble: canDouble(state, HUMAN),
     doubleToYou: state.phase === 'doubleOffered' && state.doubleOfferedBy === AI,
+    autoRoll,
+    setAutoRoll,
     newGame,
     rollDice,
     clickPoint,

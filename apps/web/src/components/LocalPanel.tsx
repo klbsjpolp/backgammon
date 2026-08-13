@@ -33,10 +33,12 @@ export const LocalPanel = ({ applyPendingUpdate }: LocalPanelProps = {}) => {
           primary={
             <>
               <TurnControls
-                canRoll={game.isHumanTurn && state.phase === 'rolling'}
+                canRoll={game.canRoll}
                 canDouble={game.canHumanDouble}
                 isDoubleToYou={game.doubleToYou}
+                autoRoll={game.autoRoll}
                 onRoll={game.rollDice}
+                onAutoRollChange={game.setAutoRoll}
                 onDouble={game.double}
                 onRespond={game.respond}
               />

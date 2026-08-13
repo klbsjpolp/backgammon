@@ -11,6 +11,7 @@ import {
   type BackgammonView,
 } from '@backgammon/runtime';
 import { canDouble, opponent, type GameState, type Player } from '@backgammon/core';
+import { useAutoRoll } from '@/useAutoRoll';
 import { createOnlineRoom, joinOnlineRoom } from './api';
 
 const PING_INTERVAL_MS = 25_000;
@@ -36,6 +37,10 @@ export interface OnlineGame {
   start: () => void;
   leave: () => void;
   // Game actions.
+  autoRoll: boolean;
+  setAutoRoll: (value: boolean) => void;
+  /** We are the one who has yet to roll — what Roll and auto-roll both wait on. */
+  canRoll: boolean;
   rollDice: () => void;
   clickPoint: (index: number) => void;
   double: () => void;
@@ -50,6 +55,7 @@ export const useOnlineGame = (): OnlineGame => {
   const [myPlayer, setMyPlayer] = useState<Player | null>(null);
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [selectedFrom, setSelectedFrom] = useState<number | null>(null);
+  const [autoRoll, setAutoRoll] = useState(false);
 
   const wsRef = useRef<WebSocket | null>(null);
   const hostRef = useRef<BackgammonHost | null>(null);
@@ -299,9 +305,17 @@ export const useOnlineGame = (): OnlineGame => {
     [view, selected],
   );
 
+  // One definition of "on roll", for the button, the guard and auto-roll alike —
+  // the button used to carry its own, which had already drifted from this one by
+  // leaving out the status. Closing over the boolean rather than over
+  // `view`/`gameState` also keeps `rollDice` stable across the broadcasts that
+  // replace both objects without changing whose turn it is.
+  const canRoll = status === 'playing' && (view?.yourTurn ?? false) && gameState?.phase === 'rolling';
   const rollDice = useCallback(() => {
-    if (view?.yourTurn && gameState?.phase === 'rolling') sendAction({ type: 'roll' });
-  }, [view, gameState, sendAction]);
+    if (canRoll) sendAction({ type: 'roll' });
+  }, [canRoll, sendAction]);
+
+  useAutoRoll(autoRoll, canRoll, rollDice);
 
   const double = useCallback(() => {
     if (gameState && myPlayer && canDouble(gameState, myPlayer)) sendAction({ type: 'offerDouble' });
@@ -359,6 +373,9 @@ export const useOnlineGame = (): OnlineGame => {
     setReady,
     start,
     leave,
+    autoRoll,
+    setAutoRoll,
+    canRoll,
     rollDice,
     clickPoint,
     double,

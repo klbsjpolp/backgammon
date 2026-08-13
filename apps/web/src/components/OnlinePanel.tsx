@@ -156,7 +156,6 @@ export const OnlinePanel = ({ applyPendingUpdate, onBusyChange }: OnlinePanelPro
     clickPoint: g.clickPoint,
   };
 
-  const youTurn = g.view?.yourTurn ?? false;
   const doubleToMe =
     state.phase === 'doubleOffered' && g.myPlayer != null && state.doubleOfferedBy === opponent(g.myPlayer);
 
@@ -174,10 +173,12 @@ export const OnlinePanel = ({ applyPendingUpdate, onBusyChange }: OnlinePanelPro
         <Controls
           primary={
             <TurnControls
-              canRoll={youTurn && state.phase === 'rolling'}
+              canRoll={g.canRoll}
               canDouble={g.myPlayer != null && canDouble(state, g.myPlayer)}
               isDoubleToYou={doubleToMe}
+              autoRoll={g.autoRoll}
               onRoll={g.rollDice}
+              onAutoRollChange={g.setAutoRoll}
               onDouble={g.double}
               onRespond={g.respond}
             />

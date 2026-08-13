@@ -25,6 +25,9 @@ const baseGame = (): OnlineGame => ({
   setReady: vi.fn(),
   start: vi.fn(),
   leave: vi.fn(),
+  autoRoll: false,
+  setAutoRoll: vi.fn(),
+  canRoll: false,
   rollDice: vi.fn(),
   clickPoint: vi.fn(),
   double: vi.fn(),
@@ -67,6 +70,7 @@ const playing = (overrides: Partial<OnlineGame> = {}): Partial<OnlineGame> => ({
   myPlayer: 'black',
   state: createInitialState('black'),
   view: { state: createInitialState('black'), you: 'black', yourTurn: true, legalMoves: [] },
+  canRoll: true,
   ...overrides,
 });
 
@@ -153,7 +157,11 @@ describe('OnlinePanel', () => {
     it('disables roll while the opponent is on roll', () => {
       const notYours = createInitialState('white');
       renderPanel(
-        playing({ state: notYours, view: { state: notYours, you: 'black', yourTurn: false, legalMoves: [] } }),
+        playing({
+          state: notYours,
+          view: { state: notYours, you: 'black', yourTurn: false, legalMoves: [] },
+          canRoll: false,
+        }),
       );
       expect(screen.getByRole<HTMLButtonElement>('button', { name: /^roll$/i }).disabled).toBe(true);
     });
