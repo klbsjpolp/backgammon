@@ -17,8 +17,11 @@ const baseGame = (): LocalGame => ({
   selectedFrom: null,
   targets: [],
   isHumanTurn: true,
+  canRoll: true,
   canHumanDouble: true,
   doubleToYou: false,
+  autoRoll: false,
+  setAutoRoll: vi.fn(),
   newGame: vi.fn(),
   rollDice: vi.fn(),
   clickPoint: vi.fn(),
@@ -84,7 +87,7 @@ describe('LocalPanel', () => {
   });
 
   it('disables roll when it is not your turn', () => {
-    renderPanel({ state: createInitialState('black'), isHumanTurn: false });
+    renderPanel({ state: createInitialState('black'), isHumanTurn: false, canRoll: false });
     expect(screen.getByRole<HTMLButtonElement>('button', { name: /^roll$/i }).disabled).toBe(true);
   });
 

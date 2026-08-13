@@ -3,13 +3,21 @@ import { cn } from '@/lib/cn';
 
 export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement>;
 
+/**
+ * What every control in a row shares: min-h-11 keeps them all at the ~44px
+ * touch target phones need, and the rest is what makes them line up. Anything
+ * that sits beside a button — see {@link Checkbox} — builds on this, so the
+ * touch-target rule has one place to change.
+ */
+export const CONTROL_BASE =
+  'inline-flex min-h-11 touch-manipulation items-center justify-center text-sm font-semibold transition select-none';
+
 export const Button = ({ className, ...props }: ButtonProps) => (
   <button
     type="button"
     className={cn(
-      // min-h-11 keeps every control at the ~44px touch target phones need.
-      'inline-flex min-h-11 touch-manipulation items-center justify-center rounded-md bg-accent px-4 py-2',
-      'text-sm font-semibold text-accent-fg transition select-none',
+      CONTROL_BASE,
+      'rounded-md bg-accent px-4 py-2 text-accent-fg',
       'hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-40',
       className,
     )}
