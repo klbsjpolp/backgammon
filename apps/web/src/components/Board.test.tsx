@@ -102,6 +102,28 @@ describe('Board', () => {
     expect(count.closest('div')?.className).toMatch(/text-board-checker/);
   });
 
+  it('marks how deep a stack is, so the overlap does not have to be counted in CSS', () => {
+    const state = bearingOffState('white');
+    const points = [...state.board.points];
+    points[2] = 2;
+    points[4] = 5;
+    points[5] = 9; // deeper than five, which is as deep as the stack is ever drawn
+    render(<Board controller={controllerFor('white', { state: { ...state, board: { ...state.board, points } } })} />);
+
+    const depthOn = (point: number) =>
+      screen
+        .getByLabelText(new RegExp(`^point ${point},`))
+        .querySelector('.board-stack')
+        ?.getAttribute('data-stack');
+
+    // Counting the children in CSS instead (`:has(> :nth-child(5))`) is what let
+    // a growing stack keep the flat spacing and spill past its point on WebKit
+    // until a rotation forced a recalc.
+    expect(depthOn(3)).toBe('2');
+    expect(depthOn(5)).toBe('5');
+    expect(depthOn(6)).toBe('5');
+  });
+
   it('falls back to drawing the dice itself when there is no header slot', () => {
     render(<Board controller={controllerFor('white')} />);
     // With a slot (the app) they are portalled into the header instead — see

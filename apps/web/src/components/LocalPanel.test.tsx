@@ -70,6 +70,19 @@ describe('LocalPanel', () => {
     expect(newGame().textContent).toMatch(/new game/i);
   });
 
+  it('starts a new game on the first tap once the game is over', () => {
+    const over: GameState = {
+      ...createInitialState('white'),
+      phase: 'gameOver',
+      result: { winner: 'white', kind: 'single', points: 1, cubeValue: 1 },
+    };
+    const game = renderPanel({ state: over });
+
+    // Nothing is left to protect, so there is nothing to confirm.
+    fireEvent.click(screen.getByRole('button', { name: /new game/i }));
+    expect(game.newGame).toHaveBeenCalled();
+  });
+
   it('disables roll when it is not your turn', () => {
     renderPanel({ state: createInitialState('black'), isHumanTurn: false });
     expect(screen.getByRole<HTMLButtonElement>('button', { name: /^roll$/i }).disabled).toBe(true);

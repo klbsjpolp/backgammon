@@ -62,8 +62,11 @@ const Checkers = ({ count }: CheckersProps) => {
       : 'bg-checker-dark text-checker-dark-fg ring-checker-dark-line';
   const shown = Math.min(n, 5);
   return (
-    // `board-stack` is what lets the deepest stacks overlap — see index.css.
-    <div className="board-stack flex flex-col items-center gap-board-stack">
+    // `board-stack` is what lets the deepest stacks overlap, and `data-stack` is
+    // how deep — the CSS picks the overlap off it rather than counting the
+    // children itself, so a stack that grows cannot be left at the flat spacing
+    // it had one checker ago. See index.css.
+    <div className="board-stack flex flex-col items-center gap-board-stack" data-stack={shown}>
       {Array.from({ length: shown }).map((_, i) => (
         <div
           key={i}

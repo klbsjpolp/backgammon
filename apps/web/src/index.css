@@ -93,15 +93,23 @@ body {
  * instead would cost every point ~20% of its width, on every board, to lay out a
  * case that only occurs on a couple of points at a time.
  *
- * `:has` counts the stack in CSS so the ratios stay here with the others: four
- * checkers only need the gap closed, five need real overlap (the rules are in
- * that order because a stack of five matches both).
+ * The depth is selected on `data-stack`, which the component writes from the
+ * count it already has: four checkers only need the gap closed, five need real
+ * overlap.
+ *
+ * This used to count the children in CSS with `:has(> :nth-child(n))`, which
+ * reads better but does not survive contact with WebKit: adding a checker to a
+ * stack does not re-evaluate the `:has`, so a point that grew to five checkers
+ * kept the flat spacing and spilled past its own border until something else
+ * forced a full style recalc — rotating the phone, most visibly. An attribute
+ * on the element itself is invalidated by the same DOM write that changes the
+ * count, so the two can never disagree.
  */
-.board-stack:has(> :nth-child(4)) > * + * {
+.board-stack[data-stack='4'] > * + * {
   margin-top: calc(var(--pt) * -0.03);
 }
 
-.board-stack:has(> :nth-child(5)) > * + * {
+.board-stack[data-stack='5'] > * + * {
   margin-top: calc(var(--pt) * -0.25);
 }
 

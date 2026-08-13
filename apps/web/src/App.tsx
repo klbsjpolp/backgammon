@@ -87,12 +87,19 @@ export const App = () => {
                * does not re-truncate the title under the player's eyes — it fits the
                * two dice of an ordinary roll, and doubles (four) borrow a little more
                * from the title for the length of the turn.
+               *
+               * The pip glyphs carry a lot of built-in padding — the drawn die is
+               * appreciably smaller than its font size — so on a phone they are set
+               * to about the height of the row itself rather than to the title's
+               * size, which left them a smudge. `leading-none` (in `Dice`) keeps the
+               * taller text from growing the row: the buttons opposite still set its
+               * height, so the board's height budget below is untouched.
                */}
               <div
                 ref={setDiceSlot}
                 className={cn(
                   'flex min-w-14 shrink-0 items-center justify-center text-2xl',
-                  'max-sm:min-w-11 max-sm:text-xl compact:min-w-11 compact:text-xl',
+                  'max-sm:min-w-16 max-sm:text-3xl compact:min-w-16 compact:text-3xl',
                 )}
               />
             </header>
