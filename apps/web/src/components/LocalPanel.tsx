@@ -1,6 +1,7 @@
 import { pipCount } from '@backgammon/core';
 import { Board } from '@/components/Board';
 import { Button } from '@/components/Button';
+import { Checkbox } from '@/components/Checkbox';
 import { cn } from '@/lib/cn';
 import { useLocalGame } from '@/useLocalGame';
 
@@ -45,6 +46,9 @@ export const LocalPanel = () => {
         <Button onClick={game.rollDice} disabled={!(game.isHumanTurn && state.phase === 'rolling')}>
           Roll
         </Button>
+        <Checkbox checked={game.autoRoll} onChange={game.setAutoRoll}>
+          Auto-roll
+        </Checkbox>
         <Button onClick={game.double} disabled={!game.canHumanDouble} className="bg-sky-500 hover:bg-sky-400">
           Double
         </Button>

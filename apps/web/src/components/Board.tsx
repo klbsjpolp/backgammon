@@ -112,7 +112,70 @@ const Bar = ({ white, black, selectable, selected, onClick }: BarProps) => (
   </button>
 );
 
-const die = (n: number) => '⚀⚁⚂⚃⚄⚅'[n - 1] ?? '?';
+/** Pip positions on a 3x3 grid, per face value. */
+const PIPS: Record<number, number[]> = {
+  1: [4],
+  2: [0, 8],
+  3: [0, 4, 8],
+  4: [0, 2, 6, 8],
+  5: [0, 2, 4, 6, 8],
+  6: [0, 2, 3, 5, 6, 8],
+};
+
+const Die = ({ value, spent }: { value: number; spent: boolean }) => {
+  const pips = PIPS[value] ?? [];
+  return (
+    <div
+      aria-label={`die ${value}`}
+      className={cn(
+        'grid h-9 w-9 grid-cols-3 grid-rows-3 gap-[3px] rounded-md border-2 p-1 transition lg:h-20 lg:w-20 lg:gap-1.5 lg:rounded-xl lg:p-2.5',
+        spent
+          ? 'border-emerald-950/50 bg-amber-200/25 opacity-50'
+          : 'border-amber-900/60 bg-amber-100 shadow-lg shadow-emerald-950/50',
+      )}
+    >
+      {Array.from({ length: 9 }).map((_, i) => (
+        <span
+          key={i}
+          className={cn(
+            'rounded-full',
+            pips.includes(i) && (spent ? 'bg-emerald-950/60' : 'bg-emerald-950'),
+          )}
+        />
+      ))}
+    </div>
+  );
+};
+
+/** The dice for this roll (four on doubles), each flagged as already played. */
+const rollDice = (roll: readonly [number, number], remaining: readonly number[]) => {
+  const values = roll[0] === roll[1] ? [roll[0], roll[0], roll[0], roll[0]] : [roll[0], roll[1]];
+  const left = [...remaining];
+  return values.map((value) => {
+    const at = left.indexOf(value);
+    if (at === -1) return { value, spent: true };
+    left.splice(at, 1);
+    return { value, spent: false };
+  });
+};
+
+const Dice = ({ state }: { state: GameState }) => {
+  const showRoll = state.roll && state.phase !== 'rolling';
+  return (
+    <div className="flex min-h-9 items-center gap-3 lg:min-h-20 lg:flex-col lg:gap-4">
+      {showRoll ? (
+        <div className="flex items-center gap-2 lg:gap-3" aria-label="dice">
+          {rollDice(state.roll!, state.remaining).map((d, i) => (
+            <Die key={i} value={d.value} spent={d.spent} />
+          ))}
+        </div>
+      ) : null}
+      {state.remaining.length > 0 && (
+        <span className="text-sm text-emerald-200/80 lg:text-center">remaining: {state.remaining.join(', ')}</span>
+      )}
+    </div>
+  );
+};
 
 export const Board = ({ controller }: { controller: BoardController }) => {
   const { state, selectableFroms, selectedFrom, targets } = controller;
@@ -132,7 +195,7 @@ export const Board = ({ controller }: { controller: BoardController }) => {
   );
 
   return (
-    <div className="flex flex-col items-center gap-3">
+    <div className="flex flex-col items-center gap-3 lg:flex-row lg:items-center lg:gap-6">
       <div className="flex items-stretch gap-2 rounded-xl border-4 border-amber-900/60 bg-emerald-900 p-3 shadow-2xl">
         <div className="flex flex-col justify-between gap-3">
           <div className="flex gap-1">{TOP_ROW.slice(0, 6).map((i) => renderPoint(i, 'top'))}</div>
@@ -163,16 +226,7 @@ export const Board = ({ controller }: { controller: BoardController }) => {
         </div>
       </div>
 
-      <div className="flex h-8 items-center gap-3 text-2xl text-amber-200">
-        {state.roll && state.phase !== 'rolling' ? (
-          <span aria-label="dice">
-            {die(state.roll[0])} {die(state.roll[1])}
-          </span>
-        ) : null}
-        {state.remaining.length > 0 && (
-          <span className="text-sm text-emerald-200/80">remaining: {state.remaining.join(', ')}</span>
-        )}
-      </div>
+      <Dice state={state} />
     </div>
   );
 };

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { opponent, pipCount } from '@backgammon/core';
 import { Board, type BoardController } from '@/components/Board';
 import { Button } from '@/components/Button';
+import { Checkbox } from '@/components/Checkbox';
 import { cn } from '@/lib/cn';
 import { useOnlineGame } from '@/online/useOnlineGame';
 
@@ -154,6 +155,9 @@ export const OnlinePanel = () => {
         <Button onClick={g.rollDice} disabled={!(youTurn && state.phase === 'rolling')}>
           Roll
         </Button>
+        <Checkbox checked={g.autoRoll} onChange={g.setAutoRoll}>
+          Auto-roll
+        </Checkbox>
         <Button
           onClick={g.double}
           disabled={!(youTurn && state.phase === 'rolling')}

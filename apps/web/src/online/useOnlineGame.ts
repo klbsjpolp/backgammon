@@ -13,6 +13,7 @@ import { canDouble, opponent, type GameState, type Player } from '@backgammon/co
 import { createOnlineRoom, joinOnlineRoom } from './api';
 
 const PING_INTERVAL_MS = 25_000;
+const AUTO_ROLL_DELAY_MS = 300;
 
 export type OnlineStatus = 'idle' | 'connecting' | 'lobby' | 'playing' | 'gameOver' | 'disconnected' | 'error';
 
@@ -35,6 +36,8 @@ export interface OnlineGame {
   start: () => void;
   leave: () => void;
   // Game actions.
+  autoRoll: boolean;
+  setAutoRoll: (value: boolean) => void;
   rollDice: () => void;
   clickPoint: (index: number) => void;
   double: () => void;
@@ -49,6 +52,7 @@ export const useOnlineGame = (): OnlineGame => {
   const [myPlayer, setMyPlayer] = useState<Player | null>(null);
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [selectedFrom, setSelectedFrom] = useState<number | null>(null);
+  const [autoRoll, setAutoRoll] = useState(false);
 
   const wsRef = useRef<WebSocket | null>(null);
   const hostRef = useRef<BackgammonHost | null>(null);
@@ -270,6 +274,14 @@ export const useOnlineGame = (): OnlineGame => {
     if (view?.yourTurn && gameState?.phase === 'rolling') sendAction({ type: 'roll' });
   }, [view, gameState, sendAction]);
 
+  // Auto-roll when enabled and it is our turn to roll.
+  const canRollNow = status === 'playing' && (view?.yourTurn ?? false) && gameState?.phase === 'rolling';
+  useEffect(() => {
+    if (!autoRoll || !canRollNow) return;
+    const t = setTimeout(rollDice, AUTO_ROLL_DELAY_MS);
+    return () => clearTimeout(t);
+  }, [autoRoll, canRollNow, rollDice]);
+
   const double = useCallback(() => {
     if (gameState && myPlayer && canDouble(gameState, myPlayer)) sendAction({ type: 'offerDouble' });
   }, [gameState, myPlayer, sendAction]);
@@ -326,6 +338,8 @@ export const useOnlineGame = (): OnlineGame => {
     setReady,
     start,
     leave,
+    autoRoll,
+    setAutoRoll,
     rollDice,
     clickPoint,
     double,

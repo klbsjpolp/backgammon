@@ -9,7 +9,7 @@ export const App = () => {
   const [mode, setMode] = useState<Mode>('local');
 
   return (
-    <div className="mx-auto flex min-h-full max-w-3xl flex-col items-center gap-5 px-4 py-6 text-emerald-50">
+    <div className="mx-auto flex min-h-full max-w-3xl flex-col lg:max-w-5xl items-center gap-5 px-4 py-6 text-emerald-50">
       <header className="text-center">
         <h1 className="text-3xl font-bold tracking-tight text-amber-300">Backgammon</h1>
       </header>
