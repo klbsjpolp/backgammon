@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.1.12](https://github.com/klbsjpolp/backgammon/compare/v0.1.11...v0.1.12) (2026-08-13)
+
+### Bug Fixes
+
+* **web:** bigger dice on phones, stacks that pile as they grow, no confirm after game over ([5732eba](https://github.com/klbsjpolp/backgammon/commit/5732eba84e1db2bb79f6462cf830c8d98f152722))
 ## [0.1.11](https://github.com/klbsjpolp/backgammon/compare/v0.1.10...v0.1.11) (2026-08-13)
 
 ### Features
