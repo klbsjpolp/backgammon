@@ -215,11 +215,18 @@ to play on a phone:
   to be left a margin all the way around every checker — the single largest waste on the
   board, and the one nothing else could buy back.
 - **Deep stacks overlap**, so a point is 3.85 × `--pt` deep rather than the ~4.6 five
-  full-size checkers laid flat would need. `.board-stack` counts its own children with
-  `:has()` and closes the gap at four, overlaps at five; sizing every point for the
-  deepest case instead would cost the whole board ~20% for a case that arises on two or
-  three points at a time. Two point depths plus the gutters and padding are what the
-  height divisor (8.6) counts.
+  full-size checkers laid flat would need: `.board-stack` closes the gap at four and
+  overlaps at five, and sizing every point for the deepest case instead would cost the
+  whole board ~20% for a case that arises on two or three points at a time. Two point
+  depths plus the gutters and padding are what the height divisor (8.6) counts.
+
+  How deep the stack is comes from a **`data-stack` attribute the component writes**, not
+  from `:has(> :nth-child(n))` counting the children in CSS. The `:has()` version read
+  better and was wrong on WebKit: landing a checker on a point did not re-evaluate it, so
+  a point that grew to five kept the flat spacing and spilled past its own border until
+  something forced a full style recalc — rotating the phone, most visibly. The attribute
+  is invalidated by the same DOM write that changes the count, so the two cannot disagree.
+
 - **The page chrome was measured, not guessed.** The dice moved out of the board's own
   column and up into the header row beside the title — the one row every layout already
   pays for — the status line and the header row were tightened, and the version footer is
@@ -237,6 +244,13 @@ to play on a phone:
   mid-turn. The board still owns the dice — only it knows what was rolled — and portals
   them into the slot, falling back to drawing them under itself when there is none.
 
+  On a phone the pips are set to **the height of the header row** (1.875rem) rather than
+  to the title's size. The die glyphs carry a lot of built-in padding — the drawn die is
+  noticeably smaller than its font size — so matching the text around them left the roll
+  a smudge at arm's length. It costs the board nothing: the mode switch opposite is the
+  taller item and still sets the row's height, so `--avail-h` is unchanged. It costs the
+  title, which was already the item that gives.
+
 Between them the checkers came out ~85% larger in landscape and ~40% in portrait on a
 modern phone, with the page still fitting the viewport exactly (no scroll). Where the
 screen's height is what binds — a tall phone, either way up — the board is already using
@@ -249,7 +263,9 @@ would otherwise claim the notch as well.
 Destructive controls (**new game**, **leave**) are separated from the primary row and are
 `ConfirmButton`s: one tap arms, a second confirms, and it disarms after four seconds or on
 blur. On a phone they are a thumb-width from the board and a stray tap used to be
-unrecoverable. Every button carries a 44px minimum touch target, and the page reserves
+unrecoverable. **Once the game is over, new game confirms nothing** — there is no game
+left to throw away, and the guard was then only friction between the result and the next
+game. Every button carries a 44px minimum touch target, and the page reserves
 `env(safe-area-inset-bottom)`.
 
 ## Themes
