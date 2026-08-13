@@ -11,3 +11,6 @@
 .env.local
 .env.*.local
 .claude/worktrees
+
+# Claude Code local overrides
+.claude/settings.local.json
