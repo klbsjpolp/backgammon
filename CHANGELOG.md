@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.1.11](https://github.com/klbsjpolp/backgammon/compare/v0.1.10...v0.1.11) (2026-08-13)
+
+### Features
+
+* **web:** make the board readable by keyboard and screen reader ([dc726f0](https://github.com/klbsjpolp/backgammon/commit/dc726f0c324e9b840b3f35d678dc193ea35da18e))
+
+### Bug Fixes
+
+* **core:** reject a die that is not among the remaining ones ([006a3f0](https://github.com/klbsjpolp/backgammon/commit/006a3f0f684b8e23dd8673f37a77d6a7790825f0)), references [#18](https://github.com/klbsjpolp/backgammon/issues/18)
+* **core:** reject illegal moves and stop discarding unplayable rolls ([a0e6e6a](https://github.com/klbsjpolp/backgammon/commit/a0e6e6ab8a918d0706d1505a4cef8933ad43975c))
+* **runtime:** accept older frames, and refuse snapshots that cannot be resumed ([03885bc](https://github.com/klbsjpolp/backgammon/commit/03885bced0ebfe5d1be3f8bdc714f711850e784c)), references [#18](https://github.com/klbsjpolp/backgammon/issues/18)
+* **web:** announce from a live region that is already there ([d265423](https://github.com/klbsjpolp/backgammon/commit/d2654233598e21d0dc65a68ce05febcadad2ea09)), references [#18](https://github.com/klbsjpolp/backgammon/issues/18)
+* **web:** parse runtime-config instead of casting it ([9d9f564](https://github.com/klbsjpolp/backgammon/commit/9d9f5643d277b4447fd24b69ec7971234e08325f))
+* **web:** validate relayed state and stop a bad frame blanking the page ([dc432b8](https://github.com/klbsjpolp/backgammon/commit/dc432b8c437a55173a43c8259b9cbf4b42e10cb5))
 ## [0.1.10](https://github.com/klbsjpolp/backgammon/compare/v0.1.9...v0.1.10) (2026-08-12)
 ## [0.1.9](https://github.com/klbsjpolp/backgammon/compare/v0.1.8...v0.1.9) (2026-08-12)
 
