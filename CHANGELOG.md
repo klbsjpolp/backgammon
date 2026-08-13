@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.1.15](https://github.com/klbsjpolp/backgammon/compare/v0.1.14...v0.1.15) (2026-08-13)
+
+### Features
+
+* **web:** roll automatically for the player who asked not to be asked ([3da88e6](https://github.com/klbsjpolp/backgammon/commit/3da88e67e5d88943072a7e770b448cd3abad7188))
 ## [0.1.14](https://github.com/klbsjpolp/backgammon/compare/v0.1.13...v0.1.14) (2026-08-13)
 ## [0.1.13](https://github.com/klbsjpolp/backgammon/compare/v0.1.12...v0.1.13) (2026-08-13)
 ## [0.1.12](https://github.com/klbsjpolp/backgammon/compare/v0.1.11...v0.1.12) (2026-08-13)
