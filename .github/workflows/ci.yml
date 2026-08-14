@@ -35,5 +35,11 @@ jobs:
       - name: Run typecheck
         run: pnpm typecheck
 
+      - name: Upload coverage to Codecov
+        if: matrix.node-version == '22.x'
+        uses: codecov/codecov-action@v7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+
       - name: Build
         run: pnpm build
