@@ -57,6 +57,12 @@ pnpm release:dry-run   # show the next version and changelog entry, change nothi
 pnpm release           # bump, changelog, commit, tag locally
 ```
 
+## Install it
+
+The app is a PWA: it can be installed to a home screen or a desktop, and once it
+has been opened a first time the board plays against the AI with no network at
+all. Online play still needs one, for obvious reasons.
+
 ## Updates
 
 The running version is shown in the footer, next to the manual half of the flow:
@@ -71,6 +77,11 @@ pending update is taken on the next **New game**, **Host a new game** or **Join*
 since those discard the same state a reload would; until then a banner offers it.
 An automatic reload happens at most once per version, so a stale cache can't put
 the app in a reload loop — the buttons still force it.
+
+Because the bundle is precached by a service worker, a reload alone would re-serve
+the build it is leaving; every reload therefore hands over to the waiting worker
+first, and falls back to a plain reload only when there is no worker to hand over
+to. `runtime-config.json` is never cached, or a tab could not learn it is behind.
 
 Set the repository variable `MINIMUM_SUPPORTED_VERSION` (or the Deploy workflow's
 `minimum_supported_version` input) to a release tag to make the update mandatory:

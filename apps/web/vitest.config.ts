@@ -15,11 +15,14 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(dirname, './src'),
+      // vite-plugin-pwa's virtual module has no existence outside a build.
+      'virtual:pwa-register': path.resolve(dirname, './src/testing/virtualPwaRegisterStub.ts'),
     },
   },
   test: {
     environment: 'jsdom',
     globals: true,
+    setupFiles: ['./vitest.setup.ts'],
     coverage: {
       provider: 'v8',
       reporter: ['text-summary', 'text'],

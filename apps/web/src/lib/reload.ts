@@ -1,8 +1,23 @@
+import { activateWaitingServiceWorker } from '@/lib/serviceWorker';
+
 /**
  * A reload re-fetches the document past the HTTP cache, so it is enough to pull
  * a new deploy in: the hashed asset URLs in the fresh HTML take care of the
  * rest. Isolated in its own module so tests can stub the navigation.
+ *
+ * Once a service worker is installed that stops being true — the document comes
+ * from the precache, and reloading serves the very build we are trying to leave.
+ * So the waiting worker gets its turn first; `activateWaitingServiceWorker`
+ * reloads as part of taking over, and answers `false` when there was nothing to
+ * take over from, which is when the plain reload below is still the right move.
  */
 export const reloadApp = () => {
-  globalThis.location.reload();
+  void activateWaitingServiceWorker()
+    .catch((error: unknown) => {
+      console.warn('Service worker activation failed', error);
+      return false;
+    })
+    .then((activated) => {
+      if (!activated) globalThis.location.reload();
+    });
 };
