@@ -29,17 +29,28 @@ jobs:
       - name: Run lint
         run: pnpm lint
 
+      # Coverage numbers do not depend on the node version, so only the engines
+      # floor is instrumented; the newer node just proves the suite passes.
       - name: Run tests
         run: ${{ matrix.node-version == '22.x' && 'pnpm test:coverage' || 'pnpm test' }}
 
-      - name: Run typecheck
-        run: pnpm typecheck
-
+      # Uploaded before typecheck and build so coverage still lands when a later
+      # step fails. The files are named rather than auto-discovered: discovery
+      # walks the whole workspace and would silently upload nothing if a package
+      # moved or its coverage run was skipped.
       - name: Upload coverage to Codecov
         if: matrix.node-version == '22.x'
         uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
+          files: |
+            packages/backgammon-core/coverage/lcov.info
+            packages/backgammon-runtime/coverage/lcov.info
+            apps/web/coverage/lcov.info
+
+      - name: Run typecheck
+        run: pnpm typecheck
 
       - name: Build
         run: pnpm build

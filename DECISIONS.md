@@ -361,6 +361,27 @@ not remembered" rather than throwing.
   `pnpm install`, then set the `VITE_BACKGAMMON_API_URL` secret. (Same gate as skip-bo.)
 - A `Deploy` workflow ships the web app to GitHub Pages.
 
+## Releasing under a branch ruleset
+
+- The `Deploy` workflow cuts the release itself — version bump, CHANGELOG, tag, and a
+  push straight to `main` — so protecting `main` puts the workflow on the wrong side of
+  its own ruleset. `GITHUB_TOKEN` cannot satisfy a ruleset, so `RELEASE_PUSH_TOKEN` is
+  **required**, not an optimisation. It used to fall back to `github.token`, which read
+  as a graceful degradation and was not one: it only moved the failure from checkout to
+  the push, by which point `commit-and-tag-version` had already written the commit and
+  the tag. The job now refuses before checkout when the secret is missing.
+- **The release push is `--atomic`.** `git push --follow-tags` updates the branch and the
+  tag as independent refs, so the declined push still published `v0.1.17` while leaving
+  its release commit unreachable — and every run after that recomputed the same version
+  and died on `fatal: tag 'v0.1.17' already exists`. A half-applied release is worse than
+  a failed one, because it poisons the next one; all-or-nothing is the only shape that
+  degrades safely here.
+- **`workflow_run` fires on completion, not on success.** Chaining Deploy to CI that way
+  reads as "deploy what CI proved", but the event carries a `conclusion` that has to be
+  checked or a red CI ships anyway. The gate lives in the `release` job's `if`, alongside
+  the `github-actions[bot]` actor guard, rather than in a separate job — one condition,
+  and skipping `release` skips everything downstream of it.
+
 ## Deferred
 
 - Match play, Crawford rule, Jacoby rule.
