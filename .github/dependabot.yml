@@ -4,6 +4,10 @@ updates:
     directory: '/'
     schedule:
       interval: 'weekly'
+    ignore:
+      # typescript-eslint ne supporte pas encore TypeScript 6/7 (peer: <6.1.0)
+      - dependency-name: 'typescript'
+        update-types: ['version-update:semver-major']
     # pnpm rejects lockfile entries younger than its 24h minimumReleaseAge;
     # hold updates a few days so CI can install what Dependabot proposes.
     cooldown:
