@@ -31,22 +31,41 @@ concurrency:
 
 jobs:
   release:
-    # The release commit carries [skip ci], so it does not re-trigger this
-    # workflow; the actor guard covers a manual re-run on top of one.
-    if: github.actor != 'github-actions[bot]'
+    # workflow_run fires on *completion*, pass or fail, so the conclusion has to
+    # be checked here or a red CI still cuts a release and deploys it. The
+    # release commit carries [skip ci], so it never re-runs CI and never
+    # re-enters this workflow; the actor guard covers a manual re-run on top of
+    # one, and workflow_dispatch bypasses both (there is no triggering run).
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' && github.actor != 'github-actions[bot]')
     runs-on: ubuntu-latest
     outputs:
       release_sha: ${{ steps.release_meta.outputs.release_sha }}
       release_tag: ${{ steps.release_meta.outputs.release_tag }}
       release_version: ${{ steps.release_meta.outputs.release_version }}
     steps:
+      # Checkout would happily clone this public repo with an empty token and
+      # only fail four steps later, mid-release. Refuse up front instead.
+      - name: Require a release push token
+        shell: bash
+        env:
+          RELEASE_PUSH_TOKEN: ${{ secrets.RELEASE_PUSH_TOKEN }}
+        run: |
+          if [ -z "$RELEASE_PUSH_TOKEN" ]; then
+            echo "::error::RELEASE_PUSH_TOKEN is not set. The release pushes a commit and a tag to main, which the branch ruleset denies to GITHUB_TOKEN; set a PAT with contents:write that is allowed to bypass the ruleset."
+            exit 1
+          fi
+
       - uses: actions/checkout@v7
         with:
           ref: main
           fetch-depth: 0 # Full history is required for conventional-commit version calculation
-          # A PAT lets the release push trigger downstream workflows and pass
-          # branch protection; the default token is enough without one.
-          token: ${{ secrets.RELEASE_PUSH_TOKEN || github.token }}
+          # main is protected by a ruleset, which GITHUB_TOKEN cannot satisfy, so
+          # the PAT is required rather than preferred. Falling back to
+          # github.token here only moved the failure to the push, after the tag
+          # had already been cut.
+          token: ${{ secrets.RELEASE_PUSH_TOKEN }}
       - uses: ./.github/actions/setup-node
 
       - name: Configure git author
@@ -59,9 +78,13 @@ jobs:
         shell: bash
         run: pnpm release -- --no-verify
 
+      # --atomic is load-bearing: without it the tag and the branch are separate
+      # ref updates, so a ruleset that declines the branch still publishes the
+      # tag. That orphan tag then makes every later run die on "tag already
+      # exists", because the version it recomputes is the one already tagged.
       - name: Push release commit and tag
         shell: bash
-        run: git push --follow-tags origin HEAD:main
+        run: git push --atomic --follow-tags origin HEAD:main
 
       - name: Capture release metadata
         id: release_meta
