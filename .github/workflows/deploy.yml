@@ -74,6 +74,35 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
+      # Recovery for the release that already half-applied. A declined branch
+      # push left its tag behind (--atomic stops that happening again, but not
+      # the one already published), and commit-and-tag-version recomputes that
+      # same version on every subsequent run and dies on "tag already exists" —
+      # so the pipeline cannot heal without this. A tag for the version about to
+      # be cut whose commit is not reachable from main can only be that debris:
+      # a tag from a release that landed is by definition on main. Anything
+      # reachable is a real tag and stops the job instead of being touched.
+      - name: Drop a stale tag from a declined release push
+        shell: bash
+        run: |
+          next=$(pnpm release:dry-run | sed -n 's/.*tagging release \(v[0-9][^ ]*\).*/\1/p' | tail -1)
+          if [ -z "$next" ]; then
+            echo "::error::Could not read the next release tag out of a dry run."
+            exit 1
+          fi
+          echo "Next release tag: $next"
+          if ! git rev-parse -q --verify "refs/tags/$next" >/dev/null; then
+            echo "No $next tag yet; nothing to clean up."
+            exit 0
+          fi
+          if git merge-base --is-ancestor "$next^{commit}" HEAD; then
+            echo "::error::$next already exists and its commit is on main, so this is a real release tag, not debris. Refusing to touch it."
+            exit 1
+          fi
+          echo "::warning::$next exists but its commit is not on main - debris from a release whose branch push was declined. Deleting it and re-cutting."
+          git push origin ":refs/tags/$next"
+          git tag -d "$next"
+
       - name: Create release commit and tag
         shell: bash
         run: pnpm release -- --no-verify

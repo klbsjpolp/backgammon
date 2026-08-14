@@ -370,6 +370,14 @@ not remembered" rather than throwing.
   as a graceful degradation and was not one: it only moved the failure from checkout to
   the push, by which point `commit-and-tag-version` had already written the commit and
   the tag. The job now refuses before checkout when the secret is missing.
+- **The release job clears its own debris.** `--atomic` stops a new orphan tag appearing;
+  it does nothing about the one already published, and that one is self-perpetuating —
+  every run recomputes the same version and dies on `tag already exists`, so the pipeline
+  cannot heal on its own. A step before the release reads the version a dry run is about
+  to cut and deletes that tag if it exists and its commit is **not reachable from `main`**,
+  which is the one case where it can only be debris: a tag from a release that landed is
+  by definition on `main`. A tag that _is_ reachable stops the job rather than being
+  touched — at that point something is wrong that deleting a release tag would only hide.
 - **The release push is `--atomic`.** `git push --follow-tags` updates the branch and the
   tag as independent refs, so the declined push still published `v0.1.17` while leaving
   its release commit unreachable — and every run after that recomputed the same version
