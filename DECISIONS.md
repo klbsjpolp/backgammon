@@ -382,6 +382,38 @@ not remembered" rather than throwing.
   the `github-actions[bot]` actor guard, rather than in a separate job — one condition,
   and skipping `release` skips everything downstream of it.
 
+## Installable, and offline
+
+The app is a PWA: `vite-plugin-pwa` generates the manifest and a Workbox service
+worker that precaches the bundle, so the board is playable against the AI with no
+network and installs to a home screen. The icons are one drawing —
+`public/icon.svg`, a felt board with three points and a checker — rasterized to the
+192/512 maskable PNGs and a 180px Apple icon; `public/favicon.svg` is the same mark
+redrawn at 64px, because at 16px only the triangles survive. `start_url` and
+`scope` come from Vite's `base`, which on GitHub Pages is a project path rather
+than the origin root.
+
+The interesting part is the collision with the update flow that was already here.
+`useAppUpdates` polls `runtime-config.json`, notices a newer release and reloads —
+and its comment, that a reload re-fetches the document past the HTTP cache, stops
+being true the moment a service worker is installed: the document then comes from
+the precache, so the reload serves the very build it is trying to leave. Two things
+follow. The worker is registered in **`prompt` mode**, never `autoUpdate`, because
+the app already owns the question of _when_ it is safe to reload — `autoUpdate`
+would activate a new worker and reload mid-turn, which is exactly what the deferral
+exists to prevent. And `reloadApp` now goes through `activateWaitingServiceWorker`
+first: it asks the registration for an update, waits out a worker still
+`installing` (`registration.update()` resolves before the new worker is ready, and
+a bare `waiting` check therefore reports "nothing staged" for one that was seconds
+away), hands over, and reloads onto it. It answers `false` when there is genuinely
+nothing to take over from — no worker at all, or a build the deploy has not served
+yet — and only then does the plain `location.reload()` still apply.
+
+`runtime-config.json` is deliberately in neither the precache globs nor any runtime
+cache. It is how a running tab learns it is out of date; served from a cache it
+would answer with the version the tab is already running, and the app could never
+notice a deploy.
+
 ## Deferred
 
 - Match play, Crawford rule, Jacoby rule.
@@ -391,7 +423,7 @@ not remembered" rather than throwing.
 - Stronger AI still possible: checker play is a full move-sequence search with a shot-aware
   evaluation, and cube decisions come off a heuristic win-probability estimate — neither is
   equity-based, and rollouts would beat both.
-- PWA, Sentry, Playwright e2e.
+- Sentry, Playwright e2e.
 - Online polish: reconnection/resume parity with skip-bo, richer lobby (names, kicking),
   animation/drag-and-drop (v1 uses click-to-move). A dropped socket still ends the
   game for that seat: `useOnlineGame` reports `disconnected` and stops there,

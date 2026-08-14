@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Backgammon">
+  <defs>
+    <linearGradient id="felt" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0b6a51" />
+      <stop offset="100%" stop-color="#03130d" />
+    </linearGradient>
+  </defs>
+
+  <!-- The board: classic theme's felt, the colour the app opens on. -->
+  <rect width="64" height="64" rx="14" fill="url(#felt)" />
+
+  <!-- Three points, drawn wide and full-height: at 16px the triangles are the
+       only part of a backgammon board that still reads as one. -->
+  <polygon points="8,8 22,8 15,36" fill="#f59e0b" />
+  <polygon points="24,8 38,8 31,36" fill="#f5ecd9" />
+  <polygon points="40,8 54,8 47,36" fill="#f59e0b" />
+
+  <!-- One checker on the bottom point, big enough to survive the same scale. -->
+  <polygon points="24,56 38,56 31,30" fill="#032b20" />
+  <circle cx="31" cy="48" r="10" fill="#f5ecd9" stroke="#03130d" stroke-width="2" />
+  <circle cx="31" cy="48" r="4.5" fill="none" stroke="#03130d" stroke-width="1.5" opacity="0.5" />
+</svg>

@@ -1,4 +1,5 @@
 /// <reference types="vite/client" />
+/// <reference types="vite-plugin-pwa/client" />
 
 /** Workspace version tag, injected by Vite's `define` (see version.ts). */
 declare const __APP_VERSION__: string;

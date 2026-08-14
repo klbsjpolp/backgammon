@@ -28,7 +28,13 @@ export default tseslint.config(
         ...globals.node,
       },
       parserOptions: {
-        projectService: true,
+        projectService: {
+          // `core` and `runtime` are composite builds rooted at `src`, so their
+          // own `vitest.config.ts` cannot join their tsconfig without breaking
+          // `rootDir` — and a file in no project is a parsing *error* here, not
+          // a skipped one. The default project lints them on their own.
+          allowDefaultProject: ['packages/*/vitest.config.ts'],
+        },
         tsconfigRootDir,
       },
     },

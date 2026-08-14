@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Backgammon">
+  <defs>
+    <linearGradient id="felt" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0b6a51" />
+      <stop offset="100%" stop-color="#03130d" />
+    </linearGradient>
+  </defs>
+
+  <!-- Full-bleed background: this file is the source for the maskable icons, so
+       the launcher may crop anything outside the centre 80% circle. Everything
+       that has to be seen stays inside 51..461. -->
+  <rect width="512" height="512" fill="url(#felt)" />
+
+  <g transform="translate(256 256) scale(0.72) translate(-256 -256)">
+    <rect x="24" y="24" width="464" height="464" rx="40" fill="#064e3b" stroke="#03130d" stroke-width="16" />
+
+    <polygon points="64,56 168,56 116,264" fill="#f59e0b" />
+    <polygon points="180,56 284,56 232,264" fill="#f5ecd9" />
+    <polygon points="296,56 400,56 348,264" fill="#f59e0b" />
+    <polygon points="180,456 284,456 232,248" fill="#032b20" />
+
+    <circle cx="232" cy="392" r="76" fill="#f5ecd9" stroke="#03130d" stroke-width="14" />
+    <circle cx="232" cy="392" r="34" fill="none" stroke="#03130d" stroke-width="11" opacity="0.5" />
+  </g>
+</svg>

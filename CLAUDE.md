@@ -86,6 +86,10 @@ The UI numbers points a third way: each player sees their own 1..24, counting fr
   apart before.
 - The rules engine is the state machine (`phase`: rolling → moving → doubleOffered → gameOver). React hooks drive it;
   there is no XState here on purpose.
+- **A service worker precaches the bundle, so `location.reload()` no longer picks up a deploy** — it re-serves the
+  precached build. `reloadApp` hands over to the waiting worker first and only then reloads; anything that wants to move
+  the app onto a new version goes through it. The worker is registered in `prompt` mode because `useAppUpdates` owns
+  _when_ a reload is safe, and `runtime-config.json` must stay out of every cache or a tab cannot notice a new release.
 
 ## Skills in this repo
 
@@ -109,6 +113,10 @@ fixes what it can.
 Vitest. Core and runtime keep tests in `tests/`; the web app colocates `*.test.tsx` beside the component and uses
 jsdom + Testing Library. `createRng(seed)` in `core` gives deterministic dice — use it instead of stubbing
 `Math.random`. Test through the public API of a package rather than its internals.
+
+`apps/web/vitest.setup.ts` exists only to hand the web tests a working `localStorage` on Node ≥ 25, which defines an
+inert one that Vitest's jsdom environment then refuses to overwrite. It is inert itself on the Node versions CI runs;
+delete it once Vitest handles the collision.
 
 ## Commits
 
