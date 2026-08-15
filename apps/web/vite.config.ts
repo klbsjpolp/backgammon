@@ -23,6 +23,13 @@ export default defineConfig(({ mode }) => {
         // until nothing is mid-game (see useAppUpdates). `prompt` is the only
         // mode that leaves that decision to us; `autoUpdate` would activate the
         // new worker and reload out from under a player's turn.
+        //
+        // It is also half of a contract with `lib/serviceWorker.ts`, which hands
+        // over by posting `SKIP_WAITING` to the waiting worker. Workbox's
+        // template only emits the listener for that message when `skipWaiting`
+        // is off — and switching to `autoUpdate` (or setting `workbox.skipWaiting`
+        // here) turns it on. The message would then go unanswered, and every
+        // handover would silently wait out its deadline instead.
         injectRegister: null,
         registerType: 'prompt',
         manifest: {
