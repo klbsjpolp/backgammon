@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.1.20](https://github.com/klbsjpolp/backgammon/compare/v0.1.19...v0.1.20) (2026-08-15)
+
+### Features
+
+* **web:** install to a home screen, and play with no network ([643284a](https://github.com/klbsjpolp/backgammon/commit/643284a5711df34ebb2751fe814ed8736b395398))
+
+### Bug Fixes
+
+* **web:** own the handover instead of trusting the plugin to reload ([a9778bf](https://github.com/klbsjpolp/backgammon/commit/a9778bf1821b8894cf4a311c3d65853646a0bca8))
 ## [0.1.19](https://github.com/klbsjpolp/backgammon/compare/v0.1.18...v0.1.19) (2026-08-14)
 ## [0.1.18](https://github.com/klbsjpolp/backgammon/compare/v0.1.17...v0.1.18) (2026-08-14)
 ## [0.1.17](https://github.com/klbsjpolp/backgammon/compare/v0.1.16...v0.1.17) (2026-08-14)
