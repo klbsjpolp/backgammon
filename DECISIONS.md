@@ -409,6 +409,32 @@ away), hands over, and reloads onto it. It answers `false` when there is genuine
 nothing to take over from — no worker at all, or a build the deploy has not served
 yet — and only then does the plain `location.reload()` still apply.
 
+**The handover is written by hand, and that is the whole point.** vite-plugin-pwa's
+`updateServiceWorker(true)` reads as "activate and reload" and is neither: it
+ignores its `reloadPage` argument outright and only posts skip-waiting. The reload
+comes from a `controlling` listener the plugin attaches when workbox fires
+`waiting` — and workbox fires that from a 200ms timer it _clears_ as soon as the
+worker reaches `activating`. Skip-waiting inside that window therefore activates
+the new worker, cancels the event the listener was waiting for, and reloads
+nothing; the tab keeps running the old build while `applyUpdate` has already
+written the version into `APPLIED_UPDATE_STORAGE_KEY`, so the automatic path will
+not try again. That window is the common case, not an exotic one — it is "the
+player pressed Update shortly after opening the tab". So the message goes straight
+to `registration.waiting`, a `controllerchange` listener is attached _before_ it is
+posted (control can change immediately, and a listener added afterwards waits for
+an event that has already fired), and the reload is ours. `true` now means the page
+reloaded, which is what the caller was already assuming it meant.
+
+Two smaller versions of the same mistake, both "an answer that never comes is not
+the same as no answer": `registration.update()` is bounded by a deadline, because a
+captive portal or a proxy holding the connection open leaves it pending rather than
+rejecting — the `.catch` never runs and the Update button does nothing at all. And
+the registration is read from `navigator.serviceWorker.getRegistration()` when the
+plugin's `onRegisteredSW` has not fired yet, since it defers `wb.register()` to
+`window.load` and the first version poll can easily beat it; without that, "our
+callback is late" was indistinguishable from "this browser has no worker", and the
+fallback reload went straight back into the precached build.
+
 `runtime-config.json` is deliberately in neither the precache globs nor any runtime
 cache. It is how a running tab learns it is out of date; served from a cache it
 would answer with the version the tab is already running, and the app could never

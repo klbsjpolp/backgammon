@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const registerSW = vi.hoisted(() => vi.fn());
 vi.mock('virtual:pwa-register', () => ({ registerSW }));
@@ -8,9 +8,14 @@ const { activateWaitingServiceWorker, registerServiceWorker, resetServiceWorkerF
 
 type MutableRegistration = {
   installing: ServiceWorker | null;
-  waiting: ServiceWorker | null;
+  waiting: (ServiceWorker & { postMessage: ReturnType<typeof vi.fn> }) | null;
   update: ReturnType<typeof vi.fn>;
 };
+
+const createWaitingWorker = () =>
+  ({ postMessage: vi.fn() }) as unknown as ServiceWorker & {
+    postMessage: ReturnType<typeof vi.fn>;
+  };
 
 const createRegistration = (overrides: Partial<MutableRegistration> = {}): MutableRegistration => ({
   installing: null,
@@ -19,21 +24,50 @@ const createRegistration = (overrides: Partial<MutableRegistration> = {}): Mutab
   ...overrides,
 });
 
-/** Registers the worker and hands back the plugin's update function. */
+const reload = vi.fn();
+/** Listeners the module attached to the container, by event name. */
+const containerListeners = new Map<string, Set<() => void>>();
+let getRegistrationResult: Promise<MutableRegistration | null> = Promise.resolve(null);
+
+const container = {
+  getRegistration: () => getRegistrationResult,
+  addEventListener: (type: string, listener: () => void) => {
+    const existing = containerListeners.get(type) ?? new Set<() => void>();
+    existing.add(listener);
+    containerListeners.set(type, existing);
+  },
+  removeEventListener: (type: string, listener: () => void) => {
+    containerListeners.get(type)?.delete(listener);
+  },
+};
+
+/** Fires `controllerchange`, as a worker taking control does. */
+const takeControl = () => {
+  for (const listener of [...(containerListeners.get('controllerchange') ?? [])]) listener();
+};
+
+/** Registers the worker, reporting `registration` from `onRegisteredSW`. */
 const register = (registration: MutableRegistration | null) => {
-  const updateServiceWorker = vi.fn().mockResolvedValue(undefined);
   registerSW.mockImplementation((options: Parameters<typeof registerSW>[0]) => {
     options?.onRegisteredSW?.('/sw.js', registration as unknown as ServiceWorkerRegistration | undefined);
-    return updateServiceWorker;
+    return vi.fn();
   });
   registerServiceWorker();
-  return updateServiceWorker;
 };
 
 describe('serviceWorker', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     resetServiceWorkerForTests();
+    containerListeners.clear();
+    getRegistrationResult = Promise.resolve(null);
+    vi.stubGlobal('navigator', { serviceWorker: container });
+    vi.spyOn(globalThis, 'location', 'get').mockReturnValue({ reload } as unknown as Location);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.useRealTimers();
   });
 
   it('registers only once', () => {
@@ -43,7 +77,9 @@ describe('serviceWorker', () => {
     expect(registerSW).toHaveBeenCalledTimes(1);
   });
 
-  it('reports no activation when nothing was ever registered', async () => {
+  it('reports no activation in a browser without service workers', async () => {
+    vi.stubGlobal('navigator', {});
+
     await expect(activateWaitingServiceWorker()).resolves.toBe(false);
   });
 
@@ -61,21 +97,88 @@ describe('serviceWorker', () => {
     await expect(activateWaitingServiceWorker()).resolves.toBe(false);
   });
 
-  it('activates and reloads onto a waiting worker', async () => {
-    const registration = createRegistration({ waiting: {} as ServiceWorker });
-    const updateServiceWorker = register(registration);
+  it('activates a waiting worker and reloads once it has control', async () => {
+    const waiting = createWaitingWorker();
+    const registration = createRegistration({ waiting });
+    register(registration);
+
+    const activation = activateWaitingServiceWorker();
+    await vi.waitFor(() => expect(waiting.postMessage).toHaveBeenCalledWith({ type: 'SKIP_WAITING' }));
+    // Not yet: the reload waits for the new worker to actually take over.
+    expect(reload).not.toHaveBeenCalled();
+
+    takeControl();
+
+    await expect(activation).resolves.toBe(true);
+    expect(registration.update).toHaveBeenCalled();
+    expect(reload).toHaveBeenCalledTimes(1);
+  });
+
+  // The listener has to be attached before the message: a worker can take
+  // control immediately, and a listener added afterwards waits for an event that
+  // has already fired.
+  it('listens for the handover before asking for it', async () => {
+    const waiting = createWaitingWorker();
+    waiting.postMessage.mockImplementation(() => {
+      expect(containerListeners.get('controllerchange')?.size).toBe(1);
+      takeControl();
+    });
+    register(createRegistration({ waiting }));
 
     await expect(activateWaitingServiceWorker()).resolves.toBe(true);
-    expect(registration.update).toHaveBeenCalled();
-    expect(updateServiceWorker).toHaveBeenCalledWith(true);
+    expect(reload).toHaveBeenCalledTimes(1);
+  });
+
+  // A worker that never takes control must not strand a player who pressed the
+  // button; reloading anyway is the safer of the two answers.
+  it('reloads anyway when the handover never completes', async () => {
+    vi.useFakeTimers();
+    const waiting = createWaitingWorker();
+    register(createRegistration({ waiting }));
+
+    const activation = activateWaitingServiceWorker();
+    await vi.waitFor(() => expect(waiting.postMessage).toHaveBeenCalled());
+    await vi.advanceTimersByTimeAsync(3000);
+
+    await expect(activation).resolves.toBe(true);
+    expect(reload).toHaveBeenCalledTimes(1);
+    expect(containerListeners.get('controllerchange')?.size).toBe(0);
   });
 
   it('reports no activation when the deploy has nothing newer staged', async () => {
-    const registration = createRegistration();
-    const updateServiceWorker = register(registration);
+    register(createRegistration());
 
     await expect(activateWaitingServiceWorker()).resolves.toBe(false);
-    expect(updateServiceWorker).not.toHaveBeenCalled();
+    expect(reload).not.toHaveBeenCalled();
+  });
+
+  // The version poll can fire before the plugin's `onRegisteredSW` does — it
+  // defers `wb.register()` to `window.load`. Reading the browser's own
+  // registration keeps "no worker" from meaning "our callback is late", which
+  // would reload straight back into the precached build.
+  it('finds a registration the plugin has not reported yet', async () => {
+    const waiting = createWaitingWorker();
+    getRegistrationResult = Promise.resolve(createRegistration({ waiting }));
+
+    const activation = activateWaitingServiceWorker();
+    await vi.waitFor(() => expect(waiting.postMessage).toHaveBeenCalled());
+    takeControl();
+
+    await expect(activation).resolves.toBe(true);
+  });
+
+  // Looking one up throws where the API exists but is refused — a sandboxed
+  // frame, storage blocked. That is "no worker", not a crash on the way out.
+  it('treats a refused registration lookup as nothing to activate', async () => {
+    getRegistrationResult = Promise.reject(new Error('storage blocked'));
+
+    await expect(activateWaitingServiceWorker()).resolves.toBe(false);
+  });
+
+  it('treats a missing registration as nothing to activate', async () => {
+    register(null);
+
+    await expect(activateWaitingServiceWorker()).resolves.toBe(false);
   });
 
   // The window a bare `registration.waiting` check would miss: update() resolves
@@ -89,7 +192,7 @@ describe('serviceWorker', () => {
       removeEventListener: (_type: string, listener: () => void) => listeners.delete(listener),
     };
     const registration = createRegistration({ installing: installing as unknown as ServiceWorker });
-    const updateServiceWorker = register(registration);
+    register(registration);
 
     const activation = activateWaitingServiceWorker();
     await vi.waitFor(() => expect(listeners.size).toBe(1));
@@ -100,51 +203,36 @@ describe('serviceWorker', () => {
     expect(listeners.size).toBe(1);
 
     installing.state = 'installed';
-    registration.waiting = {} as ServiceWorker;
+    registration.waiting = createWaitingWorker();
     listeners.forEach((listener) => listener());
 
+    await vi.waitFor(() => expect(registration.waiting?.postMessage).toHaveBeenCalled());
+    takeControl();
+
     await expect(activation).resolves.toBe(true);
-    expect(updateServiceWorker).toHaveBeenCalledWith(true);
-  });
-
-  // The plugin reports a registration of `undefined` when the browser hands it
-  // nothing back, which is not the same as an error and must not be stored.
-  it('treats a missing registration as nothing to activate', async () => {
-    register(null);
-
-    await expect(activateWaitingServiceWorker()).resolves.toBe(false);
   });
 
   // `installing` is a snapshot: the worker can have moved on by the time we look
   // at it, and waiting on a `statechange` that already fired would hang.
   it('does not wait on a worker that has already left installing', async () => {
-    const installed = {
-      state: 'installed',
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-    };
-    const registration = createRegistration({
-      installing: installed as unknown as ServiceWorker,
-      waiting: {} as ServiceWorker,
-    });
-    const updateServiceWorker = register(registration);
+    const installed = { state: 'installed', addEventListener: vi.fn(), removeEventListener: vi.fn() };
+    const waiting = createWaitingWorker();
+    register(createRegistration({ installing: installed as unknown as ServiceWorker, waiting }));
 
-    await expect(activateWaitingServiceWorker()).resolves.toBe(true);
+    const activation = activateWaitingServiceWorker();
+    await vi.waitFor(() => expect(waiting.postMessage).toHaveBeenCalled());
+    takeControl();
+
+    await expect(activation).resolves.toBe(true);
     expect(installed.addEventListener).not.toHaveBeenCalled();
-    expect(updateServiceWorker).toHaveBeenCalledWith(true);
   });
 
   // A download that stalls must not leave the caller awaiting forever: the
   // player pressed a button, and "nothing staged" is an answer they can act on.
   it('gives up on an install that never settles', async () => {
     vi.useFakeTimers();
-    const stalled = {
-      state: 'installing',
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-    };
-    const registration = createRegistration({ installing: stalled as unknown as ServiceWorker });
-    const updateServiceWorker = register(registration);
+    const stalled = { state: 'installing', addEventListener: vi.fn(), removeEventListener: vi.fn() };
+    register(createRegistration({ installing: stalled as unknown as ServiceWorker }));
 
     const activation = activateWaitingServiceWorker();
     await vi.waitFor(() => expect(stalled.addEventListener).toHaveBeenCalled());
@@ -152,18 +240,33 @@ describe('serviceWorker', () => {
 
     await expect(activation).resolves.toBe(false);
     expect(stalled.removeEventListener).toHaveBeenCalled();
-    expect(updateServiceWorker).not.toHaveBeenCalled();
-    vi.useRealTimers();
   });
 
   it('still activates what is waiting when the update check fails offline', async () => {
-    const registration = createRegistration({
-      waiting: {} as ServiceWorker,
-      update: vi.fn().mockRejectedValue(new Error('offline')),
-    });
-    const updateServiceWorker = register(registration);
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const waiting = createWaitingWorker();
+    register(createRegistration({ waiting, update: vi.fn().mockRejectedValue(new Error('offline')) }));
 
-    await expect(activateWaitingServiceWorker()).resolves.toBe(true);
-    expect(updateServiceWorker).toHaveBeenCalledWith(true);
+    const activation = activateWaitingServiceWorker();
+    await vi.waitFor(() => expect(waiting.postMessage).toHaveBeenCalled());
+    takeControl();
+
+    await expect(activation).resolves.toBe(true);
+  });
+
+  // A check that never answers is not a check that failed: without a deadline
+  // the caller waits forever and the Update button does nothing at all.
+  it('stops waiting on an update check that hangs', async () => {
+    vi.useFakeTimers();
+    const waiting = createWaitingWorker();
+    register(createRegistration({ waiting, update: vi.fn().mockReturnValue(new Promise(() => {})) }));
+
+    const activation = activateWaitingServiceWorker();
+    await vi.advanceTimersByTimeAsync(5000);
+    await vi.waitFor(() => expect(waiting.postMessage).toHaveBeenCalled());
+    takeControl();
+
+    await expect(activation).resolves.toBe(true);
+    expect(reload).toHaveBeenCalledTimes(1);
   });
 });
