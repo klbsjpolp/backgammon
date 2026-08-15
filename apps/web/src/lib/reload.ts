@@ -8,8 +8,9 @@ import { activateWaitingServiceWorker } from '@/lib/serviceWorker';
  * Once a service worker is installed that stops being true — the document comes
  * from the precache, and reloading serves the very build we are trying to leave.
  * So the waiting worker gets its turn first; `activateWaitingServiceWorker`
- * reloads as part of taking over, and answers `false` when there was nothing to
- * take over from, which is when the plain reload below is still the right move.
+ * reloads once the new worker has control, and answers `false` only when there
+ * was nothing to take over from — no worker in this browser, or nothing newer
+ * staged — which is when the plain reload below is still the right move.
  */
 export const reloadApp = () => {
   void activateWaitingServiceWorker()
