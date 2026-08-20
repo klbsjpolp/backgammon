@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.1.23](https://github.com/klbsjpolp/backgammon/compare/v0.1.22...v0.1.23) (2026-08-20)
+
+### Bug Fixes
+
+* **web:** move the dice down to the buttons that roll them ([db5b05a](https://github.com/klbsjpolp/backgammon/commit/db5b05aaeac6bec6ba5c9f778b83ea4a93d2ced8))
 ## [0.1.22](https://github.com/klbsjpolp/backgammon/compare/v0.1.21...v0.1.22) (2026-08-20)
 
 ### Bug Fixes
