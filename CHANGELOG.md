@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.1.22](https://github.com/klbsjpolp/backgammon/compare/v0.1.21...v0.1.22) (2026-08-20)
+
+### Bug Fixes
+
+* **web:** draw the dice instead of setting them in a font ([a3c4c31](https://github.com/klbsjpolp/backgammon/commit/a3c4c31841abc7753f817a75e01456d6b9cb1bdb))
 ## [0.1.21](https://github.com/klbsjpolp/backgammon/compare/v0.1.20...v0.1.21) (2026-08-18)
 ## [0.1.20](https://github.com/klbsjpolp/backgammon/compare/v0.1.19...v0.1.20) (2026-08-15)
 
