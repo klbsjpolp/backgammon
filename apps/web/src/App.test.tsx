@@ -35,6 +35,18 @@ describe('App', () => {
     expect(await screen.findByText(/to move/i, { ignore: '.sr-only' })).toBeDefined();
   });
 
+  it('switches between playing the AI and playing online', () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: /^online$/i }));
+    // Online opens on its room picker — no socket until a room is created or joined.
+    expect(screen.getByLabelText('Room code')).toBeDefined();
+    expect(screen.queryByRole('button', { name: /^roll$/i })).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: /^vs ai$/i }));
+    expect(screen.getAllByLabelText(/^point \d+,/)).toHaveLength(24);
+  });
+
   it('shows the running version', () => {
     render(<App />);
     expect(screen.getByTestId('app-version').textContent).toBe('Version v1.2.3');
