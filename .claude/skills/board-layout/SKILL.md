@@ -53,8 +53,12 @@ Before and after any such change, check **three** cases — they are CSS-only, n
   invalidated by the same DOM write that changes the count, so the two cannot disagree. Do not "simplify" this back.
 - The dice ride in the header row (portalled from the board, which is the only thing that knows the roll) and are
   drawn as pips with the played ones faded — the same information as a "remaining: 6, 5" line in a third of the
-  width. On a phone they are sized to the header row's height, not the title's, because die glyphs carry a lot of
-  built-in padding. The title is the item that gives when a narrow phone runs out of row.
+  width. On a phone they are sized to the header row's height, not the title's, and the title is the item that gives
+  when a narrow phone runs out of row.
+- **A die is an SVG, not the ⚀..⚅ character.** A glyph's ink is a fraction of its em box, its outline weight is the
+  font's choice and so is whether the platform draws it as text or emoji, so a bigger font size bought a smudge. The
+  drawn face fills its `1em` box. Sizes still come from the caller as `text-*`, and the gap between two dice is in
+  `em`, so a pair keeps fitting the width the slot reserves.
 
 ## Finishing
 

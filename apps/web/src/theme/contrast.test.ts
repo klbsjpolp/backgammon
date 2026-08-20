@@ -61,6 +61,19 @@ describe.each(THEMES.map((theme) => theme.id))('%s', (id) => {
     }
   });
 
+  // The dice are drawn, not typed, so a theme now picks two colours for them and
+  // both have somewhere to be legible: the pips against the face they sit on, and
+  // the face against the page it floats on with nothing but its own fill to draw
+  // its edge. A theme that gives the die the canvas's own luminance loses the die.
+  it('the dice read against their face and the page', () => {
+    for (const [name, against] of [
+      ['dice-pip on dice', contrast(vars['dice-pip'], vars.dice)],
+      ['dice on canvas', contrast(vars.dice, vars.canvas)],
+    ] as const) {
+      expect(`${name}: ${against.toFixed(2)}`).toBe(`${name}: ${Math.max(against, MIN_NON_TEXT_CONTRAST).toFixed(2)}`);
+    }
+  });
+
   // Either the body or the rim has to draw the checker's edge. In the dark themes
   // the pale body does it on its own; on a light board only the rim can.
   it.each(['light', 'dark'])('the %s checker has an edge on both point colours', (side) => {

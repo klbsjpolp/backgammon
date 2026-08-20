@@ -88,17 +88,16 @@ export const App = () => {
                * two dice of an ordinary roll, and doubles (four) borrow a little more
                * from the title for the length of the turn.
                *
-               * The pip glyphs carry a lot of built-in padding — the drawn die is
-               * appreciably smaller than its font size — so on a phone they are set
-               * to about the height of the row itself rather than to the title's
-               * size, which left them a smudge. `leading-none` (in `Dice`) keeps the
-               * taller text from growing the row: the buttons opposite still set its
-               * height, so the board's height budget below is untouched.
+               * A die is drawn to the full size it is set (see `Dice`), so the size
+               * here is the die: the row's own height, not the title's, since that
+               * is the room there is. The buttons opposite still set the row —
+               * 40px on a phone, 36px of title line box on a desktop — so a die of
+               * at most that leaves the board's height budget below untouched.
                */}
               <div
                 ref={setDiceSlot}
                 className={cn(
-                  'flex min-w-14 shrink-0 items-center justify-center text-2xl',
+                  'flex min-w-20 shrink-0 items-center justify-center text-4xl',
                   'max-sm:min-w-16 max-sm:text-3xl compact:min-w-16 compact:text-3xl',
                 )}
               />
