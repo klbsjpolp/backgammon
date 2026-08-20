@@ -59,6 +59,15 @@ describe('LocalPanel', () => {
     expect(game.rollDice).toHaveBeenCalled();
   });
 
+  it('draws the roll in the same block as the buttons, not up in the page header', () => {
+    renderPanel({ state: { ...createInitialState('white'), phase: 'moving', roll: [6, 5], remaining: [6, 5] } });
+    // Roll sits in a row of that block, so its grandparent is the block itself.
+    // Being one container is the point: it is what lets CSS put the dice beside
+    // Roll, under it or above it per layout without a copy per breakpoint.
+    const controls = screen.getByRole('button', { name: /^roll$/i }).parentElement?.parentElement;
+    expect(controls?.contains(screen.getByLabelText('dice'))).toBe(true);
+  });
+
   it('starts a new game only after the tap is confirmed', () => {
     const game = renderPanel();
     const newGame = () => screen.getByRole('button', { name: /new game/i });

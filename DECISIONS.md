@@ -228,24 +228,19 @@ to play on a phone:
   is invalidated by the same DOM write that changes the count, so the two cannot disagree.
 
 - **The page chrome was measured, not guessed.** The dice moved out of the board's own
-  column and up into the header row beside the title — the one row every layout already
-  pays for — the status line and the header row were tightened, and the version footer is
-  dropped in landscape. What is left is what `--avail-h` / `--avail-w` reserve, down from
-  22rem to 18.5rem in portrait and from 7.5rem to 3.5rem in landscape, and the board now
-  has the full width of the screen (portrait) or of everything but the sidebar
-  (landscape) to be drawn in.
+  column into a row every layout already pays for, the status line and the header row
+  were tightened, and the version footer is dropped in landscape. What is left is what
+  `--avail-h` / `--avail-w` reserve, down from 22rem to 18.5rem in portrait and from
+  7.5rem to 3.5rem in landscape, and the board now has the full width of the screen
+  (portrait) or of everything but the sidebar (landscape) to be drawn in.
 
-  Anything riding in that row still costs the board height, so the dice are drawn as
+  Anything riding in such a row still costs the board height, so the dice are drawn as
   **pips with the ones already played faded**, rather than spelled out beside a
   "remaining: 6, 5" line: the same information in a third of the width, and four pips on
-  doubles say what four moves are coming better than the text did. The title is the item
-  that gives when a narrow phone runs out of row, as it already was for the switches; the
-  slot reserves its width so that a roll landing does not re-truncate the heading
-  mid-turn. The board still owns the dice — only it knows what was rolled — and portals
-  them into the slot, falling back to drawing them under itself when there is none.
+  doubles say what four moves are coming better than the text did.
 
-  On a phone the dice are set to **the height of the header row** (1.875rem) rather than
-  to the title's size, and they are **drawn** rather than typed. The first version set the
+  On a phone the dice are set to **the height of a control row** (1.875rem), and they are
+  **drawn** rather than typed. The first version set the
   Unicode pip characters, ⚀..⚅, in a larger font, and that is why the roll still read as a
   smudge at arm's length: a glyph's ink is a fraction of its em box and the rest is padding
   the font chose, its outline is a hairline the font chose, and whether the platform draws
@@ -259,11 +254,31 @@ to play on a phone:
   That costs one more variable in every theme and a line in the contrast gate, which now
   holds the pips to 3:1 against the face and the face to 3:1 against `--canvas` — a die
   floats on the page with nothing but its own fill to draw its edge, so a theme that gives
-  it the page's luminance loses it. It costs the board nothing: the mode switch opposite is
-  still the taller item in the row, so `--avail-h` is unchanged, and the gap between two
-  dice is in `em` so that a pair still fits the width the slot already reserved. On a
-  desktop the row is the title's own 36px line box and the dice now take all of it instead
-  of 24px; the slot's reservation goes 3.5rem → 5rem there, where nothing is truncating.
+  it the page's luminance loses it.
+
+- **The dice sit with the buttons, and every layout wants that somewhere else.** They rode
+  in the page header first, which is the far end of the screen from the thumb that rolls
+  them — you watch the bottom of a phone and the roll lands at the top. Moving them down is
+  a width problem, not a taste one: the primary row on a 390px portrait screen has 33px
+  spare once Roll, auto-roll and Double have taken theirs, and four dice on a double need 132. There is no arrangement of that row that holds them.
+
+  So `Controls` is a three-column grid, the outer two `1fr`, and the dice are one cell that
+  each layout places for itself — beside Roll on a roomy screen, in the bottom row hard
+  left on a portrait phone (the row that holds one button and has the 132px going spare),
+  and on a line of its own at the top of the sidebar in landscape, where height is what is
+  going spare. One element moved by CSS, not a copy per breakpoint: a copy is a second
+  `aria-label="dice"` for a screen reader to find, and the one that is hidden is hidden by
+  a media query a test environment does not evaluate.
+
+  The cell is reserved at the width of a **double**, four dice, not of the two an ordinary
+  roll draws. That is what keeps the buttons still: they sit in the middle column, and a
+  cell that grew when a double landed would slide them sideways between the two taps the
+  new-game button needs. The cost is paid in symmetry — on a phone the reservation is
+  wider than the column would otherwise be, so the bottom row's button sits ~22px right of
+  the page's centre. It costs no height anywhere: every row the dice land in is already a
+  44px control row and a die is 30px. The board is untouched, `--avail-h` unchanged, and
+  the header, with nothing left in it but the title, stops truncating "Backgammon" on a
+  phone.
 
 Between them the checkers came out ~85% larger in landscape and ~40% in portrait on a
 modern phone, with the page still fitting the viewport exactly (no scroll). Where the

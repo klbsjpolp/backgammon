@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { canDouble, opponent } from '@backgammon/core';
 import { Board, type BoardController } from '@/components/Board';
 import { Button, ConfirmButton } from '@/components/Button';
+import { Dice } from '@/components/Dice';
 import { Controls, GameLayout } from '@/components/GameLayout';
 import { TurnControls } from '@/components/TurnControls';
 import { TurnStatus } from '@/components/TurnStatus';
@@ -171,6 +172,7 @@ export const OnlinePanel = ({ applyPendingUpdate, onBusyChange }: OnlinePanelPro
       board={<Board controller={controller} />}
       controls={
         <Controls
+          dice={<Dice state={state} />}
           primary={
             <TurnControls
               canRoll={g.canRoll}

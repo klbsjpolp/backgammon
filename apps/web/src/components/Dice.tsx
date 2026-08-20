@@ -96,13 +96,13 @@ const facesFor = (roll: readonly [number, number], remaining: readonly number[])
 /**
  * The roll, drawn as pips rather than spelled out. Fading the dice already played
  * says the same thing the old "remaining: 6, 5" line did in a fraction of the
- * width, which is what lets the dice ride in the header row beside the title
+ * width, which is what lets the dice ride in a row the page already pays for
  * instead of costing the board a strip of the little room a phone has.
  *
- * Size and colour are the caller's: the header draws them one way, the fallback
- * row under the board another. The gap is in `em` for the same reason — it has
- * to stay a hair between two dice at every size, and two dice plus their gap are
- * what the header reserves room for.
+ * Size and colour are the caller's — see `Controls`, which owns the cell they are
+ * drawn in and moves it per layout. The gap is in `em` for the same reason: it
+ * has to stay a hair between two dice at every size, and four dice plus their
+ * gaps are what that cell reserves room for.
  */
 export const Dice = ({ state, className }: { state: GameState; className?: string }) => {
   if (!state.roll || state.phase === 'rolling') return null;

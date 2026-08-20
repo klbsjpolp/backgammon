@@ -1,5 +1,6 @@
 import { Board } from '@/components/Board';
 import { Button, ConfirmButton } from '@/components/Button';
+import { Dice } from '@/components/Dice';
 import { Controls, GameLayout } from '@/components/GameLayout';
 import { TurnControls } from '@/components/TurnControls';
 import { TurnStatus } from '@/components/TurnStatus';
@@ -30,6 +31,7 @@ export const LocalPanel = ({ applyPendingUpdate }: LocalPanelProps = {}) => {
       board={<Board controller={game} />}
       controls={
         <Controls
+          dice={<Dice state={state} />}
           primary={
             <>
               <TurnControls

@@ -1,7 +1,4 @@
-import { createPortal } from 'react-dom';
 import { BAR, CHECKERS_PER_SIDE, OFF, POINT_COUNT, opponent, type GameState, type Player } from '@backgammon/core';
-import { Dice } from '@/components/Dice';
-import { useDiceSlot } from '@/components/diceSlot';
 import { cn } from '@/lib/cn';
 
 /** Minimal surface the board needs; satisfied by both the local and online games. */
@@ -212,7 +209,6 @@ export const Board = ({ controller }: { controller: BoardController }) => {
   const board = state.board;
   const them = opponent(you);
   const { top, bottom } = rowsFor(you);
-  const diceSlot = useDiceSlot();
 
   const renderPoint = (index: number, orientation: 'top' | 'bottom') => (
     <Point
@@ -269,15 +265,6 @@ export const Board = ({ controller }: { controller: BoardController }) => {
           </div>
         </div>
       </div>
-
-      {/*
-       * The dice belong to the header row, which every layout already pays for —
-       * drawn under or beside the board they cost it the height or the width that
-       * sets how big a checker can be. The board still owns them (only it knows
-       * what was rolled), so they are portalled into the slot the header exposes;
-       * with no slot — a `<Board>` rendered on its own — they stay under it.
-       */}
-      {diceSlot ? createPortal(<Dice state={state} />, diceSlot) : <Dice state={state} className="mt-2 text-4xl" />}
     </div>
   );
 };

@@ -51,10 +51,13 @@ Before and after any such change, check **three** cases — they are CSS-only, n
   The CSS version read better and was wrong on WebKit: landing a checker did not re-evaluate it, so a point that grew
   to five kept the flat spacing and spilled past its border until something forced a full recalc. The attribute is
   invalidated by the same DOM write that changes the count, so the two cannot disagree. Do not "simplify" this back.
-- The dice ride in the header row (portalled from the board, which is the only thing that knows the roll) and are
-  drawn as pips with the played ones faded — the same information as a "remaining: 6, 5" line in a third of the
-  width. On a phone they are sized to the header row's height, not the title's, and the title is the item that gives
-  when a narrow phone runs out of row.
+- **The dice are a cell of the `Controls` grid, placed per layout** — beside Roll on a roomy screen, bottom row hard
+  left in portrait, a line of its own at the top of the sidebar in landscape. They are drawn as pips with the played
+  ones faded, the same information as a "remaining: 6, 5" line in a third of the width. Do not try to fit them into
+  the primary button row on a phone: it has 33px spare at 390px and a double needs 132. Do not solve the placement
+  with one copy per breakpoint either — a hidden copy is a second `aria-label="dice"` in the tree, and the media
+  query that hides it does not run in jsdom. The cell is reserved at the width of a **double** so a roll landing
+  never slides the buttons sideways.
 - **A die is an SVG, not the ⚀..⚅ character.** A glyph's ink is a fraction of its em box, its outline weight is the
   font's choice and so is whether the platform draws it as text or emoji, so a bigger font size bought a smudge. The
   drawn face fills its `1em` box. Sizes still come from the caller as `text-*`, and the gap between two dice is in
