@@ -277,7 +277,7 @@ export const Board = ({ controller }: { controller: BoardController }) => {
        * what was rolled), so they are portalled into the slot the header exposes;
        * with no slot — a `<Board>` rendered on its own — they stay under it.
        */}
-      {diceSlot ? createPortal(<Dice state={state} />, diceSlot) : <Dice state={state} className="mt-2 text-2xl" />}
+      {diceSlot ? createPortal(<Dice state={state} />, diceSlot) : <Dice state={state} className="mt-2 text-4xl" />}
     </div>
   );
 };

@@ -33,6 +33,10 @@ non-text UI. It runs automatically over a new theme the moment it is in the cata
   first, then nudge the points apart until both clear.
 - `--pick-strong` out-**contrasts** `--pick`, which is not the same as out-brightening it. On a dark felt stronger is
   lighter; on a light one it is darker, because a mid-toned point leaves no headroom above it.
+- The dice read: `--dice-pip` clears 3:1 on `--dice`, and `--dice` clears 3:1 on `--canvas`. The die is drawn, not
+  typed, and has no rim — its own fill is the only thing separating it from the page, so a face at the canvas's
+  luminance disappears whatever the pips do. A dark face with pale pips is as valid as the reverse; only the two
+  ratios decide.
 - Each checker has an edge: `max(contrast(body, point), contrast(rim, point)) >= 3` for both checkers on both points.
   A pale checker on a dark point needs no rim; a dark checker on a dark felt, or a pale one on cream, is invisible
   without one and the rim carries the ratio alone.

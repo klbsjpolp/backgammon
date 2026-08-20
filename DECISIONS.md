@@ -244,12 +244,26 @@ to play on a phone:
   mid-turn. The board still owns the dice — only it knows what was rolled — and portals
   them into the slot, falling back to drawing them under itself when there is none.
 
-  On a phone the pips are set to **the height of the header row** (1.875rem) rather than
-  to the title's size. The die glyphs carry a lot of built-in padding — the drawn die is
-  noticeably smaller than its font size — so matching the text around them left the roll
-  a smudge at arm's length. It costs the board nothing: the mode switch opposite is the
-  taller item and still sets the row's height, so `--avail-h` is unchanged. It costs the
-  title, which was already the item that gives.
+  On a phone the dice are set to **the height of the header row** (1.875rem) rather than
+  to the title's size, and they are **drawn** rather than typed. The first version set the
+  Unicode pip characters, ⚀..⚅, in a larger font, and that is why the roll still read as a
+  smudge at arm's length: a glyph's ink is a fraction of its em box and the rest is padding
+  the font chose, its outline is a hairline the font chose, and whether the platform draws
+  the character as text or as an emoji is a third thing the font chose. Every one of those
+  is out of our hands, so raising the font size buys only a fraction of itself: at 30px,
+  Chromium's fallback draws 22px of ink, and how much less a phone draws is again the
+  font's business. A face drawn as a rounded rect and up to six circles fills the box it
+  is given — at the same 1.875rem it is a solid 30px of `--dice` with `--dice-pip` pips,
+  the same on every platform.
+
+  That costs one more variable in every theme and a line in the contrast gate, which now
+  holds the pips to 3:1 against the face and the face to 3:1 against `--canvas` — a die
+  floats on the page with nothing but its own fill to draw its edge, so a theme that gives
+  it the page's luminance loses it. It costs the board nothing: the mode switch opposite is
+  still the taller item in the row, so `--avail-h` is unchanged, and the gap between two
+  dice is in `em` so that a pair still fits the width the slot already reserved. On a
+  desktop the row is the title's own 36px line box and the dice now take all of it instead
+  of 24px; the slot's reservation goes 3.5rem → 5rem there, where nothing is truncating.
 
 Between them the checkers came out ~85% larger in landscape and ~40% in portrait on a
 modern phone, with the page still fitting the viewport exactly (no scroll). Where the

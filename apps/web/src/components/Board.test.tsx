@@ -128,9 +128,8 @@ describe('Board', () => {
     render(<Board controller={controllerFor('white')} />);
     // With a slot (the app) they are portalled into the header instead — see
     // `Dice.test.tsx` for what they say. Here the board keeps them.
-    const dice = within(screen.getByLabelText('dice'));
-    expect(dice.getByText('⚅')).toBeDefined();
-    expect(dice.getByText('⚄')).toBeDefined();
+    const faces = [...screen.getByLabelText('dice').querySelectorAll('svg')].map((el) => el.getAttribute('data-face'));
+    expect(faces).toEqual(['6', '5']);
   });
 });
 
