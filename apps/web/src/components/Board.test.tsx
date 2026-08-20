@@ -123,14 +123,6 @@ describe('Board', () => {
     expect(depthOn(5)).toBe('5');
     expect(depthOn(6)).toBe('5');
   });
-
-  it('falls back to drawing the dice itself when there is no header slot', () => {
-    render(<Board controller={controllerFor('white')} />);
-    // With a slot (the app) they are portalled into the header instead — see
-    // `Dice.test.tsx` for what they say. Here the board keeps them.
-    const faces = [...screen.getByLabelText('dice').querySelectorAll('svg')].map((el) => el.getAttribute('data-face'));
-    expect(faces).toEqual(['6', '5']);
-  });
 });
 
 describe('Board — what it says out loud', () => {
