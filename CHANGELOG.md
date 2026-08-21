@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.1.25](https://github.com/klbsjpolp/backgammon/compare/v0.1.24...v0.1.25) (2026-08-21)
+
+### Features
+
+* **web:** play the AI's turn one checker at a time ([5262a18](https://github.com/klbsjpolp/backgammon/commit/5262a189ab44413a38f3f3b889c9d69382953e37))
 ## [0.1.24](https://github.com/klbsjpolp/backgammon/compare/v0.1.23...v0.1.24) (2026-08-21)
 
 ### Bug Fixes
