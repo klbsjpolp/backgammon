@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.1.26](https://github.com/klbsjpolp/backgammon/compare/v0.1.25...v0.1.26) (2026-08-21)
+
+### Features
+
+* **web:** draw the checker crossing the board ([9843f76](https://github.com/klbsjpolp/backgammon/commit/9843f768a03fc6dd6f2337d2ed5081007fcb1320))
+
+### Bug Fixes
+
+* **web:** aim the flight at the slot that actually opened ([bde2bfb](https://github.com/klbsjpolp/backgammon/commit/bde2bfbfc182d025c4d166d08e3dfab8194a56a7))
 ## [0.1.25](https://github.com/klbsjpolp/backgammon/compare/v0.1.24...v0.1.25) (2026-08-21)
 
 ### Features
