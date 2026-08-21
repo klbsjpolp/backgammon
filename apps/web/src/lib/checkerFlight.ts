@@ -43,7 +43,19 @@ export interface Spot {
   y: number;
 }
 
-export const centreOf = (rect: DOMRect): Spot => ({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
+/**
+ * The part of a `DOMRect` a flight actually reads. A `DOMRect` satisfies it, and
+ * so does the square a drag was let go of — which no element ever occupied and
+ * so cannot be measured.
+ */
+export interface Rect {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+}
+
+export const centreOf = (rect: Rect): Spot => ({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
 
 /**
  * Asked per flight rather than read once: the setting can change under a running
@@ -57,7 +69,7 @@ const canAnimate = (element: Element): boolean => typeof element.animate === 'fu
 
 export interface Flight {
   /** Screen rect of the checker as it stood before the move — where the trip starts. */
-  from: DOMRect;
+  from: Rect;
   /** Screen point it is heading for. */
   to: Spot;
   /**

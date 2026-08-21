@@ -12,6 +12,7 @@ import {
 } from '@backgammon/runtime';
 import { canDouble, opponent, type GameState, type Player } from '@backgammon/core';
 import { useAutoRoll } from '@/useAutoRoll';
+import { useCheckerSelection } from '@/useCheckerSelection';
 import { createOnlineRoom, joinOnlineRoom } from './api';
 
 const PING_INTERVAL_MS = 25_000;
@@ -43,6 +44,9 @@ export interface OnlineGame {
   canRoll: boolean;
   rollDice: () => void;
   clickPoint: (index: number) => void;
+  targetsFrom: (from: number) => number[];
+  selectFrom: (from: number | null) => void;
+  moveChecker: (from: number, to: number) => void;
   double: () => void;
   respond: (accept: boolean) => void;
 }
@@ -54,7 +58,6 @@ export const useOnlineGame = (): OnlineGame => {
   const [room, setRoom] = useState<RoomSummary | null>(null);
   const [myPlayer, setMyPlayer] = useState<Player | null>(null);
   const [gameState, setGameState] = useState<GameState | null>(null);
-  const [selectedFrom, setSelectedFrom] = useState<number | null>(null);
   const [autoRoll, setAutoRoll] = useState(false);
 
   const wsRef = useRef<WebSocket | null>(null);
@@ -100,7 +103,6 @@ export const useOnlineGame = (): OnlineGame => {
 
   const sendAction = useCallback(
     (action: BackgammonAction) => {
-      setSelectedFrom(null);
       if (isHostRef.current && hostRef.current && sessionRef.current) {
         try {
           hostRef.current.applyAction(sessionRef.current.seatIndex, action);
@@ -294,15 +296,16 @@ export const useOnlineGame = (): OnlineGame => {
     [gameState, myPlayer],
   );
 
-  // A selection is only meaningful while it is our move; otherwise treat it as
-  // cleared (this also drops any stale selection without a setState-in-effect).
+  // A selection is only meaningful while it is our move, and an empty move list is
+  // what makes every part of the selection below inert when it is not.
   const canSelect = (view?.yourTurn ?? false) && gameState?.phase === 'moving';
-  const selected = canSelect ? selectedFrom : null;
+  const legalMoves = useMemo(() => (canSelect ? (view?.legalMoves ?? []) : []), [canSelect, view]);
 
-  const selectableFroms = useMemo(() => [...new Set((view?.legalMoves ?? []).map((m) => m.from))], [view]);
-  const targets = useMemo(
-    () => (selected === null ? [] : (view?.legalMoves ?? []).filter((m) => m.from === selected).map((m) => m.to)),
-    [view, selected],
+  // The same selection the local game uses; only what playing a move *does*
+  // differs. A guest never applies anything itself — it relays the move and waits
+  // for the host's board to come back.
+  const selection = useCheckerSelection(legalMoves, (move) =>
+    sendAction({ type: 'move', from: move.from, to: move.to, die: move.die }),
   );
 
   // One definition of "on roll", for the button, the guard and auto-roll alike —
@@ -330,23 +333,6 @@ export const useOnlineGame = (): OnlineGame => {
     [gameState, myPlayer, sendAction],
   );
 
-  const clickPoint = useCallback(
-    (index: number) => {
-      if (!canSelect || !view) return;
-      if (selected === null) {
-        if (selectableFroms.includes(index)) setSelectedFrom(index);
-        return;
-      }
-      const move = view.legalMoves.find((m) => m.from === selected && m.to === index);
-      if (move) {
-        sendAction({ type: 'move', from: move.from, to: move.to, die: move.die });
-        return;
-      }
-      setSelectedFrom(selectableFroms.includes(index) ? index : null);
-    },
-    [canSelect, view, selected, selectableFroms, sendAction],
-  );
-
   // Tidy up the socket on unmount.
   useEffect(
     () => () => {
@@ -358,6 +344,7 @@ export const useOnlineGame = (): OnlineGame => {
   );
 
   return {
+    ...selection,
     status,
     error,
     session,
@@ -365,9 +352,6 @@ export const useOnlineGame = (): OnlineGame => {
     myPlayer,
     view,
     state: gameState,
-    selectableFroms,
-    selectedFrom: selected,
-    targets,
     hostRoom,
     joinRoom,
     setReady,
@@ -377,7 +361,6 @@ export const useOnlineGame = (): OnlineGame => {
     setAutoRoll,
     canRoll,
     rollDice,
-    clickPoint,
     double,
     respond,
   };
