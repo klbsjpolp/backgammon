@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.1.27](https://github.com/klbsjpolp/backgammon/compare/v0.1.26...v0.1.27) (2026-08-21)
+
+### Bug Fixes
+
+* **web:** give parchment's move ring a blue you can see ([9fce3ad](https://github.com/klbsjpolp/backgammon/commit/9fce3ad6ef8864a2b3ed08c47aec05bd0334a1de)), closes [#002864](https://github.com/klbsjpolp/backgammon/issues/002864), references [#001b2e](https://github.com/klbsjpolp/backgammon/issues/001b2e) [#7d3708](https://github.com/klbsjpolp/backgammon/issues/7d3708) [#64260a](https://github.com/klbsjpolp/backgammon/issues/64260a) [#983c00](https://github.com/klbsjpolp/backgammon/issues/983c00) [#743206](https://github.com/klbsjpolp/backgammon/issues/743206)
 ## [0.1.26](https://github.com/klbsjpolp/backgammon/compare/v0.1.25...v0.1.26) (2026-08-21)
 
 ### Features
