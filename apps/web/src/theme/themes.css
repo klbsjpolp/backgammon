@@ -243,21 +243,32 @@
    * distance from the surface, and on cream that direction is down. A light
    * board only ever offers room below its darker point, so all three rings share
    * one narrow band and the order they sit in is the whole design: `--pick` at
-   * the top, `--pick-strong` a step down, `--move` at the floor. They used to be
-   * stacked on top of each other instead — pick and move landed 2 apart in L*,
-   * a brown ring and a navy one of identical darkness, telling you nothing about
-   * which point you were holding and which you could go to.
+   * the top, `--pick-strong` a step down, `--move` at the floor.
+   *
+   * What decides whether that band is enough is `--move`'s *chroma*, not its
+   * lightness. It was #001b2e, a navy so dark it carried a chroma of 16 — no
+   * hue survives that, so it read as black, and a brown ring against a black one
+   * is a difference in darkness alone. Every gate below was green: 23 L* apart
+   * and 30 ΔE2000 under protanopia, both over the floor, and the board still
+   * looked like one ring drawn twice. #002864 holds a chroma of 41 and is
+   * unmistakably blue, which costs it 9 points of L* — and paying for those out
+   * of the pick family (#7d3708 / #64260a lifted to #983c00 / #743206) is what
+   * keeps the whole ladder inside the band.
+   *
+   * The price is `--pick`'s ratio against the darker point, 4.13 down to 3.36.
+   * That still clears 3:1, and a ring that clears its point comfortably while
+   * meaning the same thing as the ring beside it is the worse failure.
+   * Ratios against even / odd: pick 3.36 / 5.49, pick-strong 4.55 / 7.44,
+   * move 6.73 / 11.01.
    *
    * `--point-even` was #c89a63, and mid-tone is what made the band too narrow to
    * hold three rings: at 4:1 it left only L* 24 to work with. Lightening it to
    * #d6ac74 opens that to 33 at the cost of some alternation (1.98 to 1.64
    * against `--point-odd`, still well clear of Midnight's shipped 1.17).
-   * Ratios against even / odd: pick 4.13 / 6.76, pick-strong 5.49 / 8.98,
-   * move 8.37 / 13.69.
    */
-  --pick: #7d3708;
-  --pick-strong: #64260a;
-  --move: #001b2e;
+  --pick: #983c00;
+  --pick-strong: #743206;
+  --move: #002864;
   --dice: #8a4b1d;
   --dice-pip: #f7ecd8;
 }

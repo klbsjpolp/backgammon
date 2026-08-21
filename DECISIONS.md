@@ -460,6 +460,25 @@ down to 1.64, still well clear of Midnight's shipped 1.17. Midnight paid a diffe
 price — its `--move` is now gold on an otherwise entirely blue board, since yellow
 against blue is the one axis dichromacy leaves standing.
 
+Parchment came back anyway, still reading as one ring drawn twice, and the second
+look found the part the first one had measured around. `--move` was #001b2e: a navy
+whose chroma is 16, which is to say no hue at all. Lightness was the only channel it
+had left, so the gate's L\* step was not a floor it cleared on its way to being
+different — it was the whole of the difference, and 23 points of "one dark thing
+against another dark thing" is not a signal. The fix is chroma, not more distance:
+#002864 carries a chroma of 41 and is blue on sight, and since that costs 9 points of
+L\*, the pick family had to move up to keep the ladder inside the band (#7d3708 →
+#983c00, #64260a → #743206). `--pick` pays for it against the darker point, 4.13 down
+to 3.36 — the thinnest ratio Parchment has, and still the right trade, because a ring
+that clears its own point comfortably and means the same thing as the ring next to it
+has failed at the only job it has.
+
+The ΔE floor moved with it, 25 to 35. 25 was chosen as "clearly not the same colour"
+and Parchment passed it at 30 while looking exactly like the same colour, so it was
+never measuring what it claimed to. The three themes now sit at 38 to 60, so 35 is
+not a target anyone has to design toward; it is a floor that a theme can only land on
+by making `--move` too dark to have a hue, which is the defect it exists to catch.
+
 Classic keeps `--move` at 3.07, the thinnest ratio on the board, and that is not an
 oversight. Every ring has to clear the _lighter_ point, so lifting `--move` means
 darkening `--point-even` — and by the time that point is dark enough for 4:1 it sits
