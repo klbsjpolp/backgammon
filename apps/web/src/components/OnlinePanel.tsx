@@ -187,11 +187,13 @@ export const OnlinePanel = ({ applyPendingUpdate, onBusyChange }: OnlinePanelPro
               canRoll={g.canRoll}
               canDouble={g.myPlayer != null && canDouble(state, g.myPlayer)}
               isDoubleToYou={doubleToMe}
+              isHolding={g.selectedFrom !== null}
               autoRoll={g.autoRoll}
               onRoll={g.rollDice}
               onAutoRollChange={g.setAutoRoll}
               onDouble={g.double}
               onRespond={g.respond}
+              onClearSelection={g.clearSelection}
             />
           }
           danger={

@@ -41,7 +41,12 @@ body {
  */
 .board-fit {
   --avail-w: calc(100vw - 2.75rem);
-  --avail-h: calc(100svh - 19rem);
+  /*
+   * 19rem of page chrome, plus the line the status bar now keeps reserved for a
+   * turn that could not be played — see TurnStatus, which holds that line whether
+   * or not there is anything on it so the board does not move when there is.
+   */
+  --avail-h: calc(100svh - 20.25rem);
   --pt: clamp(1rem, min(calc(var(--avail-w) / 17), calc(var(--avail-h) / 8.6)), 2.5rem);
 
   position: relative;
@@ -176,8 +181,13 @@ body[data-drag-active] {
   .board-fit {
     /* Header, status line, both control rows, the hint and the version line —
        all of it trimmed to earn the board back the height it is drawn from, plus
-       the home indicator the page pads for at the bottom. */
-    --avail-w: calc(100svh - 18.5rem - env(safe-area-inset-bottom));
+       the home indicator the page pads for at the bottom.
+       Measured, not guessed: at 18.5rem the page overflowed its own viewport by
+       5px even before the status bar reserved its second line, so a phone
+       scrolled a hair on every screen. This is what the chrome actually
+       occupies, checked from 360px up — below that `--pt` is already pinned at
+       its 1rem floor and no reservation can buy the board anything. */
+    --avail-w: calc(100svh - 19.875rem - env(safe-area-inset-bottom));
     /* The page padding, and nothing else: with the dice up in the header row the
        turned board has the full width of the screen to be deep in. A narrow phone
        is the one that notices — this is what limits it, where a tall one is

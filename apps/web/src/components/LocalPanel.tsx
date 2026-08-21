@@ -1,5 +1,5 @@
 import { Board } from '@/components/Board';
-import { Button, ConfirmButton } from '@/components/Button';
+import { ConfirmButton } from '@/components/Button';
 import { Dice } from '@/components/Dice';
 import { Controls, GameLayout, ShortcutHint } from '@/components/GameLayout';
 import { TurnControls } from '@/components/TurnControls';
@@ -39,41 +39,33 @@ export const LocalPanel = ({ applyPendingUpdate }: LocalPanelProps = {}) => {
         <Controls
           dice={<Dice state={state} />}
           primary={
-            <>
-              <TurnControls
-                canRoll={game.canRoll}
-                canDouble={game.canHumanDouble}
-                isDoubleToYou={game.doubleToYou}
-                autoRoll={game.autoRoll}
-                onRoll={game.rollDice}
-                onAutoRollChange={game.setAutoRoll}
-                onDouble={game.double}
-                onRespond={game.respond}
-              />
-              {game.selectedFrom !== null && (
-                <Button onClick={game.clearSelection} className="bg-neutral text-neutral-fg hover:bg-neutral-hover">
-                  Clear selection
-                </Button>
-              )}
-            </>
+            <TurnControls
+              canRoll={game.canRoll}
+              canDouble={game.canHumanDouble}
+              isDoubleToYou={game.doubleToYou}
+              isHolding={game.selectedFrom !== null}
+              autoRoll={game.autoRoll}
+              onRoll={game.rollDice}
+              onAutoRollChange={game.setAutoRoll}
+              onDouble={game.double}
+              onRespond={game.respond}
+              onClearSelection={game.clearSelection}
+            />
           }
           danger={
             // The second tap guards a game in progress. Once the game is over
             // there is nothing left to throw away — the confirmation is then
-            // pure friction between the result and the next game, so the button
-            // stops being a danger and just starts one.
-            state.phase === 'gameOver' ? (
-              <Button onClick={startNewGame} className="bg-positive text-positive-fg hover:bg-positive-hover">
-                New game
-              </Button>
-            ) : (
-              <ConfirmButton
-                label="New game"
-                confirmLabel="Start over?"
-                onConfirm={startNewGame}
-                className="bg-positive text-positive-fg hover:bg-positive-hover"
-              />
-            )
+            // pure friction between the result and the next game, so `confirm`
+            // drops it. It stays the same element either way: swapping in a
+            // plain button resized it at the moment the game ended, which is
+            // when the player's hand is already moving towards it.
+            <ConfirmButton
+              label="New game"
+              confirmLabel="Start over?"
+              confirm={state.phase !== 'gameOver'}
+              onConfirm={startNewGame}
+              className="bg-positive text-positive-fg hover:bg-positive-hover"
+            />
           }
         />
       }

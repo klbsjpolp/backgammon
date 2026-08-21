@@ -48,6 +48,7 @@ export interface OnlineGame {
   targetsFrom: (from: number) => number[];
   selectFrom: (from: number | null) => void;
   moveChecker: (from: number, to: number) => void;
+  clearSelection: () => void;
   double: () => void;
   respond: (accept: boolean) => void;
 }

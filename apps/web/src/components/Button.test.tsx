@@ -13,12 +13,19 @@ describe('ConfirmButton', () => {
 
   const button = () => screen.getByRole('button', { name: 'Leave' });
 
+  /**
+   * Both labels are always in the DOM — that is what keeps the button one width
+   * across the arming it asks for — so `textContent` is both of them at once.
+   * What the player sees is the one that is not hidden.
+   */
+  const visibleLabel = () => button().querySelector('[aria-hidden="false"]')?.textContent;
+
   it('keeps its accessible name while armed, so the action stays findable', () => {
     render(<ConfirmButton label="Leave" confirmLabel="Leave game?" onConfirm={vi.fn()} />);
 
-    expect(button().textContent).toBe('Leave');
+    expect(visibleLabel()).toBe('Leave');
     fireEvent.click(button());
-    expect(button().textContent).toBe('Leave game?');
+    expect(visibleLabel()).toBe('Leave game?');
   });
 
   it('announces the armed state, which the pinned name would otherwise hide', () => {
@@ -52,7 +59,7 @@ describe('ConfirmButton', () => {
 
     fireEvent.click(button());
     act(() => void vi.advanceTimersByTime(5000));
-    expect(button().textContent).toBe('Leave');
+    expect(visibleLabel()).toBe('Leave');
 
     // The tap that follows arms it again rather than confirming the stale one.
     fireEvent.click(button());
@@ -64,6 +71,17 @@ describe('ConfirmButton', () => {
 
     fireEvent.click(button());
     fireEvent.blur(button());
-    expect(button().textContent).toBe('Leave');
+    expect(visibleLabel()).toBe('Leave');
+  });
+
+  it('fires on the first tap when there is nothing left to guard', () => {
+    const onConfirm = vi.fn();
+    render(<ConfirmButton label="Leave" confirm={false} onConfirm={onConfirm} />);
+
+    fireEvent.click(button());
+    expect(onConfirm).toHaveBeenCalledTimes(1);
+    // Still the same element, and still the same width: the confirm label is
+    // in the DOM reserving it whether or not the guard is asked for.
+    expect(visibleLabel()).toBe('Leave');
   });
 });
