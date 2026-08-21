@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from '@testing-library/react';
 import { createInitialState, type Board as BoardState, type GameState, type Player } from '@backgammon/core';
 import { FLIGHT_MS, HIT_DELAY_MS, HIT_FLIGHT_MS } from '@/lib/checkerFlight';
+import { AI_MOVE_MS } from '@/useLocalGame';
 import { Board, type BoardController } from './Board';
 
 /*
@@ -13,7 +14,7 @@ import { Board, type BoardController } from './Board';
  */
 
 interface Flight {
-  element: Element;
+  element: HTMLElement;
   keyframes: Keyframe[];
   options: KeyframeAnimationOptions;
   animation: StubAnimation;
@@ -60,10 +61,12 @@ const stubbedAnimate = function (this: Element, keyframes: unknown, options: unk
   const animation: StubAnimation = {
     onfinish: null,
     oncancel: null,
-    cancel: () => animation.oncancel?.(ended('cancel')),
+    // `Animation.cancel()` queues its event rather than firing it, so a stub that
+    // fires synchronously hides exactly the bug this is here to catch.
+    cancel: () => queueMicrotask(() => animation.oncancel?.(ended('cancel'))),
   };
   flights.push({
-    element: this,
+    element: this as HTMLElement,
     keyframes: (keyframes ?? []) as Keyframe[],
     options: (options ?? {}) as KeyframeAnimationOptions,
     animation,
@@ -109,10 +112,14 @@ const controllerFor = (board: BoardState, you: Player = 'white'): BoardControlle
   clickPoint: vi.fn(),
 });
 
+/** The free end of a stack, which is the end a bottom-row point grows from. */
+const outerOf = (stack: HTMLElement): HTMLElement | null =>
+  (stack.dataset.arrives === 'first' ? stack.firstElementChild : stack.lastElementChild) as HTMLElement | null;
+
 /** Which checkers are being stood in for, and so held out of sight mid-flight. */
 const hiddenPiles = (): string[] =>
   [...document.querySelectorAll<HTMLElement>('[data-pile]')]
-    .filter((pile) => (pile.lastElementChild as HTMLElement | null)?.style.visibility === 'hidden')
+    .filter((pile) => outerOf(pile)?.style.visibility === 'hidden')
     .map((pile) => pile.dataset.pile ?? '');
 
 describe('checker flights', () => {
@@ -173,6 +180,15 @@ describe('checker flights', () => {
     expect(hiddenPiles()).toEqual([]);
   });
 
+  it('finishes a hit inside the beat the AI leaves between two checkers', () => {
+    // Past this and the next move cancels the blot in mid-air.
+    expect(HIT_DELAY_MS + HIT_FLIGHT_MS).toBeLessThan(AI_MOVE_MS);
+    expect(FLIGHT_MS).toBeLessThan(AI_MOVE_MS);
+    // And the blot has to still be on its point when the checker that hit it
+    // arrives, or it reads as having fled before the hit connected.
+    expect(HIT_DELAY_MS).toBeGreaterThan(FLIGHT_MS / 2);
+  });
+
   it('takes a superseded stand-in off the page when the next move lands', () => {
     const { rerender } = render(<Board controller={controllerFor(boardOf({ 13: 5, 8: 3 }))} />);
     rerender(<Board controller={controllerFor(boardOf({ 13: 4, 8: 4 }))} />);
@@ -199,6 +215,20 @@ describe('checker flights', () => {
     rerender(<Board controller={controllerFor(boardOf({ 13: 4, 8: 4 }))} />);
 
     expect(flights).toEqual([]);
+  });
+
+  it('never leaves a checker hidden when a move lands on one still in the air', () => {
+    // A pile already showing five draws no more checkers, so the sixth and seventh
+    // land on the very same node — the case where one flight can inherit the
+    // hidden state another one set, and put it back for good.
+    const { rerender } = render(<Board controller={controllerFor(boardOf({ 13: 5, 18: 5 }))} />);
+    rerender(<Board controller={controllerFor(boardOf({ 13: 4, 18: 6 }))} />);
+    rerender(<Board controller={controllerFor(boardOf({ 13: 3, 18: 7 }))} />);
+
+    // The second flight must have been handed a visible checker to stand in for.
+    expect(flights[1].element.style.visibility).not.toBe('hidden');
+    settle(flights[1]);
+    expect(hiddenPiles()).toEqual([]);
   });
 
   it('holds still for a player who asked for no motion', () => {

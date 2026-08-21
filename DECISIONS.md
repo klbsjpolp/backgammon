@@ -178,10 +178,26 @@ be announcing a move whose checker had not arrived.
 
 The origin cannot be read off the board once the move is on screen, because the
 checker that left is no longer standing there. So every commit records where the
-top of each pile was and the next one flies against that: the previous frame is the
-only place the starting point still exists. The one thing that invalidates it is the
-board moving underneath — a rotated phone, a resized window — so the root's own rect
-is kept alongside, and a board that is not where it was animates nothing.
+free end of each pile was and the next one flies against that: the previous frame is
+the only place the starting point still exists. The one thing that invalidates it is
+the board moving underneath — a rotated phone, a resized window — so the root's own
+rect is kept alongside, and a board that is not where it was animates nothing.
+
+Which end is free is not the same end on both halves of the board, and assuming it
+was got half the points wrong. A pile is pinned at its point's base and grows away
+from it, but it is the _point_ that is reversed along the bottom row, never the stack
+inside it — that is always drawn top-down. React appends, so on a bottom-row point
+the appended node is the one at the base and the three checkers already there shift
+up a slot to make room. The checker that arrived is the first child there and the
+last child along the top row, and a stand-in aimed at the last child on a bottom
+point flew into the base of the pile and read as sliding underneath it.
+
+Ending a flight early settles it on the spot rather than leaving that to the
+animation. `Animation.cancel()` only queues its event, and the layout effect that
+supersedes a flight runs immediately after the one that cancelled it — so it would
+read a checker that is still hidden, record _that_ as the state to restore, and hide
+it for good when it finished. Two checkers landing on a pile already showing five
+reach for the same node and were enough to do it.
 
 Which checker moved is derived by diffing the two boards rather than carried beside
 them. Locally the `Move` is in hand and it would have been easy to pass down, but a

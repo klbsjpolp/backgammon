@@ -11,7 +11,7 @@ import {
 } from '@backgammon/core';
 import { cn } from '@/lib/cn';
 import { barPile, describeMotions, offPile, pointPile, type CheckerMotion, type PileId } from '@/lib/boardDiff';
-import { centreOf, flyChecker, FLIGHT_MS, HIT_DELAY_MS, HIT_FLIGHT_MS } from '@/lib/checkerFlight';
+import { centreOf, flyChecker, FLIGHT_MS, HIT_DELAY_MS, HIT_FLIGHT_MS, type StopFlight } from '@/lib/checkerFlight';
 
 /** Minimal surface the board needs; satisfied by both the local and online games. */
 export interface BoardController {
@@ -69,9 +69,18 @@ interface CheckersProps {
   count: number; // signed: + white, - black
   /** Which pile this stack is, so a move can be flown from it and onto it. */
   pile: PileId;
+  /**
+   * Which end of the stack a checker arrives on. A pile is pinned at its point's
+   * base and grows away from it, so the free slot is at the far end — but the
+   * stack is always drawn top-down while the *point* is what gets reversed along
+   * the bottom row. React appends, so on a bottom-row point the appended node is
+   * the one at the base and every checker already there shifts up a slot. The
+   * checker that arrived is then the first child, not the last.
+   */
+  arrivesAt?: 'first' | 'last';
 }
 
-const Checkers = ({ count, pile }: CheckersProps) => {
+const Checkers = ({ count, pile, arrivesAt = 'last' }: CheckersProps) => {
   const n = Math.abs(count);
   if (n === 0) return null;
   const color = checkerColor(count > 0 ? 'white' : 'black');
@@ -81,7 +90,12 @@ const Checkers = ({ count, pile }: CheckersProps) => {
     // how deep — the CSS picks the overlap off it rather than counting the
     // children itself, so a stack that grows cannot be left at the flat spacing
     // it had one checker ago. See index.css.
-    <div className="board-stack flex flex-col items-center gap-board-stack" data-stack={shown} data-pile={pile}>
+    <div
+      className="board-stack flex flex-col items-center gap-board-stack"
+      data-stack={shown}
+      data-pile={pile}
+      data-arrives={arrivesAt}
+    >
       {Array.from({ length: shown }).map((_, i) => (
         <div
           key={i}
@@ -152,7 +166,7 @@ const Point = ({ index, number, count, orientation, selectable, selected, target
       <span aria-hidden className="board-label text-board-label leading-none text-point-label">
         {number}
       </span>
-      <Checkers count={count} pile={pointPile(index)} />
+      <Checkers count={count} pile={pointPile(index)} arrivesAt={orientation === 'bottom' ? 'first' : 'last'} />
     </button>
   );
 };
@@ -227,22 +241,30 @@ const Bar = ({ theirs, theirsPile, yours, yoursPile, selectable, selected, onCli
   </button>
 );
 
-/** Rect of the checker on top of each pile — the one a move takes, or the one it adds. */
-const measurePiles = (root: HTMLElement): Map<PileId, DOMRect> => {
-  const tops = new Map<PileId, DOMRect>();
-  for (const pile of root.querySelectorAll<HTMLElement>('[data-pile]')) {
-    const id = pile.dataset.pile;
-    const top = pile.lastElementChild;
-    if (id && top) tops.set(id, top.getBoundingClientRect());
-  }
-  return tops;
+/**
+ * The checker on the free end of a stack — the one a move adds, or the one it
+ * takes away. Which DOM end that is depends on how the pile grows; see `arrivesAt`.
+ */
+const outerChecker = (stack: HTMLElement): HTMLElement | null => {
+  const outer = stack.dataset.arrives === 'first' ? stack.firstElementChild : stack.lastElementChild;
+  return outer instanceof HTMLElement ? outer : null;
 };
 
-/** The checker now standing on top of a pile: after a move, the one that just arrived. */
+/** Where the outermost checker of every pile stands, as of this commit. */
+const measurePiles = (root: HTMLElement): Map<PileId, DOMRect> => {
+  const outer = new Map<PileId, DOMRect>();
+  for (const stack of root.querySelectorAll<HTMLElement>('[data-pile]')) {
+    const id = stack.dataset.pile;
+    const checker = outerChecker(stack);
+    if (id && checker) outer.set(id, checker.getBoundingClientRect());
+  }
+  return outer;
+};
+
+/** The checker that just arrived on a pile: the one now standing on its free end. */
 const arrivalOn = (root: HTMLElement, pile: PileId): HTMLElement | null => {
   const stack = root.querySelector<HTMLElement>(`[data-pile="${pile}"]`);
-  const top = stack?.lastElementChild;
-  return top instanceof HTMLElement ? top : null;
+  return stack ? outerChecker(stack) : null;
 };
 
 /**
@@ -307,7 +329,7 @@ const useCheckerFlights = (board: BoardState) => {
     // turned between the two commits left every rect pointing somewhere it isn't.
     if (!before || !stillThere(before.frame, frame)) return;
 
-    const flying: Animation[] = [];
+    const flying: StopFlight[] = [];
     for (const motion of describeMotions(before.board, board)) {
       const origin = before.tops.get(motion.from);
       if (!origin) continue;
@@ -316,18 +338,19 @@ const useCheckerFlights = (board: BoardState) => {
       const destination = arrival ?? trayFor(root, motion);
       if (!destination) continue;
 
-      const flight = flyChecker(standInFor(motion.player, arrival), {
+      const stop = flyChecker(standInFor(motion.player, arrival), {
         from: origin,
         to: centreOf(destination.getBoundingClientRect()),
         arrival,
         ...(motion.kind === 'hit' ? { duration: HIT_FLIGHT_MS, delay: HIT_DELAY_MS } : { duration: FLIGHT_MS }),
       });
-      if (flight) flying.push(flight);
+      if (stop) flying.push(stop);
     }
 
-    // A move that lands while one is still in the air supersedes it. Cancelling is
-    // what takes the stand-in off the page and shows the checker under it again.
-    return () => flying.forEach((flight) => flight.cancel());
+    // A move that lands while one is still in the air supersedes it. Stopping puts
+    // the board back on the spot, which matters because the effect that replaces
+    // this one runs immediately after and reads the DOM it leaves behind.
+    return () => flying.forEach((stop) => stop());
   }, [board]);
 
   return rootRef;
