@@ -321,6 +321,36 @@ describe('useOnlineGame', () => {
       expect(socket().sentOfType('relay').at(-1)?.payload).toMatchObject({ type: 'move', from: 0, to: 6, die: 6 });
     });
 
+    it('sends nothing off a point with a choice, or when it is not our move', async () => {
+      const { result } = renderHook(() => useOnlineGame());
+      await startAsGuest(result);
+
+      const { createInitialState, applyRoll } = await import('@backgammon/core');
+      // White on roll: a guest whose turn it is not has no move to shortcut,
+      // however few the point in front of them offers.
+      socket().emit({
+        type: 'relayed',
+        fromSeat: 0,
+        kind: 'view',
+        payload: applyRoll(createInitialState('white'), [6, 5]),
+      });
+      await waitFor(() => expect(result.current.state?.phase).toBe('moving'));
+      act(() => result.current.playOnlyMove(0));
+      expect(socket().sentOfType('relay')).toHaveLength(0);
+
+      socket().emit({
+        type: 'relayed',
+        fromSeat: 0,
+        kind: 'view',
+        payload: applyRoll(createInitialState('black'), [6, 5]),
+      });
+      await waitFor(() => expect(result.current.view?.yourTurn).toBe(true));
+
+      // Black's midpoint can play either die, and picking one is picking the move.
+      act(() => result.current.playOnlyMove(11));
+      expect(socket().sentOfType('relay')).toHaveLength(0);
+    });
+
     it('keeps the last good board when a relayed view is not one', async () => {
       const { result } = renderHook(() => useOnlineGame());
       await startAsGuest(result);
