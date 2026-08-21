@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.1.29](https://github.com/klbsjpolp/backgammon/compare/v0.1.28...v0.1.29) (2026-08-21)
+
+### Features
+
+* **web:** play a point's only move on a double click ([4f44fbb](https://github.com/klbsjpolp/backgammon/commit/4f44fbb4631edeb7df6e29cf8f57efb47d3ca97f))
 ## [0.1.28](https://github.com/klbsjpolp/backgammon/compare/v0.1.27...v0.1.28) (2026-08-21)
 
 ### Features
