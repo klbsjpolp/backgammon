@@ -73,18 +73,40 @@ export const TurnStatus = (props: TurnStatusProps) => {
   return (
     <div
       className={cn(
-        'flex w-full flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-lg bg-surface px-4 py-2 text-sm',
+        'w-full rounded-lg bg-surface px-4 py-2 text-sm',
         'max-sm:px-3 max-sm:py-1 max-sm:text-xs compact:px-3 compact:py-1 compact:text-xs',
         state.phase === 'gameOver' && 'bg-highlight-soft',
       )}
     >
-      <span className="font-semibold capitalize">{describeTurn(props)}</span>
-      <span className="text-muted">
-        cube ×{state.cube.value}
-        {state.cube.owner ? ` (${state.cube.owner})` : ''} · pips W {pipCount(state.board, 'white')} / B{' '}
-        {pipCount(state.board, 'black')}
-      </span>
-      {noPlay && <span className="w-full text-muted first-letter:capitalize">{noPlay}</span>}
+      {/*
+       * Two lines, always, whatever there is to say. This was one wrapping row
+       * — turn on the left, cube and pips on the right — and it grew a line
+       * whenever either half outgrew the other's room: a turn phrase one word
+       * longer at 360px, or a roll nobody could play, each of which moved the
+       * board and every control under it 20px down the screen and back again a
+       * turn later. Both are ordinary things to happen mid-game.
+       *
+       * Truncating instead is no good either, because the landscape sidebar is
+       * 11rem wide and one of the two would have to vanish entirely there.
+       */}
+      <div className="truncate font-semibold capitalize">{describeTurn(props)}</div>
+
+      {/*
+       * The second line says what is worth saying most. A roll nobody could
+       * play is news and it is gone by the next roll; the cube and the pip
+       * counts are reference, and stay true while it is shown. Giving each its
+       * own line would cost the board another 20px of height on a phone
+       * forever, to reserve a line that is empty nearly all of the time.
+       */}
+      <div className={cn('truncate text-muted', noPlay && 'first-letter:capitalize')}>
+        {noPlay ?? (
+          <>
+            cube ×{state.cube.value}
+            {state.cube.owner ? ` (${state.cube.owner})` : ''} · pips W {pipCount(state.board, 'white')} / B{' '}
+            {pipCount(state.board, 'black')}
+          </>
+        )}
+      </div>
 
       {/*
        * One region for the whole game, and always mounted — that is the part
@@ -92,7 +114,7 @@ export const TurnStatus = (props: TurnStatusProps) => {
        * its content changes for the change to be announced; one that appears
        * together with its text is silent in NVDA, JAWS and VoiceOver alike,
        * which is what the conditionally-rendered regions here and in `<Dice>`
-       * were. The visible spans above carry no `aria-live` of their own, so
+       * were. The visible lines above carry no `aria-live` of their own, so
        * this is also the only thing that speaks.
        *
        * Polite: a turn changing is worth hearing, not worth cutting off

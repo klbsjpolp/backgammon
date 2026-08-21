@@ -29,7 +29,10 @@ export const GameLayout = ({ status, board, controls, hint }: GameLayoutProps) =
   <div
     className={cn(
       'grid w-full justify-items-center gap-3',
-      'compact:grid-cols-[auto_minmax(11rem,15rem)] compact:items-start compact:gap-4',
+      // The sidebar is the tallest thing on a landscape phone once the dice
+      // hold their line, and 320px of height is 4px short of it — which the
+      // rows give up more cheaply than the column gap beside the board does.
+      'compact:grid-cols-[auto_minmax(11rem,15rem)] compact:items-start compact:gap-x-4 compact:gap-y-3',
     )}
   >
     <div className="w-full compact:col-start-2 compact:row-start-1">{status}</div>
@@ -86,12 +89,19 @@ export const Controls = ({
   <div className="grid w-full grid-cols-[1fr_auto_1fr] items-center gap-3">
     {/*
      * Reserved at the width of a double — four dice — so that rolling one does
-     * not slide the buttons sideways mid-turn. Every row it sits in is a 44px
-     * control row, and a die is 30px, so it costs no height anywhere.
+     * not slide the buttons sideways mid-turn.
+     *
+     * And at the height of one die, because `<Dice>` renders nothing at all
+     * until a roll lands. Where the cell shares a row with the buttons that is
+     * free — a control row is 44px and a die is 30px — but in landscape the
+     * dice have a line of their own at the top of the sidebar, and there an
+     * empty cell collapsed: rolling pushed everything under it 30px down the
+     * screen and the next player's turn pulled it back up. The sidebar is the
+     * one column with height going spare, so it pays the 30px permanently.
      */}
     <div
       className={cn(
-        'col-start-1 col-end-2 row-start-1 flex min-w-33 justify-end text-3xl',
+        'col-start-1 col-end-2 row-start-1 flex min-h-[1em] min-w-33 justify-end text-3xl',
         'max-sm:row-start-3 max-sm:justify-start',
         'compact:col-end-4 compact:row-start-1 compact:justify-start',
       )}

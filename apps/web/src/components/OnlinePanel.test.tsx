@@ -34,6 +34,7 @@ const baseGame = (): OnlineGame => ({
   targetsFrom: () => [],
   selectFrom: vi.fn(),
   moveChecker: vi.fn(),
+  clearSelection: vi.fn(),
   double: vi.fn(),
   respond: vi.fn(),
 });

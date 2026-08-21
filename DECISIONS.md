@@ -501,6 +501,69 @@ left to throw away, and the guard was then only friction between the result and 
 game. Every button carries a 44px minimum touch target, and the page reserves
 `env(safe-area-inset-bottom)`.
 
+## Nothing on the page moves during a game
+
+The board was measured at every resolution it is drawn at, playing a real game rather
+than looking at a static screenshot, and four things on the page moved while it was
+being played. None of them was the board's own doing; all four were chrome around it
+that grew or shrank as the game changed state, and each moved the board or the
+buttons under the player's hand.
+
+- **The status line was one wrapping row** — turn on the left, cube and pip counts on
+  the right — so it was one line or two depending on how long the two happened to be.
+  "black to roll (AI)" fits beside the counts at 360px and "white to move (you)" does
+  not, which means the board moved 20px every time the turn changed there: a 0.11
+  layout shift, the largest on the page, and it landed mid-move. A roll nobody could
+  play added a third line on top of that, on every screen. It is **two lines now,
+  always**: the turn on the first, and on the second either the roll that could not be
+  played or the cube and pip counts. Reserving a line for the news and leaving it empty
+  the rest of the time would have cost the board another 20px of height forever;
+  reference the player can read a moment later is the thing that gives way instead.
+  Both lines truncate rather than wrap, which is what the 11rem landscape sidebar
+  needs — there is no width at which both halves fit, so one of them has to end in an
+  ellipsis rather than take a line nobody budgeted for.
+
+- **Take, drop and clear-selection were added to the primary control row**, which on a
+  portrait phone wrapped it onto a second line. Picking a checker up moved the new-game
+  button 52px down the screen and putting it down moved it back — on the single most
+  frequent interaction in the game, and onto the control the two-tap confirmation
+  exists to protect. They are not extra actions, though: **rolling and doubling are
+  both impossible while a double is pending or a checker is in hand**, so they stand in
+  for those two buttons instead of joining them. The row is three controls at every
+  moment of every game — Roll or Take, Double or Cancel or Drop, and auto-roll — and
+  the two action slots hold a fixed width so a shorter label does not slide the row
+  sideways either. `TurnControls` owns all of it now, which is also how online play
+  got the clear-selection button it never had.
+
+- **The dice cell reserved its width but not its height.** That was true when it rode
+  in a row it shared with the buttons — a control row is 44px and a die is 30px — but
+  in landscape the dice have a line of their own at the top of the sidebar, and an
+  empty cell collapsed there: rolling pushed the whole sidebar 30px down and the next
+  player's turn pulled it back. The cell now holds one die's height everywhere, which
+  costs nothing in the two layouts where it shares a row and 30px of the sidebar's
+  spare height in the one where it does not.
+
+- **The confirm button resized when armed.** "New game" is 115px and "Start over?" is
+  120px, so the target moved 5px between the two taps it asks for — and swapping in a
+  plain button once the game was over moved it again. Both labels sit in one grid cell
+  now, the inactive one hidden, so the button is always as wide as the longer of them;
+  `confirm={false}` drops the second tap without swapping the element out.
+
+What is left is the game itself: checkers moving between points, and a stack
+respacing as it crosses four and five (see the point depth above). Across a full
+game at seven resolutions, from 1920×1080 down to a 320px phone, the page now has
+exactly **one** geometry — board, controls and document height identical in every
+state — and cumulative layout shift is under 0.001 everywhere, all of it inside the
+board.
+
+Two things the measurement turned up along the way. The portrait height budget was
+**5px short before any of this** — the page had always overflowed its own viewport by
+a hair — so `--avail-w` in the portrait block is now what the chrome actually
+occupies rather than what it was thought to. And below ~360px the row cannot hold
+three controls on one line whatever width they are given: it wraps there, stably, and
+the page scrolls, which costs nothing because `--pt` is already pinned at its 1rem
+floor on a screen that small and no reservation could buy the board anything back.
+
 ## Themes
 
 Three themes ship: **Classic** (green felt and brass, the original look),

@@ -33,6 +33,13 @@ export interface ConfirmButtonProps extends Omit<ButtonProps, 'children' | 'onCl
   label: string;
   /** Text shown after the first tap, while waiting for the confirming one. */
   confirmLabel?: string;
+  /**
+   * Whether the second tap is required at all. False fires on the first one, and
+   * exists so a caller with nothing left to protect — new game once the game is
+   * over — can drop the guard without swapping the element for a plain
+   * {@link Button}, which would resize the button at exactly that moment.
+   */
+  confirm?: boolean;
   onConfirm: () => void;
 }
 
@@ -44,6 +51,7 @@ export interface ConfirmButtonProps extends Omit<ButtonProps, 'children' | 'onCl
 export const ConfirmButton = ({
   label,
   confirmLabel = 'Sure?',
+  confirm = true,
   onConfirm,
   className,
   ...props
@@ -61,7 +69,7 @@ export const ConfirmButton = ({
       <Button
         aria-label={label}
         onClick={() => {
-          if (!armed) {
+          if (confirm && !armed) {
             setArmed(true);
             return;
           }
@@ -74,7 +82,22 @@ export const ConfirmButton = ({
         className={cn(className, armed && 'bg-danger text-danger-fg hover:bg-danger-hover')}
         {...props}
       >
-        {armed ? confirmLabel : label}
+        {/*
+         * Both labels, stacked in one grid cell, so the button is always as wide
+         * as the longer of them. Swapping the text outright resized it between
+         * the two taps it asks for — "New game" is 115px and "Start over?" 120px
+         * — which moves the target a few pixels under the thumb already on its
+         * way down, on the one control whose whole job is to be hard to hit by
+         * accident.
+         */}
+        <span className="grid">
+          <span aria-hidden={armed} className={cn('col-start-1 row-start-1', armed && 'invisible')}>
+            {label}
+          </span>
+          <span aria-hidden={!armed} className={cn('col-start-1 row-start-1', !armed && 'invisible')}>
+            {confirmLabel}
+          </span>
+        </span>
       </Button>
       {/*
        * The accessible name is pinned to `label` so the action stays findable,
