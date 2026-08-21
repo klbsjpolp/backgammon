@@ -344,7 +344,7 @@ before adding a theme:
 
 Every ring cleared 3:1 against both point colours and the board was still hard to
 read on Parchment, because clearing the surface you are drawn on says nothing about
-clearing the *other ring*. `--pick-strong` (the point you are holding) and `--move`
+clearing the _other ring_. `--pick-strong` (the point you are holding) and `--move`
 (where it can go) are on screen together and mean opposite things, and Parchment ran
 `--pick` and `--move` two L\* apart — a brown ring and a navy one of identical
 darkness. Different colours; the same ring. Midnight had the same defect wearing a
@@ -362,7 +362,7 @@ because whatever hue is left has to be a hue a dichromat still sees. `--pick` an
 are supposed to look related.
 
 Meeting that on a light board cost something, and it is worth knowing what.
-Parchment only ever has room *below* its darker point, so all three rings share one
+Parchment only ever has room _below_ its darker point, so all three rings share one
 band, and `--point-even` at #c89a63 was mid-toned enough to leave only 24 points of
 L\* to hold three of them — which is precisely why they ended up stacked. Lightening
 it to #d6ac74 opens the band to 33 and buys `--pick` a real margin (3.41 → 4.13) as
@@ -372,7 +372,7 @@ price — its `--move` is now gold on an otherwise entirely blue board, since ye
 against blue is the one axis dichromacy leaves standing.
 
 Classic keeps `--move` at 3.07, the thinnest ratio on the board, and that is not an
-oversight. Every ring has to clear the *lighter* point, so lifting `--move` means
+oversight. Every ring has to clear the _lighter_ point, so lifting `--move` means
 darkening `--point-even` — and by the time that point is dark enough for 4:1 it sits
 1.09 against the felt and the even points dissolve into the cloth. 3.07 clears WCAG;
 a board you cannot read would not. What Classic did get is its pick family lifted

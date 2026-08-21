@@ -30,7 +30,7 @@ non-text UI. It runs automatically over a new theme the moment it is in the cata
 
 - `--pick`, `--pick-strong` and `--move` each clear 3:1 against **both** `--point-even` and `--point-odd`. The two
   point colours pull in opposite directions, so a ring tuned against one usually fails the other — pick the ring
-  first, then nudge the points apart until both clear. Note which direction "apart" runs: it is the *mid-toned* point
+  first, then nudge the points apart until both clear. Note which direction "apart" runs: it is the _mid-toned_ point
   that squeezes the band the rings have to share, so a theme that cannot fit three separated rings usually wants its
   two points closer together, not further.
 - `--pick-strong` out-**contrasts** `--pick`, which is not the same as out-brightening it. On a dark felt stronger is
