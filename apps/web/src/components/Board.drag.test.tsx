@@ -125,6 +125,7 @@ const controllerFor = (overrides: Partial<BoardController> = {}): BoardControlle
   selectedFrom: null,
   targets: [],
   clickPoint: vi.fn(),
+  playOnlyMove: vi.fn(),
   targetsFrom: (from) => (from === 5 ? [2, OFF] : []),
   selectFrom: vi.fn(),
   moveChecker: vi.fn(),
@@ -391,6 +392,7 @@ const PlayableBoard = () => {
     clickPoint: (index) => {
       if (index !== 5) play(5, index);
     },
+    playOnlyMove: vi.fn(),
     targetsFrom: () => [2],
     selectFrom: vi.fn(),
     moveChecker: play,

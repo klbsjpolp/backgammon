@@ -290,6 +290,44 @@ the flight effect reads it — and clears it in the same breath, because a relea
 outlived its own commit would send some later move off from a place no checker has
 been since.
 
+## The move that has nothing to decide
+
+Some moves have no second half to choose. A double gives all four dice the same pip,
+a blocked die leaves a point one destination, a checker on the bar usually has one
+place it can enter — and the player was still being asked to name it, with a second
+click or by carrying the checker over to it. A double click on such a point plays it
+outright.
+
+It is a shortcut over the click flow rather than a third way to move: the two clicks
+and the drag still do exactly what they did, so nothing is reachable only by
+double-clicking and neither the keyboard nor the screen reader story changes. Like
+the drag it goes in `useCheckerSelection` and so arrived in both game modes at once.
+
+"One move" means one _destination_, not one entry in `currentLegalMoves`: a checker
+low enough in the home board bears off with either die, and those are two moves that
+put it in the same place. `soleMoveFrom` compares destinations and then takes the
+first move that lands there — which is the move the second click would have played,
+since `clickPoint` picks a destination's die the same way.
+
+Wiring it to `onDoubleClick` and stopping there plays a move the player never asked
+for. A double click delivers its two clicks first, so clicking a source and then
+double-clicking the _destination_ is three clicks: the first lands the checker, the
+second selects the point it landed on, and the double click then spends another die
+on the checker that just arrived. Driven in Chromium, a roll of four dice came back
+with two left instead of three, and this game has no undo to take the second one
+back.
+
+So `Board` keeps the last two clicks with the board that was underneath each, and a
+double click is only the shortcut when both landed on this point over one board. The
+board object is the witness that costs nothing to consult: `playMove` returns a new
+one and selecting a point does not, so a pair of clicks that straddles a move is
+exactly the pair whose boards differ. A press that became a drag cannot be half of a
+pair either, for free: the gesture swallows the click at its end, so it never reaches
+the tally. What it gives up is the online case where the host's frame arrives between
+the two clicks and replaces the board without anything having moved; that double
+click does nothing, and the clicks it was made of have already selected the point, so
+the destination is one click away.
+
 ## Accessibility
 
 The board was a grid of 27 buttons that all announced the same way and all sat in

@@ -10,6 +10,17 @@ interface GameLayoutProps {
 }
 
 /**
+ * The double-click shortcut, said only where there is room to say it. At 375px
+ * the hint already runs to two lines, and this clause makes it three — a line
+ * the portrait phone's height budget in `index.css` does not have. So the phone
+ * keeps the two gestures that always work, and the shortcut is told to the
+ * screens with room for it.
+ */
+export const ShortcutHint = () => (
+  <span className="max-sm:hidden">&nbsp;Double-click a checker with one move to play it.</span>
+);
+
+/**
  * Portrait stacks status → board → controls. Landscape phones are too short for
  * that (the buttons end up below the fold, right where a thumb rests), so the
  * board moves to the left and everything else becomes a column beside it.

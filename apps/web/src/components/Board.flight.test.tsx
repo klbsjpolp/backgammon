@@ -110,6 +110,7 @@ const controllerFor = (board: BoardState, you: Player = 'white'): BoardControlle
   selectedFrom: null,
   targets: [],
   clickPoint: vi.fn(),
+  playOnlyMove: vi.fn(),
   targetsFrom: () => [],
   selectFrom: vi.fn(),
   moveChecker: vi.fn(),

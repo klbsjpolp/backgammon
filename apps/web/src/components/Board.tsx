@@ -26,6 +26,8 @@ export interface BoardController {
   selectedFrom: number | null;
   targets: number[];
   clickPoint: (index: number) => void;
+  /** Play the point's move outright, when it has only one to play. */
+  playOnlyMove: (index: number) => void;
   /** Where a checker on `from` could land, asked before anything is held. */
   targetsFrom: (from: number) => number[];
   /** Hold a checker outright — what a drag means, where a click has to guess. */
@@ -145,6 +147,7 @@ interface PointProps {
   /** The checker on the free end of this point is the one being dragged. */
   lifted: boolean;
   onClick: () => void;
+  onDoubleClick: () => void;
   onPointerDown: (event: ReactPointerEvent<HTMLElement>) => void;
 }
 
@@ -170,6 +173,7 @@ const Point = ({
   over,
   lifted,
   onClick,
+  onDoubleClick,
   onPointerDown,
 }: PointProps) => {
   const playable = selectable || selected || target;
@@ -185,6 +189,7 @@ const Point = ({
     <button
       type="button"
       onClick={onClick}
+      onDoubleClick={onDoubleClick}
       onPointerDown={onPointerDown}
       aria-label={`point ${number}, ${describeOccupancy(count)}${role}`}
       aria-pressed={selectable || selected ? selected : undefined}
@@ -273,6 +278,7 @@ interface BarProps {
   /** The checker on the free end of your side of the bar is the one being dragged. */
   lifted: boolean;
   onClick: () => void;
+  onDoubleClick: () => void;
   onPointerDown: (event: ReactPointerEvent<HTMLElement>) => void;
 }
 
@@ -285,11 +291,13 @@ const Bar = ({
   selected,
   lifted,
   onClick,
+  onDoubleClick,
   onPointerDown,
 }: BarProps) => (
   <button
     type="button"
     onClick={onClick}
+    onDoubleClick={onDoubleClick}
     onPointerDown={onPointerDown}
     aria-label={
       // Being on the bar decides the whole turn — nothing else may move until it
@@ -468,6 +476,39 @@ const useCheckerFlights = (
   }, [board]);
 };
 
+/**
+ * Clicks and double clicks on their way to the controller.
+ *
+ * A double click on a point with only one move to play plays it — the two clicks
+ * it stands in for, run together. What it must not do is play a *third* click's
+ * worth. Clicking a source and then double-clicking the destination delivers a
+ * click that lands the checker, a click that selects the point it landed on, and
+ * then the double click, which would spend another die on the checker that just
+ * arrived; there is no undo to take that back.
+ *
+ * Refusing every double click whose first half moved something is what separates
+ * the two, and the board object is the witness: `playMove` returns a new one and
+ * selecting a point does not, so a pair of clicks with one board under both of
+ * them is a pair that only selected.
+ */
+const useBoardClicks = (controller: BoardController, board: BoardState) => {
+  const pair = useRef<{ index: number; board: BoardState }[]>([]);
+
+  const click = (index: number) => {
+    pair.current = [...pair.current.slice(-1), { index, board }];
+    controller.clickPoint(index);
+  };
+
+  const doubleClick = (index: number) => {
+    const clicks = pair.current;
+    if (clicks.length === 2 && clicks.every((c) => c.index === index && c.board === board)) {
+      controller.playOnlyMove(index);
+    }
+  };
+
+  return { click, doubleClick };
+};
+
 export const Board = ({ controller }: { controller: BoardController }) => {
   const { state, you, selectableFroms, selectedFrom, targets, targetsFrom, selectFrom, moveChecker } = controller;
   const board = state.board;
@@ -483,6 +524,7 @@ export const Board = ({ controller }: { controller: BoardController }) => {
     moveChecker,
   });
   useCheckerFlights(rootRef, board, releaseRef);
+  const { click, doubleClick } = useBoardClicks(controller, board);
 
   const renderPoint = (index: number, orientation: 'top' | 'bottom') => (
     <Point
@@ -496,14 +538,16 @@ export const Board = ({ controller }: { controller: BoardController }) => {
       target={targets.includes(index)}
       over={drag?.over === index}
       lifted={drag?.from === index}
-      onClick={() => controller.clickPoint(index)}
+      onClick={() => click(index)}
+      onDoubleClick={() => doubleClick(index)}
       onPointerDown={(event) => grab(index, event)}
     />
   );
 
   return (
-    // `touch-manipulation` keeps a quick double tap on two points from zooming
-    // the page instead of playing the move.
+    // `touch-manipulation` keeps a quick double tap from zooming the page
+    // instead of playing the move — on two points, or on one now that a double
+    // tap there plays the move a point has no choice about.
     <div ref={rootRef} className="flex touch-manipulation flex-col items-center select-none">
       <div className="board-fit">
         <div
@@ -525,7 +569,8 @@ export const Board = ({ controller }: { controller: BoardController }) => {
             selectable={selectableFroms.includes(BAR)}
             selected={selectedFrom === BAR}
             lifted={drag?.from === BAR}
-            onClick={() => controller.clickPoint(BAR)}
+            onClick={() => click(BAR)}
+            onDoubleClick={() => doubleClick(BAR)}
             onPointerDown={(event) => grab(BAR, event)}
           />
 
@@ -543,7 +588,7 @@ export const Board = ({ controller }: { controller: BoardController }) => {
               value={board.off[you]}
               active={targets.includes(OFF)}
               over={drag?.over === OFF}
-              onClick={() => controller.clickPoint(OFF)}
+              onClick={() => click(OFF)}
             />
           </div>
         </div>

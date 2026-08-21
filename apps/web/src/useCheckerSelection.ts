@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Move } from '@backgammon/core';
+import { soleMoveFrom } from '@/lib/soleMove';
 
 /**
  * Holding a checker and putting it down — the click flow, and what a drag needs
@@ -31,6 +32,11 @@ export interface CheckerSelection {
   selectFrom: (from: number | null) => void;
   /** The click flow: pick up, put down, or re-aim at another source. */
   clickPoint: (index: number) => void;
+  /**
+   * Play the move a point has, when it has exactly one — the pair of clicks a
+   * double click stands in for, with nothing left in between to decide.
+   */
+  playOnlyMove: (index: number) => void;
   /** Play `from` → `to` outright, whatever happens to be held. */
   moveChecker: (from: number, to: number) => void;
   clearSelection: () => void;
@@ -96,6 +102,16 @@ export const useCheckerSelection = (legalMoves: readonly Move[], play: (move: Mo
     [legalMoves, selectableFroms, selectedFrom],
   );
 
+  const playOnlyMove = useCallback(
+    (index: number) => {
+      const move = soleMoveFrom(legalMoves, index);
+      if (!move) return;
+      setHeld(null);
+      playRef.current(move);
+    },
+    [legalMoves],
+  );
+
   const clearSelection = useCallback(() => setHeld(null), []);
 
   return {
@@ -105,6 +121,7 @@ export const useCheckerSelection = (legalMoves: readonly Move[], play: (move: Mo
     targetsFrom,
     selectFrom: setHeld,
     clickPoint,
+    playOnlyMove,
     moveChecker,
     clearSelection,
   };
