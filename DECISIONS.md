@@ -124,6 +124,34 @@ says so. It is held until the player who rolled it rolls again, rather than bein
 cleared by the next roll of any kind, so it stays up for the whole of the
 opponent's reply instead of flashing past inside the AI's think time.
 
+## Watching the AI move
+
+`applyAiTurn` plays a whole turn in one call, which is right for the engine and wrong
+for the screen: two to four checkers changed places in a single render and nothing
+said which ones. A human's own move is one they just made and are expecting; the AI's
+is the only account they get of it, and it was arriving as a fait accompli. Hitting was
+the worst of it — a checker could be sent to the bar in a turn nobody saw happen.
+
+The local hook therefore spends one die per beat, 400ms apart, against the 600ms pause
+before the turn that reads as the AI deciding something. This is also the half of
+"animate the board" that is not animation: whatever motion is added later is an echo of
+a state that now changes one move at a time, and without this there is nothing for it
+to echo.
+
+The move is re-decided from the board in front of it — `chooseTurn` on the current
+state, first move, `playMove` — rather than searching once and walking the sequence
+that came back. A stored sequence is derived state that can disagree with the board it
+was derived from, and it would want invalidating on a new game, on unmount, and on
+anything else that moves the state under the timer; re-deriving needs nothing beyond
+the guard the other AI timers already carry. It does not weaken the play either: a
+partly-played turn has a subset of the dice left, so the search from there still
+reaches every continuation the first search was choosing between — and where that one
+hit the 60k-node cap, the shorter ones may not. The cost is up to four searches per
+turn instead of one, each smaller than the last.
+
+`applyAiTurn` stays in core regardless. A caller with nothing to draw — a test, a
+rollout — wants the turn, not the beats.
+
 ## Accessibility
 
 The board was a grid of 27 buttons that all announced the same way and all sat in

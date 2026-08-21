@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
 import { useLocalGame } from './useLocalGame';
 
-/** Let the AI's delayed turn (and any it chains into) run to completion. */
+/** Run one beat of the AI's delayed turn — its roll, or one of its checker moves. */
 const runAi = async () => {
   await act(async () => {
     await vi.runOnlyPendingTimersAsync();
@@ -100,8 +100,10 @@ describe('useLocalGame', () => {
     }
     expect(result.current.state.turn).toBe('black');
 
-    await runAi();
-    await runAi();
+    // One beat for the roll and one per checker the AI moves, so the number of
+    // them is the dice's business, not the test's.
+    let beats = 0;
+    while (result.current.state.turn === 'black' && beats++ < 10) await runAi();
 
     // The AI rolled and moved, so the turn came back to the human.
     expect(result.current.state.turn).toBe('white');
