@@ -84,8 +84,20 @@
   --checker-dark-fg: #f5f5f4;
   --checker-dark-line: #c4bfba;
 
-  --pick: #f0b429;
-  --pick-strong: #fcd34d;
+  /*
+   * The pick family sits a lightness step above `--move` rather than beside it.
+   * Amber and sky are the one pair here that hue alone would carry, but a ring
+   * is two pixels wide and a thin stroke reads as light or dark long before it
+   * reads as a colour. Ratios against even / odd: pick 4.35 / 7.18, pick-strong
+   * 5.28 / 8.72, move 3.07 / 5.07. `--move` is the thinnest margin on the board
+   * and stays there: the green felt boxes it in. Every ring has to clear the
+   * lighter point, so lifting `--move` means darkening `--point-even`, and by
+   * the time it reaches 4:1 that point is 1.09 against the felt — the even
+   * points dissolve into the cloth. 3.07 clears WCAG; a board you cannot read
+   * would not.
+   */
+  --pick: #f9cd53;
+  --pick-strong: #fde68a;
   --move: #38bdf8;
   --dice: #fde68a;
   --dice-pip: #422006;
@@ -149,9 +161,17 @@
   --checker-dark-fg: #dfe4fb;
   --checker-dark-line: #8b95bd;
 
+  /*
+   * `--move` is gold on a board that is otherwise entirely blue, and that is the
+   * point. It was cyan, which against these indigos is a difference of hue and
+   * almost nothing else: simulate protanopia and `--pick-strong` and `--move`
+   * come out 3 apart on ΔE2000, the same ring twice. Yellow against blue is the
+   * one axis dichromacy leaves standing. Ratios against even / odd: pick
+   * 4.53 / 5.29, pick-strong 9.06 / 10.58, move 6.45 / 7.53.
+   */
   --pick: #818cf8;
   --pick-strong: #c7d2fe;
-  --move: #22d3ee;
+  --move: #e5a91d;
   --dice: #c7d2fe;
   --dice-pip: #1b1f3b;
 }
@@ -194,7 +214,7 @@
 
   --board-frame: #7c4a21;
   --felt: #e3cfa4;
-  --point-even: #c89a63;
+  --point-even: #d6ac74;
   --point-odd: #f0e2c4;
   --point-line: #b08b57;
   --point-label: #6b5334;
@@ -206,9 +226,9 @@
   --tray-fg: #3b2a18;
   --tray-label: #7a6244;
   /*
-   * The pale checker's body clears neither point here (2.44 on the dark point,
+   * The pale checker's body clears neither point here (2.02 on the dark point,
    * 1.23 on the light one), so unlike the dark themes its rim is what draws the
-   * boundary and has to carry the 3:1 itself: 3.53 / 7.00.
+   * boundary and has to carry the 3:1 itself: 4.28 / 7.00.
    */
   --checker-light: #fffaf0;
   --checker-light-fg: #3b2a18;
@@ -220,14 +240,24 @@
   /*
    * The rings run *darker* than the dark themes' and `--pick-strong` is darker
    * than `--pick`, which is the inversion a light board demands: emphasis is
-   * distance from the surface, and on cream that direction is down. Both have to
-   * clear 3:1 against both point colours, and the mid-toned `--point-even`
-   * (#c89a63) leaves no room above it — only below. Ratios against
-   * even / odd: pick 3.41 / 6.76, pick-strong 4.95 / 9.83, move 3.72 / 7.38.
+   * distance from the surface, and on cream that direction is down. A light
+   * board only ever offers room below its darker point, so all three rings share
+   * one narrow band and the order they sit in is the whole design: `--pick` at
+   * the top, `--pick-strong` a step down, `--move` at the floor. They used to be
+   * stacked on top of each other instead — pick and move landed 2 apart in L*,
+   * a brown ring and a navy one of identical darkness, telling you nothing about
+   * which point you were holding and which you could go to.
+   *
+   * `--point-even` was #c89a63, and mid-tone is what made the band too narrow to
+   * hold three rings: at 4:1 it left only L* 24 to work with. Lightening it to
+   * #d6ac74 opens that to 33 at the cost of some alternation (1.98 to 1.64
+   * against `--point-odd`, still well clear of Midnight's shipped 1.17).
+   * Ratios against even / odd: pick 4.13 / 6.76, pick-strong 5.49 / 8.98,
+   * move 8.37 / 13.69.
    */
   --pick: #7d3708;
-  --pick-strong: #5a2208;
-  --move: #0c4a6e;
+  --pick-strong: #64260a;
+  --move: #001b2e;
   --dice: #8a4b1d;
   --dice-pip: #f7ecd8;
 }

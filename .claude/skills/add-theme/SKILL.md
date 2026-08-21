@@ -26,13 +26,21 @@ contrast gate is real and it is where every attempt fails first, so read the las
 ## The contrast gate
 
 `apps/web/src/theme/contrast.test.ts` reads `themes.css` off disk and holds every theme in `THEMES` to WCAG's 3:1 for
-non-text UI. It runs automatically over a new theme the moment it is in the catalogue. Three things it checks:
+non-text UI. It runs automatically over a new theme the moment it is in the catalogue. What it checks:
 
 - `--pick`, `--pick-strong` and `--move` each clear 3:1 against **both** `--point-even` and `--point-odd`. The two
   point colours pull in opposite directions, so a ring tuned against one usually fails the other — pick the ring
-  first, then nudge the points apart until both clear.
+  first, then nudge the points apart until both clear. Note which direction "apart" runs: it is the *mid-toned* point
+  that squeezes the band the rings have to share, so a theme that cannot fit three separated rings usually wants its
+  two points closer together, not further.
 - `--pick-strong` out-**contrasts** `--pick`, which is not the same as out-brightening it. On a dark felt stronger is
   lighter; on a light one it is darker, because a mid-toned point leaves no headroom above it.
+- `--move` is **at least 10 L\* away from both `--pick` and `--pick-strong`**, and **at least 25 ΔE2000 away from
+  each under simulated protanopia, deuteranopia and tritanopia**. Clearing the point you sit on says nothing about
+  clearing the other ring, and source and destination are on screen together. A ring is two pixels wide, so lightness
+  is what it actually conveys — hue alone is not enough, and a hue two of the three dichromacies flatten is worse
+  than not enough. `--pick` and `--pick-strong` are exempt from each other; they are one signal at two strengths.
+  This is the constraint that decides your palette: pick `--move`'s lightness slot first, then place the pick family.
 - The dice read: `--dice-pip` clears 3:1 on `--dice`, and `--dice` clears 3:1 on `--canvas`. The die is drawn, not
   typed, and has no rim — its own fill is the only thing separating it from the page, so a face at the canvas's
   luminance disappears whatever the pips do. A dark face with pale pips is as valid as the reverse; only the two

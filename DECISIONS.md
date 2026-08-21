@@ -340,6 +340,45 @@ before adding a theme:
   Both dark themes needed their rims lifted for this — black checkers on a dark board
   were 2.66 and 1.35 against their points.
 
+### Rings also have to be legible against each other
+
+Every ring cleared 3:1 against both point colours and the board was still hard to
+read on Parchment, because clearing the surface you are drawn on says nothing about
+clearing the *other ring*. `--pick-strong` (the point you are holding) and `--move`
+(where it can go) are on screen together and mean opposite things, and Parchment ran
+`--pick` and `--move` two L\* apart — a brown ring and a navy one of identical
+darkness. Different colours; the same ring. Midnight had the same defect wearing a
+better disguise: indigo rings against a cyan `--move` look distinct until you
+simulate protanopia, where they land 3 apart on ΔE2000 and become the same colour
+twice.
+
+So the gate now asserts two more things about `--move` against each of `--pick` and
+`--pick-strong`, and they are deliberately different in kind. **A step of at least 10
+in L\*,** because a ring is two pixels wide and the eye resolves lightness at that
+width far better than hue — no hue difference rescues two equally dark strokes.
+**And at least 25 ΔE2000 under simulated protanopia, deuteranopia and tritanopia,**
+because whatever hue is left has to be a hue a dichromat still sees. `--pick` and
+`--pick-strong` are exempt from each other: they are one signal at two strengths and
+are supposed to look related.
+
+Meeting that on a light board cost something, and it is worth knowing what.
+Parchment only ever has room *below* its darker point, so all three rings share one
+band, and `--point-even` at #c89a63 was mid-toned enough to leave only 24 points of
+L\* to hold three of them — which is precisely why they ended up stacked. Lightening
+it to #d6ac74 opens the band to 33 and buys `--pick` a real margin (3.41 → 4.13) as
+well as the room to ladder, at the price of some alternation between the points: 1.98
+down to 1.64, still well clear of Midnight's shipped 1.17. Midnight paid a different
+price — its `--move` is now gold on an otherwise entirely blue board, since yellow
+against blue is the one axis dichromacy leaves standing.
+
+Classic keeps `--move` at 3.07, the thinnest ratio on the board, and that is not an
+oversight. Every ring has to clear the *lighter* point, so lifting `--move` means
+darkening `--point-even` — and by the time that point is dark enough for 4:1 it sits
+1.09 against the felt and the even points dissolve into the cloth. 3.07 clears WCAG;
+a board you cannot read would not. What Classic did get is its pick family lifted
+clear of `--move` in lightness (#f0b429 → #f9cd53, #fcd34d → #fde68a), which also
+takes `--pick` from 3.53 to 4.35.
+
 A small inline script in `index.html` applies the stored theme (and the matching
 `<meta name="theme-color">`) **before first paint**, so a reload does not flash
 Classic on its way to the chosen palette. It duplicates the storage key and the
