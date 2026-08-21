@@ -43,6 +43,24 @@ describe('useCheckerSelection', () => {
     expect(play).not.toHaveBeenCalled();
   });
 
+  it('plays a point only move outright, and leaves a point with a choice alone', () => {
+    const play = vi.fn();
+    const { result } = renderHook(() => useCheckerSelection(MOVES, play));
+
+    // Point 5 has two destinations, and picking one of them is picking the
+    // player's move for them.
+    act(() => result.current.clickPoint(5));
+    act(() => result.current.playOnlyMove(5));
+    expect(play).not.toHaveBeenCalled();
+    expect(result.current.selectedFrom).toBe(5);
+
+    // Point 8 has one, so there is nothing left for a second click to say —
+    // including the checker still held on 5, which this puts down.
+    act(() => result.current.playOnlyMove(8));
+    expect(play).toHaveBeenCalledWith(move(8, 4, 4));
+    expect(result.current.selectedFrom).toBeNull();
+  });
+
   it('answers where a checker could go without holding it first', () => {
     // What a drag asks: it has to light the destinations up in the same gesture
     // that picks the checker up, and cannot wait for a render to say so.

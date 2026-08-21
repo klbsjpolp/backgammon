@@ -24,6 +24,7 @@ const controllerFor = (you: Player, overrides: Partial<BoardController> = {}): B
   selectedFrom: you === 'white' ? 2 : 21,
   targets: [OFF],
   clickPoint: vi.fn(),
+  playOnlyMove: vi.fn(),
   targetsFrom: () => [OFF],
   selectFrom: vi.fn(),
   moveChecker: vi.fn(),
@@ -91,6 +92,56 @@ describe('Board', () => {
 
     fireEvent.click(screen.getByLabelText(/^bar,/));
     expect(clickPoint).toHaveBeenCalledWith(-1); // BAR
+  });
+
+  it('plays a point only move on a double click', () => {
+    const playOnlyMove = vi.fn();
+    render(<Board controller={controllerFor('white', { playOnlyMove })} />);
+
+    const point = screen.getByLabelText(/^point 3,/);
+    // The clicks a double click is made of arrive first, and select as they always do.
+    fireEvent.click(point);
+    fireEvent.click(point);
+    fireEvent.dblClick(point);
+
+    expect(playOnlyMove).toHaveBeenCalledWith(2);
+  });
+
+  it('takes a double click on the bar the same way', () => {
+    const playOnlyMove = vi.fn();
+    const state = bearingOffState('white');
+    render(
+      <Board
+        controller={controllerFor('white', {
+          playOnlyMove,
+          state: { ...state, board: { ...state.board, bar: { white: 1, black: 0 } } },
+        })}
+      />,
+    );
+
+    const bar = screen.getByLabelText(/^bar,/);
+    fireEvent.click(bar);
+    fireEvent.click(bar);
+    fireEvent.dblClick(bar);
+
+    expect(playOnlyMove).toHaveBeenCalledWith(-1); // BAR
+  });
+
+  it('ignores a double click whose first click already moved a checker', () => {
+    const playOnlyMove = vi.fn();
+    const state = bearingOffState('white');
+    const { rerender } = render(<Board controller={controllerFor('white', { playOnlyMove, state })} />);
+
+    // Clicking a source and then double-clicking the destination: the first of
+    // those two clicks lands the checker, and the shortcut must not spend a
+    // second die on it.
+    fireEvent.click(screen.getByLabelText(/^point 3,/));
+    const landed = { ...state, board: { ...state.board, points: state.board.points.map((c, i) => (i === 2 ? 4 : c)) } };
+    rerender(<Board controller={controllerFor('white', { playOnlyMove, state: landed })} />);
+    fireEvent.click(screen.getByLabelText(/^point 3,/));
+    fireEvent.dblClick(screen.getByLabelText(/^point 3,/));
+
+    expect(playOnlyMove).not.toHaveBeenCalled();
   });
 
   it('sizes the overflow count on a stacked point', () => {

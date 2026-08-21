@@ -44,6 +44,7 @@ export interface OnlineGame {
   canRoll: boolean;
   rollDice: () => void;
   clickPoint: (index: number) => void;
+  playOnlyMove: (index: number) => void;
   targetsFrom: (from: number) => number[];
   selectFrom: (from: number | null) => void;
   moveChecker: (from: number, to: number) => void;

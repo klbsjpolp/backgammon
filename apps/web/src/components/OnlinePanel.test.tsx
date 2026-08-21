@@ -30,6 +30,7 @@ const baseGame = (): OnlineGame => ({
   canRoll: false,
   rollDice: vi.fn(),
   clickPoint: vi.fn(),
+  playOnlyMove: vi.fn(),
   targetsFrom: () => [],
   selectFrom: vi.fn(),
   moveChecker: vi.fn(),

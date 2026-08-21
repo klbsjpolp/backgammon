@@ -1,7 +1,7 @@
 import { Board } from '@/components/Board';
 import { Button, ConfirmButton } from '@/components/Button';
 import { Dice } from '@/components/Dice';
-import { Controls, GameLayout } from '@/components/GameLayout';
+import { Controls, GameLayout, ShortcutHint } from '@/components/GameLayout';
 import { TurnControls } from '@/components/TurnControls';
 import { TurnStatus } from '@/components/TurnStatus';
 import { useLocalGame } from '@/useLocalGame';
@@ -26,7 +26,12 @@ export const LocalPanel = ({ applyPendingUpdate }: LocalPanelProps = {}) => {
 
   return (
     <GameLayout
-      hint="You play white. Drag a checker where it goes, or click it and then its destination."
+      hint={
+        <>
+          You play white. Drag a checker where it goes, or click it and then its destination.
+          <ShortcutHint />
+        </>
+      }
 
       status={<TurnStatus state={state} you={game.you} opponentLabel="AI" />}
       board={<Board controller={game} />}

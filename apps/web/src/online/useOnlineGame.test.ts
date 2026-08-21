@@ -301,6 +301,26 @@ describe('useOnlineGame', () => {
       expect(result.current.state).toEqual(moving);
     });
 
+    it('sends a point only move on its own, without a destination click', async () => {
+      const { result } = renderHook(() => useOnlineGame());
+      await startAsGuest(result);
+
+      const { createInitialState, applyRoll } = await import('@backgammon/core');
+      // 6-5: black's back checker can only run to its 18-point, the 5 being
+      // blocked by white's midpoint.
+      socket().emit({
+        type: 'relayed',
+        fromSeat: 0,
+        kind: 'view',
+        payload: applyRoll(createInitialState('black'), [6, 5]),
+      });
+      await waitFor(() => expect(result.current.state?.phase).toBe('moving'));
+
+      act(() => result.current.playOnlyMove(0));
+
+      expect(socket().sentOfType('relay').at(-1)?.payload).toMatchObject({ type: 'move', from: 0, to: 6, die: 6 });
+    });
+
     it('keeps the last good board when a relayed view is not one', async () => {
       const { result } = renderHook(() => useOnlineGame());
       await startAsGuest(result);

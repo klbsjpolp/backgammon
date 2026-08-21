@@ -3,7 +3,7 @@ import { canDouble, opponent } from '@backgammon/core';
 import { Board, type BoardController } from '@/components/Board';
 import { Button, ConfirmButton } from '@/components/Button';
 import { Dice } from '@/components/Dice';
-import { Controls, GameLayout } from '@/components/GameLayout';
+import { Controls, GameLayout, ShortcutHint } from '@/components/GameLayout';
 import { TurnControls } from '@/components/TurnControls';
 import { TurnStatus } from '@/components/TurnStatus';
 import { cn } from '@/lib/cn';
@@ -155,6 +155,7 @@ export const OnlinePanel = ({ applyPendingUpdate, onBusyChange }: OnlinePanelPro
     selectedFrom: g.selectedFrom,
     targets: g.targets,
     clickPoint: g.clickPoint,
+    playOnlyMove: g.playOnlyMove,
     targetsFrom: g.targetsFrom,
     selectFrom: g.selectFrom,
     moveChecker: g.moveChecker,
@@ -165,7 +166,12 @@ export const OnlinePanel = ({ applyPendingUpdate, onBusyChange }: OnlinePanelPro
 
   return (
     <GameLayout
-      hint={`You play ${g.myPlayer}. Drag a checker where it goes, or click it and then its destination.`}
+      hint={
+        <>
+          You play {g.myPlayer}. Drag a checker where it goes, or click it and then its destination.
+          <ShortcutHint />
+        </>
+      }
       status={
         <div className="flex w-full flex-col gap-2">
           {g.status === 'disconnected' && <Banner tone="error">{g.error ?? 'Connection lost.'}</Banner>}
