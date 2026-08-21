@@ -27,7 +27,7 @@ const AI_DELAY_MS = 600;
  * double buys four moves, which at the full delay is most of three seconds of
  * watching.
  */
-const AI_MOVE_MS = 400;
+export const AI_MOVE_MS = 400;
 
 export interface LocalGame {
   state: GameState;

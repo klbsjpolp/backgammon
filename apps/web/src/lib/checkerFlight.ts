@@ -17,11 +17,20 @@
  * depth, the label a screen reader reads — and only the paint is deferred.
  */
 
-/** Short enough to finish inside the 400ms the AI leaves between two checkers. */
+/**
+ * The whole of a hit — the wait, then the blot's own trip — has to finish inside
+ * the beat the AI leaves between two checkers, or the next move cancels it in
+ * mid-air. `AI_MOVE_MS` is the budget, and a test holds these three to it.
+ */
 export const FLIGHT_MS = 220;
-/** A hit reads as caused by the arrival, so the blot leaves just after it lands. */
-export const HIT_DELAY_MS = 70;
-export const HIT_FLIGHT_MS = 200;
+/**
+ * Measured from the same moment as the flight that caused it, so this is most of
+ * the hitter's trip: the blot goes as that checker comes down on it, overlapping
+ * the last of the flight. Leaving earlier reads as a blot that fled before the
+ * hit connected, and waiting for a clean landing reads as two unrelated moves.
+ */
+export const HIT_DELAY_MS = 170;
+export const HIT_FLIGHT_MS = 180;
 
 /** A checker is put down, not thrown: it carries speed and then settles. */
 const TRAVEL = 'cubic-bezier(0.22, 0.61, 0.36, 1)';
@@ -60,11 +69,14 @@ export interface Flight {
   delay?: number;
 }
 
+/** Ends a flight early, putting the board back exactly as finishing would have. */
+export type StopFlight = () => void;
+
 /**
- * Send `flyer` across the screen. Returns the animation, or `null` when nothing
- * moved — which is what a player who asked for no motion gets.
+ * Send `flyer` across the screen. Returns the way to end it early, or `null` when
+ * nothing moved — which is what a player who asked for no motion gets.
  */
-export const flyChecker = (flyer: HTMLElement, flight: Flight): Animation | null => {
+export const flyChecker = (flyer: HTMLElement, flight: Flight): StopFlight | null => {
   const { from, to, arrival } = flight;
   if (!canAnimate(flyer)) return null;
 
@@ -107,14 +119,24 @@ export const flyChecker = (flyer: HTMLElement, flight: Flight): Animation | null
     },
   );
 
-  // Both endings, because a flight cancelled by the next move still has a
-  // stand-in on the page and a checker hidden underneath it.
+  // Once only: a flight that is stopped early settles on the spot and then has
+  // its `cancel` event arrive afterwards, and the second pass would undo the first.
+  let settled = false;
   const settle = () => {
+    if (settled) return;
+    settled = true;
     flyer.remove();
     if (arrival) arrival.style.visibility = hidden;
   };
   animation.onfinish = settle;
   animation.oncancel = settle;
 
-  return animation;
+  // `cancel()` only *queues* its event, so a caller that cancelled and then read
+  // the DOM would still see the checker hidden — and a flight starting in that
+  // window would record `hidden` as the state to restore and hide it for good.
+  // Settling here, before cancelling, closes that window.
+  return () => {
+    settle();
+    animation.cancel();
+  };
 };
