@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  applyAiTurn,
+  chooseTurn,
   currentLegalMoves,
   canDouble,
   createInitialState,
@@ -19,7 +19,15 @@ import { useAutoRoll } from '@/useAutoRoll';
 
 const HUMAN: Player = 'white';
 const AI: Player = 'black';
+/** Long enough that the AI reads as deciding something rather than reacting. */
 const AI_DELAY_MS = 600;
+/**
+ * Between two checkers of the same turn. Shorter than the pause before it, because
+ * this is one decision unfolding rather than a new one being made — and because a
+ * double buys four moves, which at the full delay is most of three seconds of
+ * watching.
+ */
+const AI_MOVE_MS = 400;
 
 export interface LocalGame {
   state: GameState;
@@ -109,8 +117,8 @@ export const useLocalGame = (): LocalGame => {
   const canRoll = isHumanTurn && state.phase === 'rolling';
   useAutoRoll(autoRoll, canRoll, rollDice);
 
-  // Drive the AI: offer a double when the cube is right, roll, play its whole
-  // turn, or answer a human double offer.
+  // Drive the AI: offer a double when the cube is right, roll, play its turn a
+  // checker at a time, or answer a human double offer.
   useEffect(() => {
     if (state.phase === 'gameOver') return;
 
@@ -126,9 +134,30 @@ export const useLocalGame = (): LocalGame => {
       return () => clearTimeout(t);
     }
     if (state.turn === AI && state.phase === 'moving') {
+      // One checker per beat. `applyAiTurn` played the whole turn in a single
+      // state, so two to four checkers changed places at once and nothing on
+      // screen said which ones — the human's own move is one they just made and
+      // are expecting, but the AI's is the only account they get of it.
+      //
+      // The move is re-decided from the board in front of it rather than walked
+      // out of a sequence stored on the side: there is then no plan that can
+      // disagree with the state, and the timer needs no cancelling beyond the
+      // guard every other AI timer here already carries. It does not cost play
+      // either, because a turn that is partly played has a subset of the dice
+      // left, so the search from here still reaches every continuation the first
+      // one was choosing between.
       const t = setTimeout(
-        () => setState((s) => (s.turn === AI && s.phase === 'moving' ? applyAiTurn(s) : s)),
-        AI_DELAY_MS,
+        () =>
+          setState((s) => {
+            if (!(s.turn === AI && s.phase === 'moving')) return s;
+            // `moving` is only ever entered with a move available, and the turn
+            // ends the moment one stops being, so there is always a first move.
+            const [move] = chooseTurn(s);
+            // Not `applyLegalMove`: the fast path belongs to the search itself,
+            // which regenerates nothing. This is the UI applying a move.
+            return playMove(s, move);
+          }),
+        AI_MOVE_MS,
       );
       return () => clearTimeout(t);
     }
