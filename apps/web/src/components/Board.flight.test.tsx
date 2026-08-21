@@ -110,6 +110,9 @@ const controllerFor = (board: BoardState, you: Player = 'white'): BoardControlle
   selectedFrom: null,
   targets: [],
   clickPoint: vi.fn(),
+  targetsFrom: () => [],
+  selectFrom: vi.fn(),
+  moveChecker: vi.fn(),
 });
 
 /** The free end of a stack, which is the end a bottom-row point grows from. */

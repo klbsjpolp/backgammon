@@ -24,6 +24,9 @@ const controllerFor = (you: Player, overrides: Partial<BoardController> = {}): B
   selectedFrom: you === 'white' ? 2 : 21,
   targets: [OFF],
   clickPoint: vi.fn(),
+  targetsFrom: () => [OFF],
+  selectFrom: vi.fn(),
+  moveChecker: vi.fn(),
   ...overrides,
 });
 

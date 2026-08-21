@@ -1,4 +1,6 @@
 import { useLayoutEffect, useRef } from 'react';
+import type { PointerEvent as ReactPointerEvent, RefObject } from 'react';
+import { createPortal } from 'react-dom';
 import {
   BAR,
   CHECKERS_PER_SIDE,
@@ -11,7 +13,9 @@ import {
 } from '@backgammon/core';
 import { cn } from '@/lib/cn';
 import { barPile, describeMotions, offPile, pointPile, type CheckerMotion, type PileId } from '@/lib/boardDiff';
+import { outerChecker } from '@/lib/checkerStack';
 import { centreOf, flyChecker, FLIGHT_MS, HIT_DELAY_MS, HIT_FLIGHT_MS, type StopFlight } from '@/lib/checkerFlight';
+import { useCheckerDrag, type CheckerDrag, type DragRelease } from '@/useCheckerDrag';
 
 /** Minimal surface the board needs; satisfied by both the local and online games. */
 export interface BoardController {
@@ -22,6 +26,12 @@ export interface BoardController {
   selectedFrom: number | null;
   targets: number[];
   clickPoint: (index: number) => void;
+  /** Where a checker on `from` could land, asked before anything is held. */
+  targetsFrom: (from: number) => number[];
+  /** Hold a checker outright — what a drag means, where a click has to guess. */
+  selectFrom: (from: number | null) => void;
+  /** Put the checker down on `to`. */
+  moveChecker: (from: number, to: number) => void;
 }
 
 // Rows as white sees them: its home board (0..5) ends up bottom-right, next to
@@ -78,13 +88,21 @@ interface CheckersProps {
    * checker that arrived is then the first child, not the last.
    */
   arrivesAt?: 'first' | 'last';
+  /**
+   * The checker on the free end of this pile is in the player's hand. It keeps its
+   * slot — the stack must not resettle under a drag that may yet be abandoned —
+   * and only stops being drawn, because what the player is looking at is the ghost
+   * following their pointer.
+   */
+  lifted?: boolean;
 }
 
-const Checkers = ({ count, pile, arrivesAt = 'last' }: CheckersProps) => {
+const Checkers = ({ count, pile, arrivesAt = 'last', lifted = false }: CheckersProps) => {
   const n = Math.abs(count);
   if (n === 0) return null;
   const color = checkerColor(count > 0 ? 'white' : 'black');
   const shown = Math.min(n, 5);
+  const outer = arrivesAt === 'first' ? 0 : shown - 1;
   return (
     // `board-stack` is what lets the deepest stacks overlap, and `data-stack` is
     // how deep — the CSS picks the overlap off it rather than counting the
@@ -103,6 +121,7 @@ const Checkers = ({ count, pile, arrivesAt = 'last' }: CheckersProps) => {
             'flex size-board-checker items-center justify-center rounded-full',
             'text-board-checker leading-none font-bold ring-1',
             color,
+            lifted && i === outer && 'invisible',
           )}
         >
           <span className="board-label">{i === shown - 1 && n > 5 ? n : ''}</span>
@@ -121,7 +140,12 @@ interface PointProps {
   selectable: boolean;
   selected: boolean;
   target: boolean;
+  /** A dragged checker is over this point right now, and would land here. */
+  over: boolean;
+  /** The checker on the free end of this point is the one being dragged. */
+  lifted: boolean;
   onClick: () => void;
+  onPointerDown: (event: ReactPointerEvent<HTMLElement>) => void;
 }
 
 /**
@@ -129,8 +153,25 @@ interface PointProps {
  * Everything below is the same three states said out loud, plus the occupancy a
  * sighted player reads off the checkers themselves — without it a point
  * announced as "point 13, button" and nothing else, which is not a board.
+ *
+ * Under a drag there is nothing new to say: the point being dragged from is the
+ * held one and the point under the pointer is a destination, both of which the
+ * click flow already announces. `over` only sharpens the ring the drag is aiming
+ * at, which is a thing you can only be told by seeing it.
  */
-const Point = ({ index, number, count, orientation, selectable, selected, target, onClick }: PointProps) => {
+const Point = ({
+  index,
+  number,
+  count,
+  orientation,
+  selectable,
+  selected,
+  target,
+  over,
+  lifted,
+  onClick,
+  onPointerDown,
+}: PointProps) => {
   const playable = selectable || selected || target;
   const role = selected
     ? ', holding the checker to move'
@@ -144,6 +185,7 @@ const Point = ({ index, number, count, orientation, selectable, selected, target
     <button
       type="button"
       onClick={onClick}
+      onPointerDown={onPointerDown}
       aria-label={`point ${number}, ${describeOccupancy(count)}${role}`}
       aria-pressed={selectable || selected ? selected : undefined}
       // Not `disabled`: the point still has to be readable, and a disabled
@@ -153,20 +195,28 @@ const Point = ({ index, number, count, orientation, selectable, selected, target
       aria-disabled={playable ? undefined : true}
       tabIndex={playable ? undefined : -1}
       data-point={index}
+      data-drop-zone={index}
+      data-drag-source={selectable || selected ? '' : undefined}
       className={cn(
         'flex h-board-depth w-board-point flex-col items-center gap-board-stack rounded-md',
         'border border-point-line px-px py-board-point-pad transition',
         orientation === 'bottom' && 'flex-col-reverse justify-start',
         index % 2 === 0 ? 'bg-point-even' : 'bg-point-odd',
-        selectable && 'cursor-pointer ring-2 ring-pick hover:brightness-125',
+        selectable && 'cursor-grab ring-2 ring-pick hover:brightness-125',
         selected && 'ring-2 ring-pick-strong brightness-125',
         target && 'cursor-pointer ring-2 ring-move hover:brightness-125',
+        over && 'ring-4 ring-move brightness-125',
       )}
     >
       <span aria-hidden className="board-label text-board-label leading-none text-point-label">
         {number}
       </span>
-      <Checkers count={count} pile={pointPile(index)} arrivesAt={orientation === 'bottom' ? 'first' : 'last'} />
+      <Checkers
+        count={count}
+        pile={pointPile(index)}
+        arrivesAt={orientation === 'bottom' ? 'first' : 'last'}
+        lifted={lifted}
+      />
     </button>
   );
 };
@@ -177,15 +227,21 @@ interface TrayProps {
   owner: Player;
   value: number;
   active?: boolean;
+  /** A dragged checker is over this tray and would bear off here. */
+  over?: boolean;
   onClick?: () => void;
 }
 
-const Tray = ({ label, owner, value, active, onClick }: TrayProps) => (
+const Tray = ({ label, owner, value, active, over, onClick }: TrayProps) => (
   <button
     type="button"
     onClick={onClick}
     disabled={!onClick}
     data-tray={owner}
+    // The opponent's tray is a square of the board a drag can be let go over, and
+    // one nothing can ever land on. Saying so is what stops a release there from
+    // reaching past it to the nearest point that *is* a destination.
+    data-drop-zone={onClick ? OFF : 'none'}
     // The count and the caption are two elements, so the default accessible name
     // comes out as the bare "12 white off"; spelling it out says what the number
     // counts and what is left to bear off.
@@ -194,6 +250,7 @@ const Tray = ({ label, owner, value, active, onClick }: TrayProps) => (
       'flex h-board-tray-depth w-board-tray flex-col items-center justify-center',
       'rounded-md border border-tray-line bg-tray text-tray-fg',
       active && 'cursor-pointer ring-2 ring-move hover:brightness-125',
+      over && 'ring-4 ring-move brightness-125',
     )}
   >
     {/* One block so the count and its caption turn back upright together. */}
@@ -213,13 +270,27 @@ interface BarProps {
   yoursPile: PileId;
   selectable: boolean;
   selected: boolean;
+  /** The checker on the free end of your side of the bar is the one being dragged. */
+  lifted: boolean;
   onClick: () => void;
+  onPointerDown: (event: ReactPointerEvent<HTMLElement>) => void;
 }
 
-const Bar = ({ theirs, theirsPile, yours, yoursPile, selectable, selected, onClick }: BarProps) => (
+const Bar = ({
+  theirs,
+  theirsPile,
+  yours,
+  yoursPile,
+  selectable,
+  selected,
+  lifted,
+  onClick,
+  onPointerDown,
+}: BarProps) => (
   <button
     type="button"
     onClick={onClick}
+    onPointerDown={onPointerDown}
     aria-label={
       // Being on the bar decides the whole turn — nothing else may move until it
       // is entered — so the count belongs in the name, not just in the pips.
@@ -229,26 +300,21 @@ const Bar = ({ theirs, theirsPile, yours, yoursPile, selectable, selected, onCli
     aria-pressed={selectable || selected ? selected : undefined}
     aria-disabled={selectable || selected ? undefined : true}
     tabIndex={selectable || selected ? undefined : -1}
+    // Nothing is ever moved *to* the bar — a hit puts the blot there without
+    // anyone aiming at it — so the bar is a zone with no index of its own.
+    data-drop-zone="none"
+    data-drag-source={selectable || selected ? '' : undefined}
     className={cn(
       'flex w-board-bar flex-col items-center justify-center gap-board-bar-gap self-stretch',
       'rounded-md border border-bar-line bg-bar py-board-bar-pad',
-      (selectable || selected) && 'cursor-pointer ring-2 ring-pick-strong',
+      (selectable || selected) && 'cursor-grab ring-2 ring-pick-strong',
     )}
   >
     <Checkers count={theirs} pile={theirsPile} />
     <span className="board-label text-board-label leading-none text-bar-label uppercase">bar</span>
-    <Checkers count={yours} pile={yoursPile} />
+    <Checkers count={yours} pile={yoursPile} lifted={lifted} />
   </button>
 );
-
-/**
- * The checker on the free end of a stack — the one a move adds, or the one it
- * takes away. Which DOM end that is depends on how the pile grows; see `arrivesAt`.
- */
-const outerChecker = (stack: HTMLElement): HTMLElement | null => {
-  const outer = stack.dataset.arrives === 'first' ? stack.firstElementChild : stack.lastElementChild;
-  return outer instanceof HTMLElement ? outer : null;
-};
 
 /** Where the outermost checker of every pile stands, as of this commit. */
 const measurePiles = (root: HTMLElement): Map<PileId, DOMRect> => {
@@ -266,6 +332,33 @@ const arrivalOn = (root: HTMLElement, pile: PileId): HTMLElement | null => {
   const stack = root.querySelector<HTMLElement>(`[data-pile="${pile}"]`);
   return stack ? outerChecker(stack) : null;
 };
+
+/**
+ * The checker in the player's hand, drawn on the page rather than in the board.
+ *
+ * `position: fixed` on the body for the same reason a flight is: a portrait phone
+ * turns the whole board a quarter turn, and screen coordinates applied inside that
+ * frame come out at right angles to the finger that produced them. Outside the
+ * rotation, one set of coordinates is right in both orientations — and the ghost is
+ * above every point it crosses, which a checker inside its own point can never be.
+ */
+const DragGhost = ({ drag }: { drag: CheckerDrag }) =>
+  createPortal(
+    <div
+      aria-hidden
+      className={cn('pointer-events-none fixed top-0 left-0 z-40 rounded-full ring-1', checkerColor(drag.player))}
+      style={{
+        width: `${drag.width}px`,
+        height: `${drag.height}px`,
+        // Centred on the pointer, and a shade larger than the checker it left
+        // behind: the lift is what says the checker is in your hand rather than
+        // lying on the board. A static transform, so it costs reduced motion
+        // nothing.
+        transform: `translate3d(${drag.pointer.x}px, ${drag.pointer.y}px, 0) translate(-50%, -50%) scale(1.15)`,
+      }}
+    />,
+    document.body,
+  );
 
 /**
  * What actually crosses the screen. A copy of the checker that landed is exact —
@@ -310,14 +403,27 @@ const stillThere = (before: DOMRect, now: DOMRect): boolean =>
  * new board and before the browser paints it, so the checker that landed is hidden
  * and its stand-in launched within the same frame; there is no paint in which the
  * checker is visible at both ends of the move.
+ *
+ * A move played by dragging starts somewhere the board has no record of — where
+ * the player let go — which is why `release` is read here. Flying such a move from
+ * the point instead would snap the checker back out of the player's hand and then
+ * fly it to where they had already put it.
  */
-const useCheckerFlights = (board: BoardState) => {
-  const rootRef = useRef<HTMLDivElement | null>(null);
+const useCheckerFlights = (
+  rootRef: RefObject<HTMLDivElement | null>,
+  board: BoardState,
+  releaseRef: RefObject<DragRelease | null>,
+) => {
   const previous = useRef<{ board: BoardState; tops: Map<PileId, DOMRect>; frame: DOMRect } | null>(null);
 
   useLayoutEffect(() => {
     const root = rootRef.current;
     if (!root) return;
+
+    // Taken whether or not it is used: a release that outlived its own commit
+    // would send some later move off from a place no checker has been since.
+    const released = releaseRef.current;
+    releaseRef.current = null;
 
     const frame = root.getBoundingClientRect();
     const before = previous.current;
@@ -331,7 +437,12 @@ const useCheckerFlights = (board: BoardState) => {
 
     const flying: StopFlight[] = [];
     for (const motion of describeMotions(before.board, board)) {
-      const origin = before.tops.get(motion.from);
+      // Only the checker the player was holding starts from their hand. A blot
+      // this move knocked to the bar leaves from where it was standing.
+      const origin =
+        released && motion.kind === 'move' && motion.from === released.pile
+          ? released.rect
+          : before.tops.get(motion.from);
       if (!origin) continue;
 
       const arrival = arrivalOn(root, motion.to);
@@ -351,17 +462,27 @@ const useCheckerFlights = (board: BoardState) => {
     // the board back on the spot, which matters because the effect that replaces
     // this one runs immediately after and reads the DOM it leaves behind.
     return () => flying.forEach((stop) => stop());
+    // `releaseRef` and `rootRef` are refs, and re-running this for anything but a new
+    // board is what would fly a move twice.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [board]);
-
-  return rootRef;
 };
 
 export const Board = ({ controller }: { controller: BoardController }) => {
-  const { state, you, selectableFroms, selectedFrom, targets } = controller;
+  const { state, you, selectableFroms, selectedFrom, targets, targetsFrom, selectFrom, moveChecker } = controller;
   const board = state.board;
   const them = opponent(you);
   const { top, bottom } = rowsFor(you);
-  const rootRef = useCheckerFlights(board);
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const { drag, releaseRef, grab } = useCheckerDrag({
+    rootRef,
+    you,
+    selectableFroms,
+    targetsFrom,
+    selectFrom,
+    moveChecker,
+  });
+  useCheckerFlights(rootRef, board, releaseRef);
 
   const renderPoint = (index: number, orientation: 'top' | 'bottom') => (
     <Point
@@ -373,7 +494,10 @@ export const Board = ({ controller }: { controller: BoardController }) => {
       selectable={selectableFroms.includes(index)}
       selected={selectedFrom === index}
       target={targets.includes(index)}
+      over={drag?.over === index}
+      lifted={drag?.from === index}
       onClick={() => controller.clickPoint(index)}
+      onPointerDown={(event) => grab(index, event)}
     />
   );
 
@@ -400,7 +524,9 @@ export const Board = ({ controller }: { controller: BoardController }) => {
             yoursPile={barPile(you)}
             selectable={selectableFroms.includes(BAR)}
             selected={selectedFrom === BAR}
+            lifted={drag?.from === BAR}
             onClick={() => controller.clickPoint(BAR)}
+            onPointerDown={(event) => grab(BAR, event)}
           />
 
           <div className="flex flex-col justify-between gap-board-gutter">
@@ -416,11 +542,13 @@ export const Board = ({ controller }: { controller: BoardController }) => {
               owner={you}
               value={board.off[you]}
               active={targets.includes(OFF)}
+              over={drag?.over === OFF}
               onClick={() => controller.clickPoint(OFF)}
             />
           </div>
         </div>
       </div>
+      {drag && <DragGhost drag={drag} />}
     </div>
   );
 };

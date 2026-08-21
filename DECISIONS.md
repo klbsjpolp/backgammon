@@ -213,6 +213,83 @@ Bearing off is the one move with no checker to stand in for, because a tray draw
 number. It gets one drawn from scratch, which shrinks away on arrival instead of
 landing on a checker that is not there.
 
+## Checkers you can pick up
+
+Click the checker, then click where it goes, was the whole of it. It is precise, and
+it is what the keyboard has to do anyway — but it asks for a move in two steps that
+the hand already knows as one, and on a phone, where a point is forty pixels across
+and the two taps land a board apart, it is the second tap that goes wrong. Dragging
+says the same thing in the gesture the board is a metaphor for.
+
+The drag does not replace the click flow; it _is_ the click flow, entered from the
+other end. Picking a checker up holds it exactly as a first click does, and letting
+go over a destination plays it exactly as a second click does. Which is why letting
+go over nothing leaves the checker held rather than throwing the gesture away: a
+drag that ran out of nerve half way has already made the first click, and the
+destination is one tap from there. Escape is the one thing that gives the checker
+back, because a player who wants out says so.
+
+Both flows now come out of one hook, `useCheckerSelection`, instead of one per game
+mode. Local and online had written the same hold-and-play logic twice over,
+differing only in what playing a move _does_ — apply it, or relay it and wait — and
+those two are exactly the pair that had drifted apart before. A gesture added to one
+is now a gesture in both.
+
+`clickPoint` could not be the drag's two ends, because it has to guess. A click on a
+point that is both a legal source and a legal destination of the checker already
+held means "play the move"; the same point grabbed means "pick this up". So the drag
+holds and plays outright — `selectFrom`, `moveChecker` — and only the click flow is
+left guessing. `targetsFrom` is there for the same reason: a drag has to light the
+destinations up inside the gesture that picks the checker up, and cannot wait for
+the selection to come back around through a render.
+
+Pointer events rather than HTML5 drag-and-drop, which has no touch implementation to
+speak of on iOS and cannot draw its own checker. A press only becomes a drag once it
+has travelled — further for a finger than for a cursor, because a touch contact
+drifts a few pixels while the player is merely tapping, and at the cursor's threshold
+every tap on a point promoted itself into a drag that then had to be aimed. Until
+then the press falls straight through to the click flow, and after it the click the
+browser fires at the end of the gesture is swallowed, or it would reach the point the
+drag started on and undo the selection the drag just made.
+
+**The scroll lock is the thing that makes it work on a phone at all.** By default a
+finger travelling down a point is a page scroll, and the browser decides so a few
+frames in: the pointer stream ends in a `pointercancel` and the checker is dropped in
+mid-air — "it starts moving and then the page scrolls instead". `touch-action: none`
+is the cheap half, and it is set only on the points that can actually be played, so
+every other part of the page still scrolls and pinches with the same finger that has
+to reach the buttons under the board. On iOS `touch-action` is advisory: Safari
+re-decides and hands the gesture to the scroller anyway, so the gesture also cancels
+`touchmove` outright for its own duration. That is scoped to one drag and released on
+`pointerup`, `pointercancel`, Escape _and_ window blur — an app switch can end a
+pointer stream without ever delivering an up, and a lock left armed leaves the whole
+board inert.
+
+Skip-bo, where this gesture came from, also auto-scrolls the board when a card is
+held near the edge of the viewport. Deliberately not copied: `--pt` sizes the board to
+the room the viewport has, so there is never a destination off screen to scroll to.
+
+**Where a release lands is decided by rects, and a square under the pointer answers
+for itself.** That last part is the difference from a board of scattered piles: the
+points _tile_, so a release over a point that is not a legal destination has to mean
+nothing at all. A nearest-target tolerance able to see over the square under the
+pointer would quietly play the point next door. The tolerance that remains is small
+and only ever reaches across the gutters between points, or in from just outside the
+frame — and the bar and the opponent's tray are squares too, carrying no index of
+their own, precisely so that a release over one of them stops there instead of
+snapping to a point a few pixels away. Rects and not `elementFromPoint`, because the
+checker the player is holding sits under their own pointer and would answer every hit
+test itself — and because rects can be stubbed, where a paint order cannot.
+
+**A dragged move flies from the hand, not from the point.** "Checkers that travel"
+above flies every move from where the checker was standing one commit ago, which for
+a drag is the one move it must not do: the checker the player has just put down would
+snap back to its point and fly to the destination they had already reached, on the
+only move they made themselves. So the gesture records the square it let go over and
+the flight effect reads it — and clears it in the same breath, because a release that
+outlived its own commit would send some later move off from a place no checker has
+been since.
+
 ## Accessibility
 
 The board was a grid of 27 buttons that all announced the same way and all sat in
@@ -607,8 +684,8 @@ notice a deploy.
   evaluation, and cube decisions come off a heuristic win-probability estimate — neither is
   equity-based, and rollouts would beat both.
 - Sentry, Playwright e2e.
-- Online polish: reconnection/resume parity with skip-bo, richer lobby (names, kicking),
-  animation/drag-and-drop (v1 uses click-to-move). A dropped socket still ends the
+- Online polish: reconnection/resume parity with skip-bo, richer lobby (names,
+  kicking). A dropped socket still ends the
   game for that seat: `useOnlineGame` reports `disconnected` and stops there,
   though the seat token it would need to resume is sitting in `sessionRef`.
 - The `dist/` output of `@backgammon/core` and `@backgammon/runtime` is built by

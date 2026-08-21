@@ -155,6 +155,9 @@ export const OnlinePanel = ({ applyPendingUpdate, onBusyChange }: OnlinePanelPro
     selectedFrom: g.selectedFrom,
     targets: g.targets,
     clickPoint: g.clickPoint,
+    targetsFrom: g.targetsFrom,
+    selectFrom: g.selectFrom,
+    moveChecker: g.moveChecker,
   };
 
   const doubleToMe =
@@ -162,7 +165,7 @@ export const OnlinePanel = ({ applyPendingUpdate, onBusyChange }: OnlinePanelPro
 
   return (
     <GameLayout
-      hint={`You play ${g.myPlayer}. Click a checker, then its destination.`}
+      hint={`You play ${g.myPlayer}. Drag a checker where it goes, or click it and then its destination.`}
       status={
         <div className="flex w-full flex-col gap-2">
           {g.status === 'disconnected' && <Banner tone="error">{g.error ?? 'Connection lost.'}</Banner>}

@@ -113,6 +113,42 @@ body {
   margin-top: calc(var(--pt) * -0.25);
 }
 
+/*
+ * Dragging a checker.
+ *
+ * `touch-action: none` on the points you can actually play is the scroll lock: by
+ * default a finger moving down a point is a page scroll, and the browser takes the
+ * gesture back the moment it decides so — the pointer stream ends in a
+ * `pointercancel` and the checker is dropped in mid-air. Claiming the gesture on
+ * the drag sources alone leaves every other part of the page scrolling and
+ * pinching as it did, which matters because it is the same finger that has to
+ * reach the buttons under the board.
+ *
+ * The two WebKit properties close the rest of the hole. iOS answers a
+ * press-and-hold on ordinary content with the selection callout and its own
+ * system drag session, and either takes the pointer away from us; `touch-action`
+ * does not suppress them. `touch-action` is in any case only advisory on iOS,
+ * which is why `useCheckerDrag` also cancels `touchmove` for the length of a
+ * touch drag — the CSS is the cheap half of the lock, not the whole of it.
+ */
+[data-drag-source] {
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-drag: none;
+}
+
+/*
+ * And for the length of the drag, the whole page: the checker follows the pointer
+ * past the edge of the board, and a gesture that ends over the page chrome must
+ * not have selected half of it on the way.
+ */
+body[data-drag-active] {
+  cursor: grabbing;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
 /* Landscape phone: the board sits beside the controls, with little height to spare. */
 @media (orientation: landscape) and (max-height: 640px) {
   .board-fit {

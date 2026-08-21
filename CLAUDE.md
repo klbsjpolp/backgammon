@@ -83,7 +83,14 @@ The UI numbers points a third way: each player sees their own 1..24, counting fr
   with `tabIndex={-1}` (not `disabled`, which drops them from the accessible tree in some readers).
 - **Both game modes share their chrome.** `TurnStatus` and `TurnControls` are common to `LocalPanel` and
   `OnlinePanel`; only the wiring differs. Don't re-implement status text in a panel — that is exactly how they drifted
-  apart before.
+  apart before. The same goes for holding a checker and playing it: `useCheckerSelection` is the one copy, and the two
+  games differ only in what playing a move does (apply it, or relay it).
+- **A drag is the click flow entered from the other end**, not a second way to play a move — `useCheckerDrag` holds the
+  source with `selectFrom` and plays with `moveChecker`, so letting go over nothing leaves the checker selected. The
+  scroll lock is load-bearing: `touch-action: none` on the drag sources plus a `touchmove` that is cancelled for the
+  length of a touch gesture, or iOS hands the drag to the page scroller half way through. A release resolves against
+  `data-drop-zone` rects, and a zone under the pointer answers for itself — the points tile, so reaching past one to a
+  neighbour plays a move nobody aimed at.
 - The rules engine is the state machine (`phase`: rolling → moving → doubleOffered → gameOver). React hooks drive it;
   there is no XState here on purpose.
 - **A service worker precaches the bundle, so `location.reload()` no longer picks up a deploy** — it re-serves the

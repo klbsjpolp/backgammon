@@ -26,7 +26,8 @@ export const LocalPanel = ({ applyPendingUpdate }: LocalPanelProps = {}) => {
 
   return (
     <GameLayout
-      hint="You play white. Click a checker, then its destination."
+      hint="You play white. Drag a checker where it goes, or click it and then its destination."
+
       status={<TurnStatus state={state} you={game.you} opponentLabel="AI" />}
       board={<Board controller={game} />}
       controls={

@@ -16,6 +16,7 @@ import {
   type Player,
 } from '@backgammon/core';
 import { useAutoRoll } from '@/useAutoRoll';
+import { useCheckerSelection } from '@/useCheckerSelection';
 
 const HUMAN: Player = 'white';
 const AI: Player = 'black';
@@ -49,6 +50,9 @@ export interface LocalGame {
   newGame: () => void;
   rollDice: () => void;
   clickPoint: (index: number) => void;
+  targetsFrom: (from: number) => number[];
+  selectFrom: (from: number | null) => void;
+  moveChecker: (from: number, to: number) => void;
   clearSelection: () => void;
   double: () => void;
   respond: (accept: boolean) => void;
@@ -56,7 +60,6 @@ export interface LocalGame {
 
 export const useLocalGame = (): LocalGame => {
   const [state, setState] = useState<GameState>(() => createInitialState(HUMAN));
-  const [selectedFrom, setSelectedFrom] = useState<number | null>(null);
   const [autoRoll, setAutoRoll] = useState(false);
 
   const isHumanTurn = state.turn === HUMAN;
@@ -66,17 +69,16 @@ export const useLocalGame = (): LocalGame => {
     [state, isHumanTurn],
   );
 
-  const selectableFroms = useMemo(() => [...new Set(legalMoves.map((m) => m.from))], [legalMoves]);
-
-  const targets = useMemo(
-    () => (selectedFrom === null ? [] : legalMoves.filter((m) => m.from === selectedFrom).map((m) => m.to)),
-    [legalMoves, selectedFrom],
-  );
+  // Holding a checker and putting it down, by click or by drag. `playMove` and not
+  // `applyLegalMove`: the fast path belongs to the AI's search, which took its move
+  // out of a list it generated itself. This is the UI playing one.
+  const selection = useCheckerSelection(legalMoves, (move) => setState((s) => playMove(s, move)));
+  const { clearSelection } = selection;
 
   const newGame = useCallback(() => {
-    setSelectedFrom(null);
+    clearSelection();
     setState(createInitialState(HUMAN));
-  }, []);
+  }, [clearSelection]);
 
   const rollDice = useCallback(() => {
     setState((s) => (s.turn === HUMAN && s.phase === 'rolling' ? roll(s) : s));
@@ -89,30 +91,6 @@ export const useLocalGame = (): LocalGame => {
   const respond = useCallback((accept: boolean) => {
     setState((s) => (s.phase === 'doubleOffered' && s.doubleOfferedBy === AI ? respondDouble(s, accept) : s));
   }, []);
-
-  const clearSelection = useCallback(() => setSelectedFrom(null), []);
-
-  const clickPoint = useCallback(
-    (index: number) => {
-      if (!isHumanTurn || state.phase !== 'moving') return;
-
-      if (selectedFrom === null) {
-        if (selectableFroms.includes(index)) setSelectedFrom(index);
-        return;
-      }
-
-      const move = legalMoves.find((m) => m.from === selectedFrom && m.to === index);
-      if (move) {
-        setState((s) => playMove(s, move));
-        setSelectedFrom(null);
-        return;
-      }
-
-      // Not a target: treat as re-selecting a different source, else deselect.
-      setSelectedFrom(selectableFroms.includes(index) ? index : null);
-    },
-    [isHumanTurn, state.phase, selectedFrom, selectableFroms, legalMoves],
-  );
 
   const canRoll = isHumanTurn && state.phase === 'rolling';
   useAutoRoll(autoRoll, canRoll, rollDice);
@@ -174,12 +152,10 @@ export const useLocalGame = (): LocalGame => {
   }, [state]);
 
   return {
+    ...selection,
     state,
     you: HUMAN,
     legalMoves,
-    selectableFroms,
-    selectedFrom,
-    targets,
     isHumanTurn,
     canRoll,
     canHumanDouble: canDouble(state, HUMAN),
@@ -188,8 +164,6 @@ export const useLocalGame = (): LocalGame => {
     setAutoRoll,
     newGame,
     rollDice,
-    clickPoint,
-    clearSelection,
     double,
     respond,
   };
