@@ -1,5 +1,17 @@
-import { BAR, CHECKERS_PER_SIDE, OFF, POINT_COUNT, opponent, type GameState, type Player } from '@backgammon/core';
+import { useLayoutEffect, useRef } from 'react';
+import {
+  BAR,
+  CHECKERS_PER_SIDE,
+  OFF,
+  POINT_COUNT,
+  opponent,
+  type Board as BoardState,
+  type GameState,
+  type Player,
+} from '@backgammon/core';
 import { cn } from '@/lib/cn';
+import { barPile, describeMotions, offPile, pointPile, type CheckerMotion, type PileId } from '@/lib/boardDiff';
+import { centreOf, flyChecker, FLIGHT_MS, HIT_DELAY_MS, HIT_FLIGHT_MS } from '@/lib/checkerFlight';
 
 /** Minimal surface the board needs; satisfied by both the local and online games. */
 export interface BoardController {
@@ -44,26 +56,32 @@ const describeOccupancy = (count: number): string => {
   return `${n} ${count > 0 ? 'white' : 'black'} checker${n === 1 ? '' : 's'}`;
 };
 
+/**
+ * Both colours carry a rim: on a light theme a pale checker on a pale point is
+ * otherwise only an edgeless smudge.
+ */
+const checkerColor = (player: Player): string =>
+  player === 'white'
+    ? 'bg-checker-light text-checker-light-fg ring-checker-light-line'
+    : 'bg-checker-dark text-checker-dark-fg ring-checker-dark-line';
+
 interface CheckersProps {
   count: number; // signed: + white, - black
+  /** Which pile this stack is, so a move can be flown from it and onto it. */
+  pile: PileId;
 }
 
-const Checkers = ({ count }: CheckersProps) => {
+const Checkers = ({ count, pile }: CheckersProps) => {
   const n = Math.abs(count);
   if (n === 0) return null;
-  // Both colours carry a rim: on a light theme a pale checker on a pale point is
-  // otherwise only an edgeless smudge.
-  const color =
-    count > 0
-      ? 'bg-checker-light text-checker-light-fg ring-checker-light-line'
-      : 'bg-checker-dark text-checker-dark-fg ring-checker-dark-line';
+  const color = checkerColor(count > 0 ? 'white' : 'black');
   const shown = Math.min(n, 5);
   return (
     // `board-stack` is what lets the deepest stacks overlap, and `data-stack` is
     // how deep — the CSS picks the overlap off it rather than counting the
     // children itself, so a stack that grows cannot be left at the flat spacing
     // it had one checker ago. See index.css.
-    <div className="board-stack flex flex-col items-center gap-board-stack" data-stack={shown}>
+    <div className="board-stack flex flex-col items-center gap-board-stack" data-stack={shown} data-pile={pile}>
       {Array.from({ length: shown }).map((_, i) => (
         <div
           key={i}
@@ -134,23 +152,26 @@ const Point = ({ index, number, count, orientation, selectable, selected, target
       <span aria-hidden className="board-label text-board-label leading-none text-point-label">
         {number}
       </span>
-      <Checkers count={count} />
+      <Checkers count={count} pile={pointPile(index)} />
     </button>
   );
 };
 
 interface TrayProps {
   label: string;
+  /** Whose tray, so a checker borne off knows which one to fly to. */
+  owner: Player;
   value: number;
   active?: boolean;
   onClick?: () => void;
 }
 
-const Tray = ({ label, value, active, onClick }: TrayProps) => (
+const Tray = ({ label, owner, value, active, onClick }: TrayProps) => (
   <button
     type="button"
     onClick={onClick}
     disabled={!onClick}
+    data-tray={owner}
     // The count and the caption are two elements, so the default accessible name
     // comes out as the bare "12 white off"; spelling it out says what the number
     // counts and what is left to bear off.
@@ -172,14 +193,16 @@ const Tray = ({ label, value, active, onClick }: TrayProps) => (
 interface BarProps {
   /** Signed count shown on the far side of the bar (the opponent's checkers). */
   theirs: number;
+  theirsPile: PileId;
   /** Signed count shown on the near side (this client's checkers). */
   yours: number;
+  yoursPile: PileId;
   selectable: boolean;
   selected: boolean;
   onClick: () => void;
 }
 
-const Bar = ({ theirs, yours, selectable, selected, onClick }: BarProps) => (
+const Bar = ({ theirs, theirsPile, yours, yoursPile, selectable, selected, onClick }: BarProps) => (
   <button
     type="button"
     onClick={onClick}
@@ -198,17 +221,124 @@ const Bar = ({ theirs, yours, selectable, selected, onClick }: BarProps) => (
       (selectable || selected) && 'cursor-pointer ring-2 ring-pick-strong',
     )}
   >
-    <Checkers count={theirs} />
+    <Checkers count={theirs} pile={theirsPile} />
     <span className="board-label text-board-label leading-none text-bar-label uppercase">bar</span>
-    <Checkers count={yours} />
+    <Checkers count={yours} pile={yoursPile} />
   </button>
 );
+
+/** Rect of the checker on top of each pile — the one a move takes, or the one it adds. */
+const measurePiles = (root: HTMLElement): Map<PileId, DOMRect> => {
+  const tops = new Map<PileId, DOMRect>();
+  for (const pile of root.querySelectorAll<HTMLElement>('[data-pile]')) {
+    const id = pile.dataset.pile;
+    const top = pile.lastElementChild;
+    if (id && top) tops.set(id, top.getBoundingClientRect());
+  }
+  return tops;
+};
+
+/** The checker now standing on top of a pile: after a move, the one that just arrived. */
+const arrivalOn = (root: HTMLElement, pile: PileId): HTMLElement | null => {
+  const stack = root.querySelector<HTMLElement>(`[data-pile="${pile}"]`);
+  const top = stack?.lastElementChild;
+  return top instanceof HTMLElement ? top : null;
+};
+
+/**
+ * What actually crosses the screen. A copy of the checker that landed is exact —
+ * same size, same rim, same count label if the stack is a deep one — and bearing
+ * off, which has no landed checker to copy, gets one drawn from scratch.
+ */
+const standInFor = (player: Player, arrival: HTMLElement | null): HTMLElement => {
+  if (arrival) {
+    const copy = arrival.cloneNode(true) as HTMLElement;
+    // Every length on the board is a multiple of `--pt`, which lives on the board
+    // and not on the page the stand-in flies across. Width and height are set from
+    // the measured rect; the count a deep stack carries would otherwise come out at
+    // the page's own font size.
+    copy.style.fontSize = getComputedStyle(arrival).fontSize;
+    return copy;
+  }
+  const drawn = document.createElement('div');
+  drawn.className = cn('rounded-full ring-1', checkerColor(player));
+  return drawn;
+};
+
+/** Where a checker borne off is headed: its owner's tray, and only its owner's. */
+const trayFor = (root: HTMLElement, motion: CheckerMotion): HTMLElement | null =>
+  motion.to === offPile(motion.player) ? root.querySelector(`[data-tray="${motion.player}"]`) : null;
+
+/** Rects taken one commit ago only mean anything if the board is still where it was. */
+const stillThere = (before: DOMRect, now: DOMRect): boolean =>
+  Math.abs(before.left - now.left) < 1 &&
+  Math.abs(before.top - now.top) < 1 &&
+  Math.abs(before.width - now.width) < 1 &&
+  Math.abs(before.height - now.height) < 1;
+
+/**
+ * Draw the checker going where it went.
+ *
+ * The origin cannot be read off the board once the move is on screen: the checker
+ * that left is no longer standing there. So every commit records where the top of
+ * each pile was, and the next one flies against that — the board's own history is
+ * the only place the starting point still exists.
+ *
+ * A layout effect is what makes it seamless. It runs after React has written the
+ * new board and before the browser paints it, so the checker that landed is hidden
+ * and its stand-in launched within the same frame; there is no paint in which the
+ * checker is visible at both ends of the move.
+ */
+const useCheckerFlights = (board: BoardState) => {
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const previous = useRef<{ board: BoardState; tops: Map<PileId, DOMRect>; frame: DOMRect } | null>(null);
+
+  useLayoutEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+
+    const frame = root.getBoundingClientRect();
+    const before = previous.current;
+    // Recorded before anything below may bail out: the *next* move is measured
+    // against this commit whether or not this one produced any motion.
+    previous.current = { board, tops: measurePiles(root), frame };
+
+    // Nothing to come from on the first paint; and a board that was resized or
+    // turned between the two commits left every rect pointing somewhere it isn't.
+    if (!before || !stillThere(before.frame, frame)) return;
+
+    const flying: Animation[] = [];
+    for (const motion of describeMotions(before.board, board)) {
+      const origin = before.tops.get(motion.from);
+      if (!origin) continue;
+
+      const arrival = arrivalOn(root, motion.to);
+      const destination = arrival ?? trayFor(root, motion);
+      if (!destination) continue;
+
+      const flight = flyChecker(standInFor(motion.player, arrival), {
+        from: origin,
+        to: centreOf(destination.getBoundingClientRect()),
+        arrival,
+        ...(motion.kind === 'hit' ? { duration: HIT_FLIGHT_MS, delay: HIT_DELAY_MS } : { duration: FLIGHT_MS }),
+      });
+      if (flight) flying.push(flight);
+    }
+
+    // A move that lands while one is still in the air supersedes it. Cancelling is
+    // what takes the stand-in off the page and shows the checker under it again.
+    return () => flying.forEach((flight) => flight.cancel());
+  }, [board]);
+
+  return rootRef;
+};
 
 export const Board = ({ controller }: { controller: BoardController }) => {
   const { state, you, selectableFroms, selectedFrom, targets } = controller;
   const board = state.board;
   const them = opponent(you);
   const { top, bottom } = rowsFor(you);
+  const rootRef = useCheckerFlights(board);
 
   const renderPoint = (index: number, orientation: 'top' | 'bottom') => (
     <Point
@@ -227,7 +357,7 @@ export const Board = ({ controller }: { controller: BoardController }) => {
   return (
     // `touch-manipulation` keeps a quick double tap on two points from zooming
     // the page instead of playing the move.
-    <div className="flex touch-manipulation flex-col items-center select-none">
+    <div ref={rootRef} className="flex touch-manipulation flex-col items-center select-none">
       <div className="board-fit">
         <div
           className={cn(
@@ -242,7 +372,9 @@ export const Board = ({ controller }: { controller: BoardController }) => {
 
           <Bar
             theirs={signedFor(them, board.bar[them])}
+            theirsPile={barPile(them)}
             yours={signedFor(you, board.bar[you])}
+            yoursPile={barPile(you)}
             selectable={selectableFroms.includes(BAR)}
             selected={selectedFrom === BAR}
             onClick={() => controller.clickPoint(BAR)}
@@ -255,9 +387,10 @@ export const Board = ({ controller }: { controller: BoardController }) => {
 
           {/* The near tray is always this client's, so either color can bear off. */}
           <div className="flex flex-col justify-between gap-board-gutter">
-            <Tray label={`${them} off`} value={board.off[them]} />
+            <Tray label={`${them} off`} owner={them} value={board.off[them]} />
             <Tray
               label={`${you} off`}
+              owner={you}
               value={board.off[you]}
               active={targets.includes(OFF)}
               onClick={() => controller.clickPoint(OFF)}

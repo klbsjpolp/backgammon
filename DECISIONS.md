@@ -152,6 +152,51 @@ turn instead of one, each smaller than the last.
 `applyAiTurn` stays in core regardless. A caller with nothing to draw — a test, a
 rollout — wants the turn, not the beats.
 
+## Checkers that travel
+
+Playing a move changed a board; it did not move a checker. One point had one
+fewer and another had one more, and the eye was left to work out which two — on
+the AI's turn, four times over, against a board it had not been watching. The
+beats added by "Watching the AI move" above bought the time for motion; this is
+the motion.
+
+What travels is a stand-in on the page, not the checker on the board. The board
+draws itself from signed counts, so there is no node that goes from one point to
+another to animate — but the deciding reason is the portrait phone. The whole
+board there sits under a `rotate(90deg)`, and a transform on a checker inside that
+frame is applied in the frame's turned coordinates, so an offset measured on
+screen would send it off at right angles. A `position: fixed` element on the body
+is outside the rotation, and one set of screen coordinates is then right in both
+orientations. It is also above every point it crosses, which a checker inside its
+own point can never be.
+
+The checker that landed is hidden for the length of the trip rather than the board
+being held back a frame. React commits the truth — the count, the stack depth, the
+label a screen reader reads — and only the paint is deferred; a board that lagged
+its own state by 220ms would be a second source of truth, and the live region would
+be announcing a move whose checker had not arrived.
+
+The origin cannot be read off the board once the move is on screen, because the
+checker that left is no longer standing there. So every commit records where the
+top of each pile was and the next one flies against that: the previous frame is the
+only place the starting point still exists. The one thing that invalidates it is the
+board moving underneath — a rotated phone, a resized window — so the root's own rect
+is kept alongside, and a board that is not where it was animates nothing.
+
+Which checker moved is derived by diffing the two boards rather than carried beside
+them. Locally the `Move` is in hand and it would have been easy to pass down, but a
+guest is handed a state and never sees the move that produced it, and adding one to
+the wire would have meant a field every mismatched host had to be tolerated for
+omitting. A diff is the one account both games can give, and it costs the wire
+nothing. It also fails in the right direction: anything that is not exactly one
+checker moving — the opening position, a board that jumped because a relayed frame
+went missing — describes nothing and simply appears, which is what the board did
+before any of this.
+
+Bearing off is the one move with no checker to stand in for, because a tray draws a
+number. It gets one drawn from scratch, which shrinks away on arrival instead of
+landing on a checker that is not there.
+
 ## Accessibility
 
 The board was a grid of 27 buttons that all announced the same way and all sat in
