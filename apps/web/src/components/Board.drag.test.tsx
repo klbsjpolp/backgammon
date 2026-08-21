@@ -84,6 +84,7 @@ interface PointerBits {
   clientY: number;
   pointerId?: number;
   pointerType?: string;
+  button?: number;
 }
 
 /**
@@ -97,6 +98,7 @@ const pointerEvent = (type: string, bits: PointerBits): Event => {
     cancelable: true,
     clientX: bits.clientX,
     clientY: bits.clientY,
+    button: bits.button ?? 0,
   });
   Object.assign(event, { pointerId: bits.pointerId ?? 1, pointerType: bits.pointerType ?? 'mouse' });
   return event;
@@ -298,6 +300,36 @@ describe('dragging a checker', () => {
 
     expect(controller.selectFrom).not.toHaveBeenCalled();
     expect(document.body.hasAttribute('data-drag-active')).toBe(false);
+  });
+
+  it('leaves a right-click to the context menu', () => {
+    const controller = controllerFor();
+    render(<Board controller={controller} />);
+    const start = centreOfZone(5);
+    fireEvent(pointAt(5), pointerEvent('pointerdown', { clientX: start.x, clientY: start.y, button: 2 }));
+    fireEvent(window, pointerEvent('pointermove', { clientX: start.x + 40, clientY: start.y }));
+
+    expect(controller.selectFrom).not.toHaveBeenCalled();
+    expect(document.body.hasAttribute('data-drag-active')).toBe(false);
+  });
+
+  it('lets go when the app is put in the background mid-drag', () => {
+    // Backgrounding can end the pointer stream without ever delivering an up or a
+    // cancel. Nothing would then release the one-gesture guard or the touch lock,
+    // and the board would come back inert.
+    const controller = controllerFor();
+    render(<Board controller={controller} />);
+    dragFrom(pointAt(5), 2, 'touch');
+    fireEvent.blur(window);
+
+    expect(controller.moveChecker).not.toHaveBeenCalled();
+    expect(document.body.hasAttribute('data-drag-active')).toBe(false);
+    // The page scrolls again, and the next drag still starts.
+    const freed = new Event('touchmove', { bubbles: true, cancelable: true });
+    document.dispatchEvent(freed);
+    expect(freed.defaultPrevented).toBe(false);
+    dragFrom(pointAt(5), 2);
+    expect(document.body.getAttribute('data-drag-active')).toBe('true');
   });
 
   it('will not start a second drag while one is in the air', () => {
