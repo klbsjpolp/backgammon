@@ -216,7 +216,14 @@ describe.each(THEMES.map((theme) => theme.id))('%s', (id) => {
   // And the hue that remains has to be a hue a dichromat still sees. Midnight
   // used to pair indigo rings with a cyan `--move`: a clear difference in
   // ordinary vision, and under simulated protanopia the same colour twice.
-  const MIN_COLOUR_BLIND_DIFFERENCE = 25;
+  //
+  // The floor was 25, and 25 turned out to be a number that passes boards nobody
+  // can read: Parchment sat at 30 with a `--move` so dark its hue had nowhere to
+  // show, and the ring beside it still looked like the same ring. 35 is where the
+  // three shipped themes actually live once each of them means something, and it
+  // is the useful kind of tight — a new theme that only just clears it is a theme
+  // whose `--move` has no chroma left, which is the defect itself.
+  const MIN_COLOUR_BLIND_DIFFERENCE = 35;
 
   it.each(pickFamily)('--%s stays unlike --move for a colour-blind player', (name) => {
     for (const kind of Object.keys(CONFUSIONS) as (keyof typeof CONFUSIONS)[]) {
