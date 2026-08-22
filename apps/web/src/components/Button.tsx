@@ -29,7 +29,7 @@ export const Button = ({ className, ...props }: ButtonProps) => (
 const CONFIRM_TIMEOUT_MS = 4000;
 
 export interface ConfirmButtonProps extends Omit<ButtonProps, 'children' | 'onClick'> {
-  /** Stable accessible name — the visible text changes once armed, this does not. */
+  /** What the action is called: the button's text, and the root of its name. */
   label: string;
   /** Text shown after the first tap, while waiting for the confirming one. */
   confirmLabel?: string;
@@ -82,7 +82,19 @@ export const ConfirmButton = ({
   return (
     <>
       <Button
-        aria-label={label}
+        /*
+         * The name tracks the word on the button rather than staying pinned to
+         * `label`, because a speech-input user says what they can see (WCAG
+         * 2.5.3). Pinning it stranded the interaction halfway: the first tap
+         * works, and it is that tap which relabels the button to "Start over?"
+         * — so the second one, the one under a four-second timer, could not be
+         * spoken at all. The elaboration after the comma keeps the action
+         * findable by its own name for the reader who navigates by it, and a
+         * comma rather than a dash because that is what a reader speaks as a
+         * pause. Derived from `isArmed`, or the name goes stale in exactly the
+         * window that guard closes.
+         */
+        aria-label={isArmed ? `${confirmLabel}, confirm ${label}` : label}
         onClick={() => {
           if (confirm && !armed) {
             setArmed(true);
@@ -115,11 +127,12 @@ export const ConfirmButton = ({
         </span>
       </Button>
       {/*
-       * The accessible name is pinned to `label` so the action stays findable,
-       * which means arming is invisible to a screen reader: the swap to
-       * `confirmLabel` and the colour change are both sighted-only signals, and
-       * the first tap would read as a no-op. This announces it instead — without
-       * it the guard degrades into "press twice for no stated reason".
+       * The name above changes for speech input, which is a different consumer:
+       * an `aria-label` changing under a focused element is not reliably
+       * announced across NVDA, JAWS and VoiceOver, so this stays the thing that
+       * actually speaks. Without it the swap to `confirmLabel` and the colour
+       * change are both sighted-only signals and the first tap reads as a no-op
+       * — the guard degrades into "press twice for no stated reason".
        *
        * `sr-only` is absolutely positioned, so it takes no room in the flex row
        * or the grid the buttons sit in.

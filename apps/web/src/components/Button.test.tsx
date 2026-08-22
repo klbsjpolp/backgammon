@@ -11,7 +11,9 @@ describe('ConfirmButton', () => {
     vi.useRealTimers();
   });
 
-  const button = () => screen.getByRole('button', { name: 'Leave' });
+  // Named by its visible word in both states now, so the query cannot be one
+  // fixed string — these tests render the one button, so ask for the one button.
+  const button = () => screen.getByRole('button');
 
   /**
    * Both labels are always in the DOM — that is what keeps the button one width
@@ -20,12 +22,29 @@ describe('ConfirmButton', () => {
    */
   const visibleLabel = () => button().querySelector('[aria-hidden="false"]')?.textContent;
 
-  it('keeps its accessible name while armed, so the action stays findable', () => {
+  it('answers to the word on it in both states, and still says what the action is', () => {
+    // WCAG 2.5.3: a speech-input user says what they can see, and the first tap
+    // is what changes what they can see — so a name pinned to `label` stranded
+    // them halfway through, unable to speak the confirming tap.
     render(<ConfirmButton label="Leave" confirmLabel="Leave game?" onConfirm={vi.fn()} />);
 
     expect(visibleLabel()).toBe('Leave');
+    expect(button().getAttribute('aria-label')).toBe('Leave');
+
     fireEvent.click(button());
     expect(visibleLabel()).toBe('Leave game?');
+    // Leads with the visible words, so voice matching works; the rest keeps the
+    // action findable by its own name for a reader navigating by it.
+    expect(button().getAttribute('aria-label')).toBe('Leave game?, confirm Leave');
+  });
+
+  it('takes the name back when the guard drops, rather than leaving it armed', () => {
+    const { rerender } = render(<ConfirmButton label="Leave" confirmLabel="Leave game?" onConfirm={vi.fn()} />);
+    fireEvent.click(button());
+    expect(button().getAttribute('aria-label')).toBe('Leave game?, confirm Leave');
+
+    rerender(<ConfirmButton label="Leave" confirmLabel="Leave game?" confirm={false} onConfirm={vi.fn()} />);
+    expect(button().getAttribute('aria-label')).toBe('Leave');
   });
 
   it('announces the armed state, which the pinned name would otherwise hide', () => {
