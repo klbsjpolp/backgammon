@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.1.30](https://github.com/klbsjpolp/backgammon/compare/v0.1.29...v0.1.30) (2026-08-22)
+
+### Bug Fixes
+
+* **web:** keep the cube visible, and disarm a guard that drops ([ee4db81](https://github.com/klbsjpolp/backgammon/commit/ee4db818f327035d34fd914038560c6fcb9fe075))
+* **web:** let a speech-input user say what the cancel button says ([f78f2b4](https://github.com/klbsjpolp/backgammon/commit/f78f2b4bb5f15959069fa8380929184098373cd2))
+* **web:** let the confirming tap be spoken too ([3b5918d](https://github.com/klbsjpolp/backgammon/commit/3b5918d2c9e206430f621c1dad513f1b84449e74))
+* **web:** stop the page moving under the player mid-game ([096b13b](https://github.com/klbsjpolp/backgammon/commit/096b13befef938b3a3508d4f88c50407791759a9))
 ## [0.1.29](https://github.com/klbsjpolp/backgammon/compare/v0.1.28...v0.1.29) (2026-08-21)
 
 ### Features
