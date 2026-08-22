@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/react';
-import { createInitialState, OFF, type GameState, type Player } from '@backgammon/core';
+import { BAR, createInitialState, OFF, type GameState, type Player } from '@backgammon/core';
 import { Board, type BoardController } from './Board';
 
 const bearingOffState = (turn: Player): GameState => {
@@ -228,5 +228,22 @@ describe('Board — what it says out loud', () => {
 
     expect(screen.getByLabelText(/^barre, 2 de vos pions, 1 des siens/)).toBeDefined();
     expect(screen.getByRole('button', { name: /blancs sortis, 12 sur 15/i })).toBeDefined();
+  });
+
+  it('says the bar holds the checker being played, not merely that it can be', () => {
+    // Entering is the whole turn while a checker sits there, so the bar has to
+    // say which of the two states it is in rather than leaving it to the ring.
+    const state = bearingOffState('white');
+    render(
+      <Board
+        controller={controllerFor('white', {
+          state: { ...state, board: { ...state.board, bar: { white: 1, black: 0 } } },
+          selectableFroms: [BAR],
+          selectedFrom: BAR,
+        })}
+      />,
+    );
+
+    expect(screen.getByLabelText(/^barre,.*vous tenez le pion à faire entrer/)).toBeDefined();
   });
 });

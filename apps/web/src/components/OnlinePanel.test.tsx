@@ -141,6 +141,15 @@ describe('OnlinePanel', () => {
       expect(screen.getByText(/en attente du lancement/i)).toBeDefined();
     });
 
+    it('says so plainly when the socket drops before the first board arrives', () => {
+      // Nothing has been drawn yet, so the banner is the whole screen: leaving
+      // it on "en attente du lancement" would have the player waiting for a
+      // host that can no longer answer.
+      renderPanel({ status: 'disconnected', session: session(1) });
+
+      expect(screen.getByText(/déconnecté/i)).toBeDefined();
+    });
+
     it('draws the board from the seat point of view', () => {
       renderPanel(playing());
       expect(screen.getByText(/vous jouez les noirs/i)).toBeDefined();
@@ -222,6 +231,12 @@ describe('OnlinePanel', () => {
 
     it('warns when the connection drops mid-game', () => {
       renderPanel(playing({ status: 'disconnected', error: 'Connexion perdue.' }));
+      expect(screen.getAllByText(/connexion perdue/i).length).toBeGreaterThan(0);
+    });
+
+    it('says the connection is gone even when the socket closed without a reason', () => {
+      renderPanel(playing({ status: 'disconnected', error: null }));
+
       expect(screen.getAllByText(/connexion perdue/i).length).toBeGreaterThan(0);
     });
 

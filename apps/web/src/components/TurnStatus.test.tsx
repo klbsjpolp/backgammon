@@ -51,6 +51,16 @@ describe('TurnStatus — what is announced', () => {
     expect(screen.getByText(/IA a fait 6-5 et n'a pas pu jouer/i, { ignore: '[aria-live]' })).toBeDefined();
   });
 
+  it('names the colour of a roll nobody could play when the seat has no label', () => {
+    // Online there is no "IA" to name the other player by, so the sentence falls
+    // back to the colour — which is the one path through `describeNoPlay` that
+    // reads a name out of the engine's own vocabulary.
+    const passed: GameState = { ...createInitialState('white'), noPlay: { player: 'black', roll: [6, 5] } };
+    const { container } = render(<TurnStatus state={passed} you="white" />);
+
+    expect(liveRegion(container)?.textContent).toMatch(/Noir a fait 6-5 et n'a pas pu jouer/);
+  });
+
   it('stays two lines whether or not a roll went unplayed', () => {
     const quiet = render(<TurnStatus state={createInitialState('white')} you="white" opponentLabel="IA" />);
     const passed: GameState = { ...createInitialState('white'), noPlay: { player: 'black', roll: [6, 5] } };
