@@ -47,7 +47,10 @@ describe('ConfirmButton', () => {
     expect(button().getAttribute('aria-label')).toBe('Leave');
   });
 
-  it('announces the armed state, which the pinned name would otherwise hide', () => {
+  it('announces the armed state, which the name change alone would not', () => {
+    // The `aria-label` now tracks the visible word, but a name changing under a
+    // focused element is not reliably announced in NVDA, JAWS or VoiceOver — so
+    // this span, not the name, is what actually speaks the arming.
     render(<ConfirmButton label="Leave" confirmLabel="Leave game?" onConfirm={vi.fn()} />);
     const status = screen.getByRole('status');
 
