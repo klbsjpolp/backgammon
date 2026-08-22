@@ -750,10 +750,19 @@ not remembered" rather than throwing.
   - Dice are rolled by the host only. The host keeps the server's turn pointer in sync
     via `setTurn`, stores a `snapshot` for reconnect, and sends `endGame` on a win.
   - Backgammon is perfect-information, so the broadcast view is the full `GameState`.
-- The web app depends on `@klbsjpolp/realtime-core ^0.1.0`. **Until that is published**,
-  a temporary `file:` override in `pnpm-workspace.yaml` resolves it from a local tarball;
-  the lockfile is left pending. Finalize: publish realtime-core, remove the override,
-  `pnpm install`, then set the `VITE_BACKGAMMON_API_URL` secret. (Same gate as skip-bo.)
+- The web app depends on `@klbsjpolp/realtime-core ^0.1.0`, now resolved from the registry;
+  the `file:` override that stood in for it while it was unpublished is gone.
+- **Online play has no default relay, and that is the deploy's job to supply.** `getApiBaseUrl`
+  throws rather than guessing at a URL: a wrong guess would fail later, on a request, as a
+  network error nobody can act on. Its cost is that the value has to arrive from outside the
+  code, and Vite bakes it in at build time — so a deploy that never sets
+  `VITE_BACKGAMMON_API_URL` ships a bundle that is complete, passes every check, plays the AI
+  perfectly, and answers "Online play is not configured" to the first player who hosts a game.
+  That is exactly what happened to the Pages site: releases kept going out green while online
+  was dead. The workflow now refuses up front when the value is missing, and reads a
+  repository variable as well as a secret — the URL travels to every visitor inside the
+  bundle, so it was never secret, and a variable can be read back from the settings UI, which
+  is what makes "is it set?" answerable without cutting a release to find out.
 - A `Deploy` workflow ships the web app to GitHub Pages.
 
 ## Releasing under a branch ruleset
@@ -771,6 +780,14 @@ not remembered" rather than throwing.
   and died on `fatal: tag 'v0.1.17' already exists`. A half-applied release is worse than
   a failed one, because it poisons the next one; all-or-nothing is the only shape that
   degrades safely here.
+- **The relay-URL check runs before the release, not before the build that reads it.** The
+  natural place for it is next to the `Build` step whose `env` it feeds, and that place is
+  wrong: the `build` job only starts once `release` has computed the version, written the
+  CHANGELOG, and pushed the commit and the tag. Failing there leaves a published tag with no
+  deploy behind it — the same half-applied release the `--atomic` push exists to prevent, just
+  reached from the other end. The check therefore sits with the `RELEASE_PUSH_TOKEN` guard, in
+  the only window where a refusal still costs nothing.
+
 - **`workflow_run` fires on completion, not on success.** Chaining Deploy to CI that way
   reads as "deploy what CI proved", but the event carries a `conclusion` that has to be
   checked or a red CI ships anyway. The gate lives in the `release` job's `if`, alongside

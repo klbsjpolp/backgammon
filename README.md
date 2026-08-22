@@ -108,7 +108,25 @@ the way the player on that side counts them, they announce what is standing on t
 what part they play in the move being made, and only the points actually in play sit in
 the tab order. Rolls and turn changes are announced through polite live regions.
 
-Online requires `@klbsjpolp/realtime-core` to be published to npm and
-`VITE_BACKGAMMON_API_URL` to point at the relay server. Until the package is
-published, a temporary `file:` override in `pnpm-workspace.yaml` resolves it from a
-local tarball. See [DECISIONS.md](DECISIONS.md).
+## Online play needs a relay
+
+Online is the one part that does not work out of the box: it talks to a
+[realtime-infra](https://github.com/klbsjpolp/realtime-infra) server, and the app has
+no default to fall back on. `VITE_BACKGAMMON_API_URL` is the base URL of that server —
+the same one skip-bo points at — and Vite bakes it into the bundle at build time, so it
+belongs to the deploy rather than to the running app.
+
+For the deployed site, set it as a repository **variable** (Settings → Secrets and
+variables → Actions → Variables) or as a secret; the Deploy workflow reads either, and
+refuses to cut a release when neither is set, because a build without it deploys a board
+that plays the AI perfectly well and tells anyone hosting a game that online play is not
+configured.
+
+Locally, put it in `apps/web/.env.local` — untracked, and read by `pnpm dev` and
+`pnpm build` alike:
+
+```bash
+VITE_BACKGAMMON_API_URL=https://your-realtime-infra-server
+```
+
+See [DECISIONS.md](DECISIONS.md).
