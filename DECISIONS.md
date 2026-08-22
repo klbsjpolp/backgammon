@@ -572,9 +572,23 @@ buttons under the player's hand.
   Keeping one element across that flip took away a reset that the remount used to give
   for free. Arm "New game" mid-game, let the AI win inside the four seconds, and the
   button sat there red, reading "Start over?" and announcing that a second tap was
-  needed — over an action that now took one. `armed` is therefore read as `armed &&
-confirm` rather than only cleared in an effect, so there is no frame in which the two
-  disagree, and the effect clears the state behind it.
+  needed — over an action that now took one. Everything drawn therefore reads a derived
+  `isArmed`, rather than the state being cleared in an effect afterwards, so there is no
+  frame in which the two disagree.
+
+  The **accessible name follows the visible word** in both states rather than staying
+  pinned to `label` — "Start over?, confirm New game" while armed. WCAG 2.5.3 asks that
+  the name contain the visible label, because a speech-input user says what they can
+  see, and a two-tap button is the worst place to break that: the first tap works, and
+  it is that tap which relabels the button, so the confirming one — the one under a
+  four-second timer — could not be spoken at all. The pinned name was meant to keep the
+  action findable, which it only had to do for those four seconds, during which the
+  visible word is the one the user would reach for anyway. The `role="status"` span
+  stays alongside it: an `aria-label` changing under a focused element is not reliably
+  announced in NVDA, JAWS or VoiceOver, so speech input and screen readers are served by
+  two different things on purpose. The same rule put "Cancel, put the checker back" on
+  the button that puts a held checker down, where the name and the label had no word in
+  common at all.
 
 What is left is the game itself: checkers moving between points, and a stack
 respacing as it crosses four and five (see the point depth above). Across a full
