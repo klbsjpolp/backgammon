@@ -143,6 +143,19 @@ describe('useOnlineGame', () => {
     expect(result.current.error).toMatch(/n'est pas configuré/);
   });
 
+  it('has something to say when what was thrown is not an Error', async () => {
+    // `fetch` rejects with a DOMException on an aborted request, and a proxy can
+    // throw a string; either way the banner cannot be left empty.
+    createRoomMock.mockRejectedValue('boom');
+    const { result } = renderHook(() => useOnlineGame());
+
+    await act(async () => {
+      await result.current.hostRoom();
+    });
+
+    expect(result.current.error).toBe('Le serveur est injoignable.');
+  });
+
   it('authenticates on open and enters the lobby on presence', async () => {
     const { result } = renderHook(() => useOnlineGame());
 
@@ -416,6 +429,18 @@ describe('useOnlineGame', () => {
 
     expect(result.current.status).toBe('disconnected');
     expect(result.current.error).toMatch(/perdue/i);
+  });
+
+  it('reports a socket that errors without closing', async () => {
+    // `onerror` fires on its own when the handshake is refused — a proxy, a
+    // captive portal — and `onclose` may never follow, so this is the only
+    // thing that ever says why the room went quiet.
+    const { result } = renderHook(() => useOnlineGame());
+    await startGame(result, 0);
+
+    act(() => socket().onerror?.());
+
+    expect(result.current.error).toBe('Erreur de connexion.');
   });
 
   it('reports a closed room and a rejected action', async () => {
