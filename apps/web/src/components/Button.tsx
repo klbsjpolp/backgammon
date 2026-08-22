@@ -58,6 +58,21 @@ export const ConfirmButton = ({
 }: ConfirmButtonProps) => {
   const [armed, setArmed] = useState(false);
 
+  /*
+   * A guard that drops while it is armed has to disarm with it, and everything
+   * below reads this rather than `armed` for it.
+   *
+   * Keeping one element across that flip is what holds the button's width, and
+   * it took away a reset the old remount gave for free: arm "New game"
+   * mid-game, let the AI win inside the four seconds, and the button sat there
+   * red, reading "Start over?" and announcing that a second tap was needed —
+   * over an action that now took one, at the moment the player's hand is
+   * already moving towards it. Derived rather than cleared in an effect so
+   * there is no frame in which the two disagree; the timer below still runs it
+   * out, and `confirm` can only come back on the tap that clears it anyway.
+   */
+  const isArmed = armed && confirm;
+
   useEffect(() => {
     if (!armed) return;
     const timer = setTimeout(() => setArmed(false), CONFIRM_TIMEOUT_MS);
@@ -79,7 +94,7 @@ export const ConfirmButton = ({
         // Reaching for another control is as good an answer as waiting it out.
         onBlur={() => setArmed(false)}
         // After `className`, so an armed button keeps its warning colour.
-        className={cn(className, armed && 'bg-danger text-danger-fg hover:bg-danger-hover')}
+        className={cn(className, isArmed && 'bg-danger text-danger-fg hover:bg-danger-hover')}
         {...props}
       >
         {/*
@@ -91,10 +106,10 @@ export const ConfirmButton = ({
          * accident.
          */}
         <span className="grid">
-          <span aria-hidden={armed} className={cn('col-start-1 row-start-1', armed && 'invisible')}>
+          <span aria-hidden={isArmed} className={cn('col-start-1 row-start-1', isArmed && 'invisible')}>
             {label}
           </span>
-          <span aria-hidden={!armed} className={cn('col-start-1 row-start-1', !armed && 'invisible')}>
+          <span aria-hidden={!isArmed} className={cn('col-start-1 row-start-1', !isArmed && 'invisible')}>
             {confirmLabel}
           </span>
         </span>
@@ -110,7 +125,7 @@ export const ConfirmButton = ({
        * or the grid the buttons sit in.
        */}
       <span role="status" className="sr-only">
-        {armed ? `${label}: tap again to confirm.` : ''}
+        {isArmed ? `${label}: tap again to confirm.` : ''}
       </span>
     </>
   );
