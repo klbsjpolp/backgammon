@@ -4,8 +4,8 @@ name: Deploy
 # CHANGELOG, tag), then builds the web app from that release commit and deploys
 # it to GitHub Pages, publishing the released tag in runtime-config.json so tabs
 # already open can update themselves. Online play connects to the shared
-# realtime-infra server via the VITE_BACKGAMMON_API_URL secret (point it at the
-# same server skip-bo uses).
+# realtime-infra server via VITE_BACKGAMMON_API_URL (point it at the same server
+# skip-bo uses).
 
 on:
   workflow_run:
@@ -54,6 +54,27 @@ jobs:
         run: |
           if [ -z "$RELEASE_PUSH_TOKEN" ]; then
             echo "::error::RELEASE_PUSH_TOKEN is not set. The release pushes a commit and a tag to main, which the branch ruleset denies to GITHUB_TOKEN; set a PAT with contents:write that is allowed to bypass the ruleset."
+            exit 1
+          fi
+
+      # Vite bakes the relay URL into the bundle, so a build without it deploys
+      # a board that plays the AI perfectly well and tells anyone who hosts a
+      # game that online play is not configured: a green run and a broken
+      # feature, which is how the deployed site came to answer that to every
+      # player. The check belongs here and not beside the build step that reads
+      # the value, because by then the release commit and its tag are pushed,
+      # and a tag with no deploy behind it is the half-applied release the
+      # --atomic push exists to prevent. It reads a variable as well as a
+      # secret: the URL is served to every visitor inside the bundle, so it is
+      # not secret, and a variable can be read back from the settings UI instead
+      # of inferred from a deploy that failed.
+      - name: Require a realtime server URL
+        shell: bash
+        env:
+          VITE_BACKGAMMON_API_URL: ${{ secrets.VITE_BACKGAMMON_API_URL || vars.VITE_BACKGAMMON_API_URL }}
+        run: |
+          if [ -z "$VITE_BACKGAMMON_API_URL" ]; then
+            echo "::error::VITE_BACKGAMMON_API_URL is not set. Online play needs the realtime-infra server URL at build time; set it as a repository variable (or secret) to the same server skip-bo uses."
             exit 1
           fi
 
@@ -130,7 +151,7 @@ jobs:
         env:
           NODE_ENV: production
           VITE_APP_VERSION: ${{ needs.release.outputs.release_tag }}
-          VITE_BACKGAMMON_API_URL: ${{ secrets.VITE_BACKGAMMON_API_URL }}
+          VITE_BACKGAMMON_API_URL: ${{ secrets.VITE_BACKGAMMON_API_URL || vars.VITE_BACKGAMMON_API_URL }}
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v5
