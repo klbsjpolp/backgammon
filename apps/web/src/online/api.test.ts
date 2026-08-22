@@ -64,6 +64,6 @@ describe('room api', () => {
 
   it('falls back to a generic message when the error body is unusable', async () => {
     fetchMock.mockResolvedValue({ ok: false, json: () => Promise.reject(new Error('not json')) });
-    await expect(joinOnlineRoom('BAD')).rejects.toThrow('Request failed.');
+    await expect(joinOnlineRoom('BAD')).rejects.toThrow('La requête a échoué.');
   });
 });

@@ -27,8 +27,8 @@ describe('TurnControls — the row that must not grow', () => {
   it('is three controls while there is nothing to answer', () => {
     const { container } = render(<TurnControls {...props()} />);
     expect(controlCount(container)).toBe(3);
-    expect(screen.getByRole('button', { name: /^roll$/i })).toBeDefined();
-    expect(screen.getByRole('button', { name: /^double$/i })).toBeDefined();
+    expect(screen.getByRole('button', { name: /^lancer$/i })).toBeDefined();
+    expect(screen.getByRole('button', { name: /^doubler$/i })).toBeDefined();
   });
 
   it('names the cancel button so a speech-input user can say what they see', () => {
@@ -36,9 +36,9 @@ describe('TurnControls — the row that must not grow', () => {
     // "click Cancel" reaches nothing — on the one control for putting a held
     // checker back down.
     render(<TurnControls {...props({ isHolding: true })} />);
-    const cancel = screen.getByRole('button', { name: /^cancel/i });
-    expect(cancel.textContent).toBe('Cancel');
-    expect(cancel.getAttribute('aria-label')).toMatch(/^Cancel\b/);
+    const cancel = screen.getByRole('button', { name: /^annuler/i });
+    expect(cancel.textContent).toBe('Annuler');
+    expect(cancel.getAttribute('aria-label')).toMatch(/^Annuler\b/);
   });
 
   it('is three controls with a checker in hand — cancel stands in for double', () => {
@@ -47,8 +47,8 @@ describe('TurnControls — the row that must not grow', () => {
 
     expect(controlCount(container)).toBe(3);
     // Doubling is impossible mid-move, which is what makes the slot free.
-    expect(screen.queryByRole('button', { name: /^double$/i })).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: /^cancel/i }));
+    expect(screen.queryByRole('button', { name: /^doubler$/i })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: /^annuler/i }));
     expect(p.onClearSelection).toHaveBeenCalled();
   });
 
@@ -58,18 +58,18 @@ describe('TurnControls — the row that must not grow', () => {
 
     expect(controlCount(container)).toBe(3);
     // Neither rolling nor doubling can happen until this is answered.
-    expect(screen.queryByRole('button', { name: /^roll$/i })).toBeNull();
-    expect(screen.queryByRole('button', { name: /^double$/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^lancer$/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^doubler$/i })).toBeNull();
 
-    fireEvent.click(screen.getByRole('button', { name: /^take$/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^prendre$/i }));
     expect(p.onRespond).toHaveBeenCalledWith(true);
-    fireEvent.click(screen.getByRole('button', { name: /^drop$/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^refuser$/i }));
     expect(p.onRespond).toHaveBeenCalledWith(false);
   });
 
   it('answers the double before it clears a selection, since a held checker is stale by then', () => {
     render(<TurnControls {...props({ isDoubleToYou: true, isHolding: true })} />);
-    expect(screen.getByRole('button', { name: /^drop$/i })).toBeDefined();
-    expect(screen.queryByRole('button', { name: /^cancel/i })).toBeNull();
+    expect(screen.getByRole('button', { name: /^refuser$/i })).toBeDefined();
+    expect(screen.queryByRole('button', { name: /^annuler/i })).toBeNull();
   });
 });

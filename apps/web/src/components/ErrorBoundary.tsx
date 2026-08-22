@@ -41,16 +41,17 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
     return (
       <div role="alert" className="mx-auto flex max-w-md flex-col items-center gap-4 p-6 text-center text-fg">
-        <h1 className="text-xl font-bold text-heading">Something went wrong</h1>
+        <h1 className="text-xl font-bold text-heading">Une erreur est survenue</h1>
         <p className="text-sm text-muted">
-          The board could not be drawn. Starting over should clear it; a game in progress is lost either way.
+          Le plateau n'a pas pu être dessiné. Recommencer devrait suffire ; une partie en cours est perdue dans tous les
+          cas.
         </p>
         {/* The message is for a bug report, not for the player, hence the fold. */}
         <details className="w-full text-left text-xs text-muted">
-          <summary className="cursor-pointer">Details</summary>
+          <summary className="cursor-pointer">Détails</summary>
           <pre className="mt-2 overflow-x-auto whitespace-pre-wrap">{error.message}</pre>
         </details>
-        <Button onClick={reloadApp}>Reload</Button>
+        <Button onClick={reloadApp}>Recharger</Button>
       </div>
     );
   }

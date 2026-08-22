@@ -16,7 +16,7 @@ const moving = (roll: [number, number], remaining: number[]): GameState => ({
  * attribute the component labels it with.
  */
 const drawn = () =>
-  [...screen.getByLabelText('dice').querySelectorAll('svg')].map((el) => ({
+  [...screen.getByLabelText('dés').querySelectorAll('svg')].map((el) => ({
     face: Number(el.getAttribute('data-face')),
     played: el.getAttribute('data-played') === 'true',
   }));
@@ -52,7 +52,7 @@ describe('Dice', () => {
 
   it('reads the pips still to play out to a screen reader', () => {
     render(<Dice state={moving([6, 5], [6, 5])} />);
-    expect(screen.getByText('remaining:').parentElement?.textContent).toBe('remaining: 6, 5');
+    expect(screen.getByText('restants :').parentElement?.textContent).toBe('restants : 6, 5');
   });
 
   it('draws every face with the number of pips it is worth', () => {

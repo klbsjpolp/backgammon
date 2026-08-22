@@ -15,7 +15,7 @@ const postJson = async <T>(path: string, body: unknown): Promise<T> => {
     const message =
       payload && typeof payload === 'object' && 'message' in payload && typeof payload.message === 'string'
         ? payload.message
-        : 'Request failed.';
+        : 'La requête a échoué.';
     throw new Error(message);
   }
   return payload as T;

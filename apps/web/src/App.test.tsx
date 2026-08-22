@@ -24,27 +24,27 @@ describe('App', () => {
   it('renders the board and opening status', () => {
     render(<App />);
     expect(screen.getByRole('heading', { name: /backgammon/i })).toBeDefined();
-    expect(screen.getByText(/white to roll/i, { ignore: '.sr-only' })).toBeDefined();
+    expect(screen.getByText(/blanc doit lancer/i, { ignore: '.sr-only' })).toBeDefined();
     // 24 points are rendered.
-    expect(screen.getAllByLabelText(/^point \d+,/)).toHaveLength(24);
+    expect(screen.getAllByLabelText(/^flèche \d+,/)).toHaveLength(24);
   });
 
   it('rolls into the moving phase', async () => {
     render(<App />);
-    fireEvent.click(screen.getByRole('button', { name: /^roll$/i }));
-    expect(await screen.findByText(/to move/i, { ignore: '.sr-only' })).toBeDefined();
+    fireEvent.click(screen.getByRole('button', { name: /^lancer$/i }));
+    expect(await screen.findByText(/doit jouer/i, { ignore: '.sr-only' })).toBeDefined();
   });
 
   it('switches between playing the AI and playing online', () => {
     render(<App />);
 
-    fireEvent.click(screen.getByRole('button', { name: /^online$/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^en ligne$/i }));
     // Online opens on its room picker — no socket until a room is created or joined.
-    expect(screen.getByLabelText('Room code')).toBeDefined();
-    expect(screen.queryByRole('button', { name: /^roll$/i })).toBeNull();
+    expect(screen.getByLabelText('Code du salon')).toBeDefined();
+    expect(screen.queryByRole('button', { name: /^lancer$/i })).toBeNull();
 
-    fireEvent.click(screen.getByRole('button', { name: /^vs ai$/i }));
-    expect(screen.getAllByLabelText(/^point \d+,/)).toHaveLength(24);
+    fireEvent.click(screen.getByRole('button', { name: /^contre l'ia$/i }));
+    expect(screen.getAllByLabelText(/^flèche \d+,/)).toHaveLength(24);
   });
 
   it('shows the running version', () => {
@@ -59,7 +59,7 @@ describe('App', () => {
     expect(await screen.findByTestId('update-banner')).toBeDefined();
     expect(reloadApp).not.toHaveBeenCalled();
 
-    fireEvent.click(screen.getAllByRole('button', { name: /update now/i })[0]);
+    fireEvent.click(screen.getAllByRole('button', { name: /mettre à jour/i })[0]);
     expect(reloadApp).toHaveBeenCalledTimes(1);
   });
 
@@ -69,7 +69,7 @@ describe('App', () => {
     await screen.findByTestId('update-banner');
 
     // Two taps: the destructive button arms before it fires.
-    const newGame = screen.getByRole('button', { name: /new game/i });
+    const newGame = screen.getByRole('button', { name: /nouvelle partie/i });
     fireEvent.click(newGame);
     fireEvent.click(newGame);
     expect(reloadApp).toHaveBeenCalledTimes(1);
@@ -80,12 +80,12 @@ describe('App', () => {
     render(<App />);
 
     const overlay = await screen.findByTestId('update-required-overlay');
-    expect(overlay.textContent).toContain('Update required');
+    expect(overlay.textContent).toContain('Mise à jour requise');
     // A required update never offers the dismissible banner.
     expect(screen.queryByTestId('update-banner')).toBeNull();
     expect(reloadApp).not.toHaveBeenCalled();
 
-    fireEvent.click(screen.getByRole('button', { name: /reload now/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^recharger$/i }));
     expect(reloadApp).toHaveBeenCalledTimes(1);
   });
 
@@ -93,16 +93,16 @@ describe('App', () => {
     render(<App />);
 
     // The check fired on mount has to settle before the button is idle again.
-    fireEvent.click(await screen.findByRole('button', { name: /check for updates/i }));
-    await waitFor(() => expect(screen.getByText('Up to date')).toBeDefined());
+    fireEvent.click(await screen.findByRole('button', { name: /rechercher une mise à jour/i }));
+    await waitFor(() => expect(screen.getByText('À jour')).toBeDefined());
   });
 
   it('reports the version it just updated from', async () => {
     localStorage.setItem('backgammon:last-seen-version', 'v1.0.0');
     render(<App />);
 
-    expect(screen.getByTestId('updated-notice').textContent).toContain('Updated to v1.2.3');
-    fireEvent.click(screen.getByRole('button', { name: /dismiss/i }));
+    expect(screen.getByTestId('updated-notice').textContent).toContain('Mis à jour en v1.2.3');
+    fireEvent.click(screen.getByRole('button', { name: /fermer/i }));
     expect(screen.queryByTestId('updated-notice')).toBeNull();
   });
 });

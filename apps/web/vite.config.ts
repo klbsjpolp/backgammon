@@ -35,7 +35,7 @@ export default defineConfig(({ mode }) => {
         manifest: {
           name: 'Backgammon',
           short_name: 'Backgammon',
-          description: 'Play backgammon against the computer, or online against a friend.',
+          description: "Jouez au backgammon contre l'ordinateur, ou en ligne contre un ami.",
           // The classic theme's canvas, matching the pre-paint script's default
           // in index.html. A remembered theme repaints the meta tag on load; the
           // manifest colour is what the launcher and the splash screen use.

@@ -356,7 +356,7 @@ describe('dragging a checker', () => {
     });
     render(<Board controller={controller} />);
 
-    const bar = screen.getByLabelText(/^bar,/);
+    const bar = screen.getByLabelText(/^barre,/);
     const start = centreOfZone(NOWHERE_SLOT);
     fireEvent(bar, pointerEvent('pointerdown', { clientX: start.x, clientY: start.y }));
     fireEvent(window, pointerEvent('pointermove', { clientX: start.x - 40, clientY: start.y }));

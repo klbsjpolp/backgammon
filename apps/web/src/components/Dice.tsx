@@ -95,7 +95,7 @@ const facesFor = (roll: readonly [number, number], remaining: readonly number[])
 
 /**
  * The roll, drawn as pips rather than spelled out. Fading the dice already played
- * says the same thing the old "remaining: 6, 5" line did in a fraction of the
+ * says the same thing the old "restants : 6, 5" line did in a fraction of the
  * width, which is what lets the dice ride in a row the page already pays for
  * instead of costing the board a strip of the little room a phone has.
  *
@@ -108,7 +108,7 @@ export const Dice = ({ state, className }: { state: GameState; className?: strin
   if (!state.roll || state.phase === 'rolling') return null;
 
   return (
-    <div role="group" aria-label="dice" className={cn('flex items-center gap-[0.12em] leading-none', className)}>
+    <div role="group" aria-label="dés" className={cn('flex items-center gap-[0.12em] leading-none', className)}>
       {facesFor(state.roll, state.remaining).map((face, i) => (
         <Die key={i} value={face.value} played={face.played} />
       ))}
@@ -119,7 +119,7 @@ export const Dice = ({ state, className }: { state: GameState; className?: strin
         // with its content and would never announce anyway. Saying it is the
         // job of the one region that is always mounted — see `TurnStatus`.
         <span className="sr-only">
-          <span>remaining: </span>
+          <span>restants : </span>
           {state.remaining.join(', ')}
         </span>
       )}

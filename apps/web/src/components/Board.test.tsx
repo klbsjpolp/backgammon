@@ -33,7 +33,7 @@ const controllerFor = (you: Player, overrides: Partial<BoardController> = {}): B
 
 /** Point indices in DOM order — the board reads left-to-right, top row then bottom. */
 const renderedPoints = () =>
-  screen.getAllByLabelText(/^point \d+,/).map((el) => Number((el as HTMLElement).dataset.point));
+  screen.getAllByLabelText(/^flèche \d+,/).map((el) => Number((el as HTMLElement).dataset.point));
 
 describe('Board', () => {
   it('renders all 24 points for either side', () => {
@@ -56,7 +56,7 @@ describe('Board', () => {
     const clickPoint = vi.fn();
     render(<Board controller={controllerFor('white', { clickPoint })} />);
 
-    fireEvent.click(screen.getByRole('button', { name: /white off/i }));
+    fireEvent.click(screen.getByRole('button', { name: /blancs sortis/i }));
     expect(clickPoint).toHaveBeenCalledWith(OFF);
   });
 
@@ -64,7 +64,7 @@ describe('Board', () => {
     const clickPoint = vi.fn();
     render(<Board controller={controllerFor('black', { clickPoint })} />);
 
-    fireEvent.click(screen.getByRole('button', { name: /black off/i }));
+    fireEvent.click(screen.getByRole('button', { name: /noirs sortis/i }));
     expect(clickPoint).toHaveBeenCalledWith(OFF);
   });
 
@@ -72,7 +72,7 @@ describe('Board', () => {
     const clickPoint = vi.fn();
     render(<Board controller={controllerFor('black', { clickPoint })} />);
 
-    const opponentTray = screen.getByRole<HTMLButtonElement>('button', { name: /white off/i });
+    const opponentTray = screen.getByRole<HTMLButtonElement>('button', { name: /blancs sortis/i });
     expect(opponentTray.disabled).toBe(true);
     fireEvent.click(opponentTray);
     expect(clickPoint).not.toHaveBeenCalled();
@@ -90,7 +90,7 @@ describe('Board', () => {
       />,
     );
 
-    fireEvent.click(screen.getByLabelText(/^bar,/));
+    fireEvent.click(screen.getByLabelText(/^barre,/));
     expect(clickPoint).toHaveBeenCalledWith(-1); // BAR
   });
 
@@ -98,7 +98,7 @@ describe('Board', () => {
     const playOnlyMove = vi.fn();
     render(<Board controller={controllerFor('white', { playOnlyMove })} />);
 
-    const point = screen.getByLabelText(/^point 3,/);
+    const point = screen.getByLabelText(/^flèche 3,/);
     // The clicks a double click is made of arrive first, and select as they always do.
     fireEvent.click(point);
     fireEvent.click(point);
@@ -119,7 +119,7 @@ describe('Board', () => {
       />,
     );
 
-    const bar = screen.getByLabelText(/^bar,/);
+    const bar = screen.getByLabelText(/^barre,/);
     fireEvent.click(bar);
     fireEvent.click(bar);
     fireEvent.dblClick(bar);
@@ -135,11 +135,11 @@ describe('Board', () => {
     // Clicking a source and then double-clicking the destination: the first of
     // those two clicks lands the checker, and the shortcut must not spend a
     // second die on it.
-    fireEvent.click(screen.getByLabelText(/^point 3,/));
+    fireEvent.click(screen.getByLabelText(/^flèche 3,/));
     const landed = { ...state, board: { ...state.board, points: state.board.points.map((c, i) => (i === 2 ? 4 : c)) } };
     rerender(<Board controller={controllerFor('white', { playOnlyMove, state: landed })} />);
-    fireEvent.click(screen.getByLabelText(/^point 3,/));
-    fireEvent.dblClick(screen.getByLabelText(/^point 3,/));
+    fireEvent.click(screen.getByLabelText(/^flèche 3,/));
+    fireEvent.dblClick(screen.getByLabelText(/^flèche 3,/));
 
     expect(playOnlyMove).not.toHaveBeenCalled();
   });
@@ -152,7 +152,7 @@ describe('Board', () => {
 
     // The size has to survive `cn()` — merged next to the checker's text colour it
     // was being classified as a colour and dropped, leaving the count at body size.
-    const count = within(screen.getByLabelText(/^point 3,/)).getByText('8');
+    const count = within(screen.getByLabelText(/^flèche 3,/)).getByText('8');
     expect(count.closest('div')?.className).toMatch(/text-board-checker/);
   });
 
@@ -166,7 +166,7 @@ describe('Board', () => {
 
     const depthOn = (point: number) =>
       screen
-        .getByLabelText(new RegExp(`^point ${point},`))
+        .getByLabelText(new RegExp(`^flèche ${point},`))
         .querySelector('.board-stack')
         ?.getAttribute('data-stack');
 
@@ -185,33 +185,33 @@ describe('Board — what it says out loud', () => {
     // 1..24 from their own home, so the two sides disagree on every point.
     const { unmount } = render(<Board controller={controllerFor('white')} />);
     // White's ace point is index 0 — the one it bears off from.
-    expect(screen.getByLabelText(/^point 1,/).dataset.point).toBe('0');
-    expect(screen.getByLabelText(/^point 24,/).dataset.point).toBe('23');
+    expect(screen.getByLabelText(/^flèche 1,/).dataset.point).toBe('0');
+    expect(screen.getByLabelText(/^flèche 24,/).dataset.point).toBe('23');
     unmount();
 
     render(<Board controller={controllerFor('black')} />);
     // Black bears off past index 23, so that is *its* ace point.
-    expect(screen.getByLabelText(/^point 1,/).dataset.point).toBe('23');
-    expect(screen.getByLabelText(/^point 24,/).dataset.point).toBe('0');
+    expect(screen.getByLabelText(/^flèche 1,/).dataset.point).toBe('23');
+    expect(screen.getByLabelText(/^flèche 24,/).dataset.point).toBe('0');
   });
 
   it('reads out who is standing on a point and how many', () => {
     render(<Board controller={controllerFor('white')} />);
-    expect(screen.getByLabelText(/^point 3, 3 white checkers/)).toBeDefined();
-    expect(screen.getByLabelText(/^point 22, 3 black checkers/)).toBeDefined();
-    expect(screen.getByLabelText(/^point 2, empty/)).toBeDefined();
+    expect(screen.getByLabelText(/^flèche 3, 3 pions blancs/)).toBeDefined();
+    expect(screen.getByLabelText(/^flèche 22, 3 pions noirs/)).toBeDefined();
+    expect(screen.getByLabelText(/^flèche 2, vide/)).toBeDefined();
   });
 
   it('says which points are in play and leaves the rest out of the tab order', () => {
     render(<Board controller={controllerFor('white')} />);
 
-    const held = screen.getByLabelText(/^point 3, .*holding the checker to move/);
+    const held = screen.getByLabelText(/^flèche 3, .*vous tenez le pion à déplacer/);
     expect(held.getAttribute('aria-pressed')).toBe('true');
     expect(held.getAttribute('tabindex')).toBeNull();
 
     // An empty point is still readable, but tabbing past 24 of them to reach the
     // two you can play is not a keyboard story.
-    const idle = screen.getByLabelText(/^point 2, empty/);
+    const idle = screen.getByLabelText(/^flèche 2, vide/);
     expect(idle.getAttribute('aria-disabled')).toBe('true');
     expect(idle.getAttribute('tabindex')).toBe('-1');
   });
@@ -226,7 +226,7 @@ describe('Board — what it says out loud', () => {
       />,
     );
 
-    expect(screen.getByLabelText(/^bar, 2 of your checkers, 1 of theirs/)).toBeDefined();
-    expect(screen.getByRole('button', { name: /white off, 12 of 15 borne off/i })).toBeDefined();
+    expect(screen.getByLabelText(/^barre, 2 de vos pions, 1 des siens/)).toBeDefined();
+    expect(screen.getByRole('button', { name: /blancs sortis, 12 sur 15/i })).toBeDefined();
   });
 });

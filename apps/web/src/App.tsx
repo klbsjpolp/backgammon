@@ -52,6 +52,9 @@ export const App = () => {
          * chrome in `index.css`, so a second row is ~36px the board never gets
          * back and the controls under it fall past the fold.
          *
+         * The French labels are wider than the English ones they replaced, which
+         * spends the title's room rather than the board's — see below.
+         *
          * Rather than tune the widths until they happen to fit — which depends on
          * the system font's metrics, so it can only ever be true of the phones you
          * measured — the row is nowrap and the title is the part that gives. It
@@ -83,13 +86,13 @@ export const App = () => {
                   type="button"
                   onClick={() => setMode(m)}
                   className={cn(
-                    'touch-manipulation rounded-md px-4 py-1.5 font-semibold capitalize transition select-none',
+                    'touch-manipulation rounded-md px-4 py-1.5 font-semibold transition select-none',
                     'max-sm:px-2',
                     'compact:px-2 compact:py-0.5',
                     mode === m ? 'bg-accent text-accent-fg' : 'text-muted hover:text-fg',
                   )}
                 >
-                  {m === 'local' ? 'vs AI' : 'online'}
+                  {m === 'local' ? "Contre l'IA" : 'En ligne'}
                 </button>
               ))}
             </div>

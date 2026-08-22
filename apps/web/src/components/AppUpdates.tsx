@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/Button';
 import { cn } from '@/lib/cn';
 
-/** How long the footer confirms "up to date" after a manual check finds nothing. */
+/** How long the footer confirms "à jour" after a manual check finds nothing. */
 const UP_TO_DATE_FLASH_MS = 4000;
 /** How long the post-update confirmation stays before it gets out of the way. */
 const UPDATED_NOTICE_MS = 6000;
@@ -14,7 +14,8 @@ const smallButton =
 
 /**
  * The running version, with the manual half of the update flow next to it:
- * "Check for updates" when nothing is pending, "Update now" once something is.
+ * "Rechercher une mise à jour" when nothing is pending, "Mettre à jour" once
+ * something is.
  */
 export const VersionLine = ({
   version,
@@ -42,7 +43,7 @@ export const VersionLine = ({
       <span data-testid="app-version">Version {version}</span>
       {isUpdateAvailable ? (
         <Button onClick={onUpdate} className={cn(smallButton, 'bg-accent hover:bg-accent-hover')}>
-          Update now
+          Mettre à jour
         </Button>
       ) : (
         <>
@@ -59,10 +60,10 @@ export const VersionLine = ({
               'hover:text-fg disabled:cursor-not-allowed disabled:opacity-50',
             )}
           >
-            {isChecking ? 'Checking…' : 'Check for updates'}
+            {isChecking ? 'Vérification…' : 'Rechercher une mise à jour'}
           </button>
           <span aria-live="polite" className="text-positive">
-            {flashUpToDate && !isChecking ? 'Up to date' : ''}
+            {flashUpToDate && !isChecking ? 'À jour' : ''}
           </span>
         </>
       )}
@@ -89,17 +90,18 @@ export const UpdateBanner = ({
     className="flex w-full flex-wrap items-center justify-between gap-2 rounded-lg bg-info-soft px-4 py-2 text-sm text-info-soft-fg"
   >
     <span>
-      {version ? `Version ${version} is available` : 'An update is available'} — it installs when this game ends.
+      {version ? `La version ${version} est disponible` : 'Une mise à jour est disponible'} — elle s'installera à la fin
+      de cette partie.
     </span>
     <span className="flex items-center gap-2">
       <Button onClick={onUpdate} className={cn(smallButton, 'bg-accent hover:bg-accent-hover')}>
-        Update now
+        Mettre à jour
       </Button>
       <Button
         onClick={onDismiss}
         className={cn(smallButton, 'bg-transparent text-info-soft-fg underline underline-offset-2 hover:opacity-75')}
       >
-        Later
+        Plus tard
       </Button>
     </span>
   </div>
@@ -126,7 +128,7 @@ export const UpdatedNotice = ({
       className="flex w-full items-center justify-between gap-2 rounded-lg bg-positive-soft px-4 py-2 text-sm text-positive-soft-fg"
     >
       <span>
-        Updated to {version} <span className="opacity-70">(was {previousVersion})</span>
+        Mis à jour en {version} <span className="opacity-70">(auparavant {previousVersion})</span>
       </span>
       <Button
         onClick={onDismiss}
@@ -135,7 +137,7 @@ export const UpdatedNotice = ({
           'bg-transparent text-positive-soft-fg underline underline-offset-2 hover:opacity-75',
         )}
       >
-        Dismiss
+        Fermer
       </Button>
     </div>
   );
@@ -169,14 +171,14 @@ export const UpdateRequiredOverlay = ({
       className="w-full max-w-md rounded-xl bg-surface p-6 text-fg shadow-xl ring-1 ring-line"
     >
       <h2 id="update-required-title" className="text-xl font-bold text-heading">
-        Update required
+        Mise à jour requise
       </h2>
       <p id="update-required-description" className="mt-2 text-sm text-fg">
-        This version is no longer supported. Reload to keep playing — a game in progress will be lost.
+        Cette version n'est plus prise en charge. Rechargez pour continuer à jouer — une partie en cours sera perdue.
       </p>
       <dl className="mt-4 rounded-lg bg-surface-soft p-3 text-sm text-muted">
         <div className="flex justify-between gap-4">
-          <dt>Running</dt>
+          <dt>Installée</dt>
           <dd className="tabular-nums">{currentVersion}</dd>
         </div>
         <div className="flex justify-between gap-4">
@@ -185,13 +187,13 @@ export const UpdateRequiredOverlay = ({
         </div>
         {latestVersion && (
           <div className="flex justify-between gap-4">
-            <dt>Available</dt>
+            <dt>Disponible</dt>
             <dd className="tabular-nums">{latestVersion}</dd>
           </div>
         )}
       </dl>
       <div className="mt-5 flex justify-end">
-        <Button onClick={onUpdate}>Reload now</Button>
+        <Button onClick={onUpdate}>Recharger</Button>
       </div>
     </section>
   </div>

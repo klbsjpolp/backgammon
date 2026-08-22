@@ -42,7 +42,7 @@ describe('ErrorBoundary', () => {
     // The message is what a bug report needs; the player gets the button.
     expect(screen.getByText(/board points are undefined/)).toBeDefined();
 
-    fireEvent.click(screen.getByRole('button', { name: /reload/i }));
+    fireEvent.click(screen.getByRole('button', { name: /recharger/i }));
     expect(vi.mocked(reloadApp)).toHaveBeenCalled();
   });
 });

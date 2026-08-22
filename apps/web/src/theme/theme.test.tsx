@@ -3,7 +3,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { App } from '@/App';
 import { THEME_STORAGE_KEY } from '@/theme/themes';
 
-const swatch = (label: string) => screen.getByRole('button', { name: `${label} theme` });
+const swatch = (label: string) => screen.getByRole('button', { name: `thème ${label}` });
 const applied = () => document.documentElement.dataset.theme;
 
 describe('theme switcher', () => {
@@ -19,17 +19,17 @@ describe('theme switcher', () => {
   it('starts on the default theme when nothing has been chosen', () => {
     render(<App />);
     expect(applied()).toBe('classic');
-    expect(swatch('Classic').getAttribute('aria-pressed')).toBe('true');
+    expect(swatch('Classique').getAttribute('aria-pressed')).toBe('true');
   });
 
   it('applies a picked theme and remembers it', () => {
     render(<App />);
 
-    fireEvent.click(swatch('Parchment'));
+    fireEvent.click(swatch('Parchemin'));
 
     expect(applied()).toBe('parchment');
-    expect(swatch('Parchment').getAttribute('aria-pressed')).toBe('true');
-    expect(swatch('Classic').getAttribute('aria-pressed')).toBe('false');
+    expect(swatch('Parchemin').getAttribute('aria-pressed')).toBe('true');
+    expect(swatch('Classique').getAttribute('aria-pressed')).toBe('false');
     expect(localStorage.getItem(THEME_STORAGE_KEY)).toBe('parchment');
   });
 
@@ -38,7 +38,7 @@ describe('theme switcher', () => {
     render(<App />);
 
     expect(applied()).toBe('midnight');
-    expect(swatch('Midnight').getAttribute('aria-pressed')).toBe('true');
+    expect(swatch('Minuit').getAttribute('aria-pressed')).toBe('true');
   });
 
   it('falls back to the default when the stored theme no longer exists', () => {
@@ -53,7 +53,7 @@ describe('theme switcher', () => {
 
     // The swatch opens its own palette scope, which is what makes the preview
     // work — without it every swatch would render in the current theme.
-    const previews = screen.getAllByRole('button', { name: /theme$/ }).map((button) => button.firstElementChild);
+    const previews = screen.getAllByRole('button', { name: /^thème / }).map((button) => button.firstElementChild);
     expect(previews.map((preview) => preview?.getAttribute('data-theme'))).toEqual([
       'classic',
       'midnight',
@@ -69,7 +69,7 @@ describe('theme switcher', () => {
     render(<App />);
     expect(meta.getAttribute('content')).toBe('#03130d');
 
-    fireEvent.click(swatch('Midnight'));
+    fireEvent.click(swatch('Minuit'));
     expect(meta.getAttribute('content')).toBe('#080b16');
 
     meta.remove();

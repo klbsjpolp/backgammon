@@ -4,6 +4,7 @@ import { Dice } from '@/components/Dice';
 import { Controls, GameLayout, ShortcutHint } from '@/components/GameLayout';
 import { TurnControls } from '@/components/TurnControls';
 import { TurnStatus } from '@/components/TurnStatus';
+import { SIDE_PLURAL } from '@/lib/french';
 import { useLocalGame } from '@/useLocalGame';
 
 interface LocalPanelProps {
@@ -28,12 +29,12 @@ export const LocalPanel = ({ applyPendingUpdate }: LocalPanelProps = {}) => {
     <GameLayout
       hint={
         <>
-          You play white. Drag a checker where it goes, or click it and then its destination.
+          Vous jouez les {SIDE_PLURAL[game.you]}. Faites glisser un pion là où il va, ou cliquez-le puis sa destination.
           <ShortcutHint />
         </>
       }
 
-      status={<TurnStatus state={state} you={game.you} opponentLabel="AI" />}
+      status={<TurnStatus state={state} you={game.you} opponentLabel="IA" />}
       board={<Board controller={game} />}
       controls={
         <Controls
@@ -60,8 +61,8 @@ export const LocalPanel = ({ applyPendingUpdate }: LocalPanelProps = {}) => {
             // plain button resized it at the moment the game ended, which is
             // when the player's hand is already moving towards it.
             <ConfirmButton
-              label="New game"
-              confirmLabel="Start over?"
+              label="Nouvelle partie"
+              confirmLabel="Recommencer ?"
               confirm={state.phase !== 'gameOver'}
               onConfirm={startNewGame}
               className="bg-positive text-positive-fg hover:bg-positive-hover"
