@@ -31,6 +31,16 @@ describe('TurnControls — the row that must not grow', () => {
     expect(screen.getByRole('button', { name: /^double$/i })).toBeDefined();
   });
 
+  it('names the cancel button so a speech-input user can say what they see', () => {
+    // WCAG 2.5.3: the accessible name has to contain the visible label, or
+    // "click Cancel" reaches nothing — on the one control for putting a held
+    // checker back down.
+    render(<TurnControls {...props({ isHolding: true })} />);
+    const cancel = screen.getByRole('button', { name: /^cancel/i });
+    expect(cancel.textContent).toBe('Cancel');
+    expect(cancel.getAttribute('aria-label')).toMatch(/^Cancel\b/);
+  });
+
   it('is three controls with a checker in hand — cancel stands in for double', () => {
     const p = props({ isHolding: true });
     const { container } = render(<TurnControls {...p} />);
@@ -38,7 +48,7 @@ describe('TurnControls — the row that must not grow', () => {
     expect(controlCount(container)).toBe(3);
     // Doubling is impossible mid-move, which is what makes the slot free.
     expect(screen.queryByRole('button', { name: /^double$/i })).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: /clear selection/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^cancel/i }));
     expect(p.onClearSelection).toHaveBeenCalled();
   });
 
@@ -60,6 +70,6 @@ describe('TurnControls — the row that must not grow', () => {
   it('answers the double before it clears a selection, since a held checker is stale by then', () => {
     render(<TurnControls {...props({ isDoubleToYou: true, isHolding: true })} />);
     expect(screen.getByRole('button', { name: /^drop$/i })).toBeDefined();
-    expect(screen.queryByRole('button', { name: /clear selection/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^cancel/i })).toBeNull();
   });
 });

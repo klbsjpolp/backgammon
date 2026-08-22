@@ -137,12 +137,12 @@ describe('LocalPanel', () => {
 
   it('hides the clear-selection button while no checker is picked up', () => {
     renderPanel();
-    expect(screen.queryByRole('button', { name: /clear selection/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^cancel/i })).toBeNull();
   });
 
   it('clears a held selection', () => {
     const game = renderPanel({ selectedFrom: 23 });
-    fireEvent.click(screen.getByRole('button', { name: /clear selection/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^cancel/i }));
     expect(game.clearSelection).toHaveBeenCalled();
   });
 

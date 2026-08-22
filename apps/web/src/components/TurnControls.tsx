@@ -80,9 +80,16 @@ export const TurnControls = ({
     ) : isHolding ? (
       // Named for what it does to the checker in hand rather than for the
       // selection model behind it, and short enough to share slot 2's width.
+      //
+      // The spoken name leads with that same word rather than replacing it
+      // ("Clear selection", as it first did). WCAG 2.5.3 asks that the
+      // accessible name contain the visible label, because a speech-input user
+      // says what they can see: "click Cancel" has to reach the one control on
+      // screen for putting a checker back down. The rest of the phrase is the
+      // elaboration the four characters cannot carry.
       <Slot
         onClick={onClearSelection}
-        aria-label="Clear selection"
+        aria-label="Cancel, put the checker back"
         className="bg-neutral text-neutral-fg hover:bg-neutral-hover"
       >
         Cancel
