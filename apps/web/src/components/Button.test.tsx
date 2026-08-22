@@ -74,6 +74,21 @@ describe('ConfirmButton', () => {
     expect(visibleLabel()).toBe('Leave');
   });
 
+  it('disarms when the guard drops out from under it', () => {
+    // Arming survives as state, and this component now survives the flip that
+    // used to remount it — so a game that ends inside the four seconds would
+    // otherwise leave a one-tap action sitting there red, reading "Leave
+    // game?" and still announcing that a second tap is needed.
+    const { rerender } = render(<ConfirmButton label="Leave" confirmLabel="Leave game?" onConfirm={vi.fn()} />);
+    fireEvent.click(button());
+    expect(visibleLabel()).toBe('Leave game?');
+
+    rerender(<ConfirmButton label="Leave" confirmLabel="Leave game?" confirm={false} onConfirm={vi.fn()} />);
+    expect(visibleLabel()).toBe('Leave');
+    expect(screen.getByRole('status').textContent).toBe('');
+    expect(button().className).not.toContain('bg-danger');
+  });
+
   it('fires on the first tap when there is nothing left to guard', () => {
     const onConfirm = vi.fn();
     render(<ConfirmButton label="Leave" confirm={false} onConfirm={onConfirm} />);

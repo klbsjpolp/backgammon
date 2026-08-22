@@ -517,11 +517,31 @@ buttons under the player's hand.
   play added a third line on top of that, on every screen. It is **two lines now,
   always**: the turn on the first, and on the second either the roll that could not be
   played or the cube and pip counts. Reserving a line for the news and leaving it empty
-  the rest of the time would have cost the board another 20px of height forever;
-  reference the player can read a moment later is the thing that gives way instead.
+  the rest of the time would have cost the board another 20px of height forever.
   Both lines truncate rather than wrap, which is what the 11rem landscape sidebar
   needs — there is no width at which both halves fit, so one of them has to end in an
   ellipsis rather than take a line nobody budgeted for.
+
+  Which meant deciding what the second line gives up when it cannot hold everything,
+  and the first answer — the news displaces the counts — was wrong. `noPlay` is held
+  until the player who rolled it rolls again (see "A roll nobody can play" above), so
+  that is not a moment, it is the whole of the opponent's reply: the counts would have
+  been gone for the turn you decide the cube on, and a double taken inside that window
+  would have left the ×2 you are now playing for invisible until the opponent rolled.
+  The cube is drawn nowhere else on the page. So the line is **cube, then the news,
+  then the pips**, in the order they can least afford to be cut, and `truncate` does
+  the cutting: everything fits on a desktop, the pips run off the end of a phone that
+  has news to report, and the sidebar keeps the cube. The pips are last because they
+  are the one thing there that the board itself carries.
+
+  The exception is the result. "black wins a backgammon — 3 points" needs three lines
+  in the sidebar and clipping it loses the win kind and the points — the sentence the
+  game was played for, and the only one with no later state that brings it back. So at
+  game over the turn line wraps, the counts stand down beside it, and the box is
+  allowed to grow. It is the one place the no-shift rule is relaxed and the one where
+  relaxing it costs nothing: there are no more moves to make under a board that moved.
+  A phone and a desktop do not move even then — the sentence fits the line the
+  reservation already pays for; only the sidebar grows.
 
 - **Take, drop and clear-selection were added to the primary control row**, which on a
   portrait phone wrapped it onto a second line. Picking a checker up moved the new-game
@@ -548,6 +568,13 @@ buttons under the player's hand.
   plain button once the game was over moved it again. Both labels sit in one grid cell
   now, the inactive one hidden, so the button is always as wide as the longer of them;
   `confirm={false}` drops the second tap without swapping the element out.
+
+  Keeping one element across that flip took away a reset that the remount used to give
+  for free. Arm "New game" mid-game, let the AI win inside the four seconds, and the
+  button sat there red, reading "Start over?" and announcing that a second tap was
+  needed — over an action that now took one. `armed` is therefore read as `armed &&
+confirm` rather than only cleared in an effect, so there is no frame in which the two
+  disagree, and the effect clears the state behind it.
 
 What is left is the game itself: checkers moving between points, and a stack
 respacing as it crosses four and five (see the point depth above). Across a full

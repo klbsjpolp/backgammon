@@ -58,24 +58,54 @@ describe('TurnStatus — what is announced', () => {
 
     // The height of this box is the position of the board under it, so the
     // number of lines has to be the same in both.
-    const lines = (r: { container: HTMLElement }) =>
-      [...(r.container.firstElementChild?.children ?? [])].filter((el) => !el.className.includes('sr-only')).length;
+    const lines = (r: { container: HTMLElement }) => r.container.querySelector('.min-h-\\[2lh\\]')?.children.length;
     expect(lines(quiet)).toBe(2);
     expect(lines(loud)).toBe(2);
   });
 
-  it('gives the second line to the news, and the pip counts back when it passes', () => {
+  it('never lets the cube be the part that is cut', () => {
+    // The cube is drawn nowhere else on the page: a stake you cannot see is one
+    // you are playing for without knowing it. So it leads the line, ahead of
+    // both the news and the pip counts.
+    const doubled: GameState = {
+      ...createInitialState('white'),
+      cube: { value: 2, owner: 'white' },
+      noPlay: { player: 'black', roll: [6, 5] },
+    };
+    render(<TurnStatus state={doubled} you="white" opponentLabel="AI" />);
+
+    const line = screen.getByText(/cube ×2 \(white\)/, { ignore: '[aria-live]' });
+    expect(line.textContent).toMatch(/^cube ×2 \(white\) · AI rolled 6-5 and could not move · pips/);
+  });
+
+  it('keeps the pip counts while a roll nobody could play is still on screen', () => {
+    // `noPlay` lives until the player who rolled it rolls again, which is a
+    // whole turn cycle — long enough that the counts cannot go away for it.
     const passed: GameState = { ...createInitialState('white'), noPlay: { player: 'black', roll: [6, 5] } };
-    const { container, rerender } = render(<TurnStatus state={passed} you="white" opponentLabel="AI" />);
+    render(<TurnStatus state={passed} you="white" opponentLabel="AI" />);
 
-    // Reference the player can read a moment later, in place of news that is
-    // gone by the next roll — rather than a line reserved for one of them and
-    // empty nearly always.
-    expect(container.textContent).toContain('AI rolled 6-5 and could not move');
-    expect(screen.queryByText(/pips W 167/, { ignore: '[aria-live]' })).toBeNull();
+    const line = screen.getByText(/could not move/, { ignore: '[aria-live]' });
+    expect(line.textContent).toMatch(/pips W 167 \/ B 167$/);
+  });
 
-    rerender(<TurnStatus state={createInitialState('white')} you="white" opponentLabel="AI" />);
-    expect(screen.getByText(/cube ×1 · pips W 167 \/ B 167/)).toBeDefined();
+  it('gives the result both lines rather than clipping it', () => {
+    const won: GameState = {
+      ...createInitialState('white'),
+      phase: 'gameOver',
+      result: { winner: 'black', kind: 'backgammon', points: 3, cubeValue: 1 },
+    };
+    const { container } = render(<TurnStatus state={won} you="white" opponentLabel="AI" />);
+
+    // The landscape sidebar is ~156px and the sentence is ~220px, so on one
+    // truncated line the win kind and the points — what the game was played
+    // for — are what falls off the end. A finished game has nothing left to
+    // count, so the counts stand down and the reservation is already paid for.
+    const box = container.querySelector('.min-h-\\[2lh\\]');
+    expect(box?.children).toHaveLength(1);
+    // Free to wrap — clamping it to the two lines the box reserves still cut
+    // the sentence off in the sidebar, which needs three for it.
+    expect(box?.firstElementChild?.className).not.toContain('truncate');
+    expect(box?.textContent).toBe('black wins a backgammon — 3 points');
   });
 
   it('leaves the visible spans silent so nothing is said twice', () => {

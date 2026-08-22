@@ -69,42 +69,65 @@ const describeAloud = (props: TurnStatusProps): string => {
 export const TurnStatus = (props: TurnStatusProps) => {
   const { state } = props;
   const noPlay = describeNoPlay(props);
+  const isOver = state.phase === 'gameOver';
 
   return (
     <div
       className={cn(
         'w-full rounded-lg bg-surface px-4 py-2 text-sm',
         'max-sm:px-3 max-sm:py-1 max-sm:text-xs compact:px-3 compact:py-1 compact:text-xs',
-        state.phase === 'gameOver' && 'bg-highlight-soft',
+        isOver && 'bg-highlight-soft',
       )}
     >
       {/*
-       * Two lines, always, whatever there is to say. This was one wrapping row
-       * — turn on the left, cube and pips on the right — and it grew a line
-       * whenever either half outgrew the other's room: a turn phrase one word
-       * longer at 360px, or a roll nobody could play, each of which moved the
-       * board and every control under it 20px down the screen and back again a
-       * turn later. Both are ordinary things to happen mid-game.
+       * Two lines, always, whatever there is to say — that height is the
+       * position of the board under it. This was one wrapping row (turn on the
+       * left, cube and pips on the right) and it grew a line whenever either
+       * half outgrew the other's room: a turn phrase one word longer at 360px,
+       * or a roll nobody could play, each of which moved the board and every
+       * control under it 20px down the screen and back again a turn later.
        *
-       * Truncating instead is no good either, because the landscape sidebar is
-       * 11rem wide and one of the two would have to vanish entirely there.
+       * `2lh` rather than a pixel height, so it follows the `text-xs` the phone
+       * and the landscape sidebar switch to.
        */}
-      <div className="truncate font-semibold capitalize">{describeTurn(props)}</div>
+      <div className="min-h-[2lh]">
+        {/*
+         * The result is the one line here worth more than the layout:
+         * "black wins a backgammon — 3 points" is ~220px and the landscape
+         * sidebar gives it ~156px, so truncating loses the win kind and the
+         * points — the sentence the whole game was played for, and the only
+         * one with no later state that brings it back. So it wraps instead,
+         * and the counts stand down beside it: a finished game has nothing
+         * left to count.
+         *
+         * That is the single place the no-shift rule is relaxed, and it is the
+         * one that costs nothing — there are no more moves to make under a
+         * board that moved. It does not move on a phone or a desktop either
+         * way, where the sentence fits the line the reservation already pays
+         * for; only the sidebar, which needs three lines for it, grows.
+         */}
+        <div className={cn('font-semibold capitalize', !isOver && 'truncate')}>{describeTurn(props)}</div>
 
-      {/*
-       * The second line says what is worth saying most. A roll nobody could
-       * play is news and it is gone by the next roll; the cube and the pip
-       * counts are reference, and stay true while it is shown. Giving each its
-       * own line would cost the board another 20px of height on a phone
-       * forever, to reserve a line that is empty nearly all of the time.
-       */}
-      <div className={cn('truncate text-muted', noPlay && 'first-letter:capitalize')}>
-        {noPlay ?? (
-          <>
+        {/*
+         * One line, three things, in the order they can least afford to be cut.
+         *
+         * The cube is drawn nowhere else on the page, so it goes first and is
+         * never the part that clips: take a double and the ×2 you are now
+         * playing for has to be visible immediately, not once the opponent
+         * rolls again. Then the roll nobody could play, which is gone for good
+         * if it is missed — and which lives until the player who rolled it
+         * rolls again (see `applyRoll`), so it is on screen for the whole of
+         * the reply, not for a moment. The pip counts come last because they
+         * are the one thing here the board itself carries: on a phone with news
+         * to report they are what runs off the end.
+         */}
+        {!isOver && (
+          <div className="truncate text-muted">
             cube ×{state.cube.value}
-            {state.cube.owner ? ` (${state.cube.owner})` : ''} · pips W {pipCount(state.board, 'white')} / B{' '}
+            {state.cube.owner ? ` (${state.cube.owner})` : ''}
+            {noPlay ? ` · ${noPlay}` : ''} · pips W {pipCount(state.board, 'white')} / B{' '}
             {pipCount(state.board, 'black')}
-          </>
+          </div>
         )}
       </div>
 
@@ -115,7 +138,8 @@ export const TurnStatus = (props: TurnStatusProps) => {
        * together with its text is silent in NVDA, JAWS and VoiceOver alike,
        * which is what the conditionally-rendered regions here and in `<Dice>`
        * were. The visible lines above carry no `aria-live` of their own, so
-       * this is also the only thing that speaks.
+       * this is also the only thing that speaks — and the only place the tail
+       * of a truncated line survives.
        *
        * Polite: a turn changing is worth hearing, not worth cutting off
        * whatever the player is already being read.
