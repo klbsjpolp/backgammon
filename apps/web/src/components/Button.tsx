@@ -50,7 +50,7 @@ export interface ConfirmButtonProps extends Omit<ButtonProps, 'children' | 'onCl
  */
 export const ConfirmButton = ({
   label,
-  confirmLabel = 'Sure?',
+  confirmLabel = 'Sûr ?',
   confirm = true,
   onConfirm,
   className,
@@ -86,7 +86,7 @@ export const ConfirmButton = ({
          * The name tracks the word on the button rather than staying pinned to
          * `label`, because a speech-input user says what they can see (WCAG
          * 2.5.3). Pinning it stranded the interaction halfway: the first tap
-         * works, and it is that tap which relabels the button to "Start over?"
+         * works, and it is that tap which relabels the button to "Recommencer ?"
          * — so the second one, the one under a four-second timer, could not be
          * spoken at all. The elaboration after the comma keeps the action
          * findable by its own name for the reader who navigates by it, and a
@@ -94,7 +94,7 @@ export const ConfirmButton = ({
          * pause. Derived from `isArmed`, or the name goes stale in exactly the
          * window that guard closes.
          */
-        aria-label={isArmed ? `${confirmLabel}, confirm ${label}` : label}
+        aria-label={isArmed ? `${confirmLabel}, confirmer ${label}` : label}
         onClick={() => {
           if (confirm && !armed) {
             setArmed(true);
@@ -112,7 +112,8 @@ export const ConfirmButton = ({
         {/*
          * Both labels, stacked in one grid cell, so the button is always as wide
          * as the longer of them. Swapping the text outright resized it between
-         * the two taps it asks for — "New game" is 115px and "Start over?" 120px
+         * the two taps it asks for — "Nouvelle partie" and "Recommencer ?" are
+         * within a few pixels of each other, and were in English before it
          * — which moves the target a few pixels under the thumb already on its
          * way down, on the one control whose whole job is to be hard to hit by
          * accident.
@@ -138,7 +139,7 @@ export const ConfirmButton = ({
        * or the grid the buttons sit in.
        */}
       <span role="status" className="sr-only">
-        {isArmed ? `${label}: tap again to confirm.` : ''}
+        {isArmed ? `${label} : touchez à nouveau pour confirmer.` : ''}
       </span>
     </>
   );

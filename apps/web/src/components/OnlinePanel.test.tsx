@@ -88,26 +88,26 @@ describe('OnlinePanel', () => {
     it('offers hosting and joining, and blocks an empty code', () => {
       const game = renderPanel();
 
-      const join = screen.getByRole<HTMLButtonElement>('button', { name: /^join$/i });
+      const join = screen.getByRole<HTMLButtonElement>('button', { name: /^rejoindre$/i });
       expect(join.disabled).toBe(true);
 
-      fireEvent.change(screen.getByLabelText(/room code/i), { target: { value: 'abcd' } });
+      fireEvent.change(screen.getByLabelText(/code du salon/i), { target: { value: 'abcd' } });
       expect(join.disabled).toBe(false);
       fireEvent.click(join);
       expect(game.joinRoom).toHaveBeenCalledWith('ABCD');
 
-      fireEvent.click(screen.getByRole('button', { name: /host a new game/i }));
+      fireEvent.click(screen.getByRole('button', { name: /héberger une partie/i }));
       expect(game.hostRoom).toHaveBeenCalled();
     });
 
     it('shows the error from a failed attempt', () => {
-      renderPanel({ status: 'error', error: 'Online play is not configured.' });
-      expect(screen.getByText(/not configured/i)).toBeDefined();
+      renderPanel({ status: 'error', error: "Le jeu en ligne n'est pas configuré." });
+      expect(screen.getByText(/n'est pas configuré/i)).toBeDefined();
     });
 
     it('shows a connecting notice', () => {
       renderPanel({ status: 'connecting' });
-      expect(screen.getByText(/connecting/i)).toBeDefined();
+      expect(screen.getByText(/connexion/i)).toBeDefined();
     });
   });
 
@@ -116,46 +116,46 @@ describe('OnlinePanel', () => {
       const game = renderPanel({ status: 'lobby', session: session(0), room: room(['ready', 'never-ready']) });
 
       expect(screen.getByText('ABCD')).toBeDefined();
-      expect(screen.getByText(/seat 0 \(you\)/i)).toBeDefined();
-      const start = screen.getByRole<HTMLButtonElement>('button', { name: /start game/i });
+      expect(screen.getByText(/place 0 \(vous\)/i)).toBeDefined();
+      const start = screen.getByRole<HTMLButtonElement>('button', { name: /démarrer la partie/i });
       expect(start.disabled).toBe(true);
 
-      fireEvent.click(screen.getByRole('button', { name: /ready/i }));
+      fireEvent.click(screen.getByRole('button', { name: /^prêt$/i }));
       expect(game.setReady).toHaveBeenCalled();
     });
 
     it('enables start once both seats are ready', () => {
       renderPanel({ status: 'lobby', session: session(0), room: room(['ready', 'ready']) });
-      expect(screen.getByRole<HTMLButtonElement>('button', { name: /start game/i }).disabled).toBe(false);
+      expect(screen.getByRole<HTMLButtonElement>('button', { name: /démarrer la partie/i }).disabled).toBe(false);
     });
 
     it('does not offer start to a guest', () => {
       renderPanel({ status: 'lobby', session: session(1), room: room(['ready', 'ready']) });
-      expect(screen.queryByRole('button', { name: /start game/i })).toBeNull();
+      expect(screen.queryByRole('button', { name: /démarrer la partie/i })).toBeNull();
     });
   });
 
   describe('in game', () => {
     it('waits for the host before there is any state to draw', () => {
       renderPanel({ status: 'playing', session: session(1) });
-      expect(screen.getByText(/waiting for the host/i)).toBeDefined();
+      expect(screen.getByText(/en attente du lancement/i)).toBeDefined();
     });
 
     it('draws the board from the seat point of view', () => {
       renderPanel(playing());
-      expect(screen.getByText(/you play black/i)).toBeDefined();
-      const points = screen.getAllByLabelText(/^point \d+,/);
+      expect(screen.getByText(/vous jouez les noirs/i)).toBeDefined();
+      const points = screen.getAllByLabelText(/^flèche \d+,/);
       expect(points).toHaveLength(24);
       // Black's home board is drawn bottom-right, next to its own tray, and it
       // is black's tray — not white's — that this seat can bear off onto.
       expect(points.at(-1)?.dataset.point).toBe('23');
-      expect(screen.getByRole<HTMLButtonElement>('button', { name: /black off/i }).disabled).toBe(false);
-      expect(screen.getByRole<HTMLButtonElement>('button', { name: /white off/i }).disabled).toBe(true);
+      expect(screen.getByRole<HTMLButtonElement>('button', { name: /noirs sortis/i }).disabled).toBe(false);
+      expect(screen.getByRole<HTMLButtonElement>('button', { name: /blancs sortis/i }).disabled).toBe(true);
     });
 
     it('enables roll on your turn', () => {
       const game = renderPanel(playing());
-      fireEvent.click(screen.getByRole('button', { name: /^roll$/i }));
+      fireEvent.click(screen.getByRole('button', { name: /^lancer$/i }));
       expect(game.rollDice).toHaveBeenCalled();
     });
 
@@ -168,25 +168,25 @@ describe('OnlinePanel', () => {
           canRoll: false,
         }),
       );
-      expect(screen.getByRole<HTMLButtonElement>('button', { name: /^roll$/i }).disabled).toBe(true);
+      expect(screen.getByRole<HTMLButtonElement>('button', { name: /^lancer$/i }).disabled).toBe(true);
     });
 
     it('enables double when the cube is centred and it is your roll', () => {
       const game = renderPanel(playing());
-      fireEvent.click(screen.getByRole('button', { name: /^double$/i }));
+      fireEvent.click(screen.getByRole('button', { name: /^doubler$/i }));
       expect(game.double).toHaveBeenCalled();
     });
 
     it('disables double when the opponent owns the cube', () => {
       const owned: GameState = { ...createInitialState('black'), cube: { value: 2, owner: 'white' } };
       renderPanel(playing({ state: owned, view: { state: owned, you: 'black', yourTurn: true, legalMoves: [] } }));
-      expect(screen.getByRole<HTMLButtonElement>('button', { name: /^double$/i }).disabled).toBe(true);
+      expect(screen.getByRole<HTMLButtonElement>('button', { name: /^doubler$/i }).disabled).toBe(true);
     });
 
     it('cannot double in the middle of a move', () => {
       const moving = applyRoll(createInitialState('black'), [3, 1]);
       renderPanel(playing({ state: moving, view: { state: moving, you: 'black', yourTurn: true, legalMoves: [] } }));
-      expect(screen.getByRole<HTMLButtonElement>('button', { name: /^double$/i }).disabled).toBe(true);
+      expect(screen.getByRole<HTMLButtonElement>('button', { name: /^doubler$/i }).disabled).toBe(true);
     });
 
     it('offers take and drop only to the seat the double was aimed at', () => {
@@ -195,16 +195,16 @@ describe('OnlinePanel', () => {
         playing({ state: offered, view: { state: offered, you: 'black', yourTurn: false, legalMoves: [] } }),
       );
 
-      fireEvent.click(screen.getByRole('button', { name: /take/i }));
+      fireEvent.click(screen.getByRole('button', { name: /prendre/i }));
       expect(game.respond).toHaveBeenCalledWith(true);
-      fireEvent.click(screen.getByRole('button', { name: /drop/i }));
+      fireEvent.click(screen.getByRole('button', { name: /refuser/i }));
       expect(game.respond).toHaveBeenCalledWith(false);
     });
 
     it('hides take and drop from the seat that offered the double', () => {
       const offered: GameState = { ...createInitialState('black'), phase: 'doubleOffered', doubleOfferedBy: 'black' };
       renderPanel(playing({ state: offered, view: { state: offered, you: 'black', yourTurn: false, legalMoves: [] } }));
-      expect(screen.queryByRole('button', { name: /take/i })).toBeNull();
+      expect(screen.queryByRole('button', { name: /prendre/i })).toBeNull();
     });
 
     it('announces the result from the seat point of view', () => {
@@ -217,17 +217,17 @@ describe('OnlinePanel', () => {
         ...playing({ state: won, view: { state: won, you: 'black', yourTurn: false, legalMoves: [] } }),
         status: 'gameOver',
       });
-      expect(screen.getByText(/you win a gammon — 4 points/i, { ignore: '.sr-only' })).toBeDefined();
+      expect(screen.getByText(/vous gagnez un gammon — 4 points/i, { ignore: '.sr-only' })).toBeDefined();
     });
 
     it('warns when the connection drops mid-game', () => {
-      renderPanel(playing({ status: 'disconnected', error: 'Connection lost.' }));
-      expect(screen.getAllByText(/connection lost/i).length).toBeGreaterThan(0);
+      renderPanel(playing({ status: 'disconnected', error: 'Connexion perdue.' }));
+      expect(screen.getAllByText(/connexion perdue/i).length).toBeGreaterThan(0);
     });
 
     it('leaves the room only once the tap is confirmed', () => {
       const game = renderPanel(playing());
-      const leave = () => screen.getByRole('button', { name: /leave/i });
+      const leave = () => screen.getByRole('button', { name: /quitter/i });
 
       fireEvent.click(leave());
       expect(game.leave).not.toHaveBeenCalled();

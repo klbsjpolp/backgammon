@@ -109,7 +109,7 @@ export const useOnlineGame = (): OnlineGame => {
         try {
           hostRef.current.applyAction(sessionRef.current.seatIndex, action);
         } catch (e) {
-          setError(e instanceof Error ? e.message : 'Invalid action');
+          setError(e instanceof Error ? e.message : 'Action invalide.');
           return;
         }
         broadcastState();
@@ -185,7 +185,7 @@ export const useOnlineGame = (): OnlineGame => {
           if (isHostRef.current && hostRef.current && msg.payload) {
             const snapshot = parseHostSnapshot(msg.payload);
             if (!snapshot) {
-              setError('The game state could not be restored.');
+              setError("L'état de la partie n'a pas pu être restauré.");
               return;
             }
             try {
@@ -197,7 +197,7 @@ export const useOnlineGame = (): OnlineGame => {
               // unwinds into `ws.onmessage`'s catch and is read as a malformed
               // frame, leaving a game that has silently stopped advancing. If
               // the two ever drift apart, this is what says so.
-              setError(e instanceof Error ? e.message : 'The game state could not be restored.');
+              setError(e instanceof Error ? e.message : "L'état de la partie n'a pas pu être restauré.");
               return;
             }
             broadcastState();
@@ -205,7 +205,7 @@ export const useOnlineGame = (): OnlineGame => {
           return;
         }
         case 'roomClosed': {
-          setError('The room was closed.');
+          setError('Le salon a été fermé.');
           setStatus('error');
           return;
         }
@@ -248,11 +248,11 @@ export const useOnlineGame = (): OnlineGame => {
         if (pingRef.current !== null) window.clearInterval(pingRef.current);
         pingRef.current = null;
         if (!intentionalCloseRef.current) {
-          setError('Connection lost.');
+          setError('Connexion perdue.');
           setStatus('disconnected');
         }
       };
-      ws.onerror = () => setError('Connection error.');
+      ws.onerror = () => setError('Erreur de connexion.');
     },
     [handleMessage, sendRaw, setStatus],
   );
@@ -268,7 +268,7 @@ export const useOnlineGame = (): OnlineGame => {
         setSession(s);
         connect(s);
       } catch (e) {
-        setError(e instanceof Error ? e.message : 'Failed to reach the server.');
+        setError(e instanceof Error ? e.message : 'Le serveur est injoignable.');
         setStatus('error');
       }
     },

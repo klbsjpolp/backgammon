@@ -334,7 +334,7 @@ The board was a grid of 27 buttons that all announced the same way and all sat i
 the tab order, whether or not they could be played, saying nothing about what was
 standing on them. It now reads as a board:
 
-- Every point names its occupancy (`point 13, 5 white checkers`) and its role in
+- Every point names its occupancy (`flèche 13, 5 pions blancs`) and its role in
   the move being made — holding the checker, having one you can move, or being
   somewhere it can go. The bar counts both sides in its name, since being on it
   decides the entire turn.
@@ -851,6 +851,53 @@ fallback reload went straight back into the precached build.
 cache. It is how a running tab learns it is out of date; served from a cache it
 would answer with the version the tab is already running, and the app could never
 notice a deploy.
+
+## The interface is French
+
+Every word on the screen was English, in a game whose players are French. It is
+all French now — the visible text, the placeholder in the room-code field, the
+accessible names, the `<html lang>`, the manifest's description and the error
+banners the online panel puts up.
+
+There is no i18n layer, and that is the decision rather than an omission. A
+catalogue of keys buys nothing while there is one locale: it would add a lookup
+between every sentence and the place it is read, and the sentences here are not
+literals — they are assembled from engine values (`white`, `gammon`,
+`never-ready`) at three or four points in a template. A key table would have to
+carry a variant per gender and per number to say `une partie simple` and
+`un gammon` from the same line, which is a translation framework's whole job and
+a cost worth paying only for the second language. What it costs to have skipped
+it is that a second language means threading a lookup back through every
+component, rather than adding a file.
+
+What the engine's own vocabulary needed instead is one table, `lib/french.ts`.
+`core` speaks in `white` / `black` and `single` / `gammon` / `backgammon`, and
+those names reach the screen in the turn line, on the trays and next to the cube
+— translated at each point of use, a colour ends up said three different ways.
+`WIN_KIND` carries its article with it (`une partie simple`, `un gammon`),
+because the three kinds do not share one and a template with the article written
+into it is wrong for a third of the results it renders. The turn line also lost
+its `capitalize`: CSS title-cases every word, which is how an English headline is
+set and not a French sentence — `Noir Gagne Un Gammon`. The sentences capitalise
+their own first word now.
+
+French is longer, and the two places that costs something were already the
+places designed to give. `Contre l'IA` and `En ligne` are ~40px wider than
+`vs AI` and `online`; the header row is nowrap with the title as the item that
+shrinks, so at 375px the heading truncates to `Bac…` — a title the browser tab
+still spells out in full, against a mode switch that has to stay on one line or
+the board loses ~36px it never gets back. And `Lancer auto` wraps to two lines
+in the landscape sidebar where `Auto-roll` held one. That one is free: the label
+is a `min-h-11` control (44px) and two lines of `text-xs`/`text-sm` are 40px, so
+the row does not grow — checked at 568 × 320, where the document is still
+exactly the height of the viewport.
+
+The one thing still not in French is what the relay says. A `close` frame's
+`reason` is shown as it arrives, because it is the server's word and not this
+app's; everything this app can put in that banner — the connection errors, the
+state that could not be restored, the missing configuration — is translated.
+The lobby's `readyState` is mapped rather than printed, since only `ready` means
+anything to someone waiting to start.
 
 ## Deferred
 

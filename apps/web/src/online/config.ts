@@ -10,7 +10,9 @@ const normalize = (url: string | undefined | null): string | null => {
 export const getApiBaseUrl = (): string => {
   const env = normalize(import.meta.env.VITE_BACKGAMMON_API_URL);
   if (!env) {
-    throw new Error('Online play is not configured. Set VITE_BACKGAMMON_API_URL to the realtime server URL.');
+    // Player-visible: the banner shows whatever this says, so it is written for
+    // the person in front of the screen and not only for whoever deploys.
+    throw new Error("Le jeu en ligne n'est pas configuré. Renseignez VITE_BACKGAMMON_API_URL avec l'URL du serveur.");
   }
   return env;
 };

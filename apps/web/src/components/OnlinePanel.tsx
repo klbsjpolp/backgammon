@@ -7,6 +7,7 @@ import { Controls, GameLayout, ShortcutHint } from '@/components/GameLayout';
 import { TurnControls } from '@/components/TurnControls';
 import { TurnStatus } from '@/components/TurnStatus';
 import { cn } from '@/lib/cn';
+import { SIDE_PLURAL } from '@/lib/french';
 import { useOnlineGame } from '@/online/useOnlineGame';
 
 const Banner = ({ children, tone = 'info' }: { children: React.ReactNode; tone?: 'info' | 'error' }) => (
@@ -55,14 +56,14 @@ export const OnlinePanel = ({ applyPendingUpdate, onBusyChange }: OnlinePanelPro
           }}
           className="bg-positive text-positive-fg hover:bg-positive-hover"
         >
-          Host a new game
+          Héberger une partie
         </Button>
         <div className="flex items-center gap-2">
           <input
             value={joinCode}
             onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-            placeholder="Room code"
-            aria-label="Room code"
+            placeholder="Code du salon"
+            aria-label="Code du salon"
             className="min-w-0 flex-1 rounded-md bg-surface px-3 py-2 text-sm uppercase tracking-widest text-fg outline-none ring-1 ring-line focus:ring-accent"
           />
           <Button
@@ -72,7 +73,7 @@ export const OnlinePanel = ({ applyPendingUpdate, onBusyChange }: OnlinePanelPro
             }}
             disabled={joinCode.trim().length === 0}
           >
-            Join
+            Rejoindre
           </Button>
         </div>
       </div>
@@ -80,7 +81,7 @@ export const OnlinePanel = ({ applyPendingUpdate, onBusyChange }: OnlinePanelPro
   }
 
   if (g.status === 'connecting') {
-    return <Banner>Connecting…</Banner>;
+    return <Banner>Connexion…</Banner>;
   }
 
   // --- Lobby ---------------------------------------------------------------
@@ -91,37 +92,40 @@ export const OnlinePanel = ({ applyPendingUpdate, onBusyChange }: OnlinePanelPro
     return (
       <div className="flex w-full max-w-sm flex-col items-stretch gap-4">
         <Banner>
-          Room code: <span className="font-mono text-lg tracking-widest text-heading">{g.session?.roomCode}</span>
-          <span className="ml-2 text-muted">— share it with your opponent</span>
+          Code du salon : <span className="font-mono text-lg tracking-widest text-heading">{g.session?.roomCode}</span>
+          <span className="ml-2 text-muted">— partagez-le avec votre adversaire</span>
         </Banner>
         <ul className="flex flex-col gap-1 rounded-lg bg-surface-soft p-3 text-sm">
           {seats.map((seat) => (
             <li key={seat.seatIndex} className="flex items-center justify-between">
               <span>
-                Seat {seat.seatIndex}
-                {seat.seatIndex === g.session?.seatIndex ? ' (you)' : ''}
+                Place {seat.seatIndex}
+                {seat.seatIndex === g.session?.seatIndex ? ' (vous)' : ''}
                 {seat.displayName ? ` — ${seat.displayName}` : ''}
               </span>
               <span className={cn('text-xs', seat.readyState === 'ready' ? 'text-positive' : 'text-muted')}>
-                {seat.readyState}
+                {/* The server's own word (`ready` / `never-ready`) used to reach the
+                    screen untranslated. Only the ready state means anything to a
+                    player waiting to start, so everything else is "pas prêt". */}
+                {seat.readyState === 'ready' ? 'prêt' : 'pas prêt'}
               </span>
             </li>
           ))}
         </ul>
         <div className="flex flex-wrap gap-2">
-          <Button onClick={() => g.setReady()}>Ready</Button>
+          <Button onClick={() => g.setReady()}>Prêt</Button>
           {isHost && (
             <Button
               onClick={g.start}
               disabled={readyCount < 2}
               className="bg-positive text-positive-fg hover:bg-positive-hover"
             >
-              Start game
+              Démarrer la partie
             </Button>
           )}
           <ConfirmButton
-            label="Leave"
-            confirmLabel="Leave room?"
+            label="Quitter"
+            confirmLabel="Quitter le salon ?"
             onConfirm={g.leave}
             className="bg-neutral text-neutral-fg hover:bg-neutral-hover"
           />
@@ -136,11 +140,11 @@ export const OnlinePanel = ({ applyPendingUpdate, onBusyChange }: OnlinePanelPro
     return (
       <div className="flex w-full max-w-sm flex-col items-stretch gap-3">
         <Banner tone={g.status === 'disconnected' ? 'error' : 'info'}>
-          {g.status === 'disconnected' ? (g.error ?? 'Disconnected.') : 'Waiting for the host to start…'}
+          {g.status === 'disconnected' ? (g.error ?? 'Déconnecté.') : "En attente du lancement par l'hôte…"}
         </Banner>
         <ConfirmButton
-          label="Leave"
-          confirmLabel="Leave room?"
+          label="Quitter"
+          confirmLabel="Quitter le salon ?"
           onConfirm={g.leave}
           className="bg-neutral text-neutral-fg hover:bg-neutral-hover"
         />
@@ -168,13 +172,14 @@ export const OnlinePanel = ({ applyPendingUpdate, onBusyChange }: OnlinePanelPro
     <GameLayout
       hint={
         <>
-          You play {g.myPlayer}. Drag a checker where it goes, or click it and then its destination.
+          Vous jouez les {SIDE_PLURAL[controller.you]}. Faites glisser un pion là où il va, ou cliquez-le puis sa
+          destination.
           <ShortcutHint />
         </>
       }
       status={
         <div className="flex w-full flex-col gap-2">
-          {g.status === 'disconnected' && <Banner tone="error">{g.error ?? 'Connection lost.'}</Banner>}
+          {g.status === 'disconnected' && <Banner tone="error">{g.error ?? 'Connexion perdue.'}</Banner>}
           <TurnStatus state={state} you={controller.you} />
         </div>
       }
@@ -198,8 +203,8 @@ export const OnlinePanel = ({ applyPendingUpdate, onBusyChange }: OnlinePanelPro
           }
           danger={
             <ConfirmButton
-              label="Leave"
-              confirmLabel="Leave game?"
+              label="Quitter"
+              confirmLabel="Quitter la partie ?"
               onConfirm={g.leave}
               className="bg-neutral text-neutral-fg hover:bg-neutral-hover"
             />

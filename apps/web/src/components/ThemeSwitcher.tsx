@@ -19,7 +19,7 @@ export const ThemeSwitcher = ({ className }: { className?: string }) => {
     // of inset per side makes each target exactly as wide as the pitch, so the
     // three tile the row — no overlap (a target that reaches past the midpoint of
     // the gap steals its neighbour's taps) and no dead pixels between them.
-    <div role="group" aria-label="Theme" className={cn('flex items-center gap-2', className)}>
+    <div role="group" aria-label="Thème" className={cn('flex items-center gap-2', className)}>
       {THEMES.map((option) => {
         const active = option.id === theme;
         return (
@@ -27,7 +27,7 @@ export const ThemeSwitcher = ({ className }: { className?: string }) => {
             key={option.id}
             type="button"
             onClick={() => setTheme(option.id)}
-            aria-label={`${option.label} theme`}
+            aria-label={`thème ${option.label}`}
             aria-pressed={active}
             title={option.blurb}
             className={cn(

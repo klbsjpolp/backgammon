@@ -73,7 +73,8 @@ which ships beside the bundle rather than inside it — that is what lets an ope
 tab notice a newer build. Tabs poll it every 10 minutes and whenever they come
 back to the foreground, then reload themselves onto the new version, but only
 where nothing is lost: never during a local game or while in an online room. A
-pending update is taken on the next **New game**, **Host a new game** or **Join**,
+pending update is taken on the next **Nouvelle partie**, **Héberger une partie** or
+**Rejoindre**,
 since those discard the same state a reload would; until then a banner offers it.
 An automatic reload happens at most once per version, so a stale cache can't put
 the app in a reload loop — the buttons still force it.
@@ -85,7 +86,7 @@ to. `runtime-config.json` is never cached, or a tab could not learn it is behind
 
 Set the repository variable `MINIMUM_SUPPORTED_VERSION` (or the Deploy workflow's
 `minimum_supported_version` input) to a release tag to make the update mandatory:
-older clients are blocked behind a "Update required" overlay and reload instead of
+older clients are blocked behind a "Mise à jour requise" overlay and reload instead of
 playing on. Leave it empty for the normal, optional flow.
 
 ## Status
@@ -93,15 +94,17 @@ playing on. Leave it empty for the normal, optional flow.
 Full rules (bar/hit/bearing off, the use-both-dice rule, doubling cube,
 gammon/backgammon scoring) with two modes:
 
-- **vs AI** — local play against a move-sequence-search, shot-aware bot that also
+- **Contre l'IA** — local play against a move-sequence-search, shot-aware bot that also
   turns the cube: it offers doubles inside the classic window and takes or drops on
   its own estimated win probability.
-- **Online** — host-authoritative multiplayer over the shared realtime-infra relay
+- **En ligne** — host-authoritative multiplayer over the shared realtime-infra relay
   (create/join a room by code). The board is drawn from each seat's point of view, so
   both colors see their home board bottom-right and bear off onto their own tray.
 
-Three themes — **Classic**, **Midnight** and **Parchment** — switch from the header
+Three themes — **Classique**, **Minuit** and **Parchemin** — switch from the header
 and are remembered between visits.
+
+The interface is in French; this file and the code around it are not.
 
 The board is playable by keyboard and readable by a screen reader: points are numbered
 the way the player on that side counts them, they announce what is standing on them and

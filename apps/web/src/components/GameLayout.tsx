@@ -17,7 +17,7 @@ interface GameLayoutProps {
  * screens with room for it.
  */
 export const ShortcutHint = () => (
-  <span className="max-sm:hidden">&nbsp;Double-click a checker with one move to play it.</span>
+  <span className="max-sm:hidden">&nbsp;Double-cliquez un pion qui n'a qu'un coup possible pour le jouer.</span>
 );
 
 /**

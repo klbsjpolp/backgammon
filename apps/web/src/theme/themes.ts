@@ -20,20 +20,20 @@ export interface ThemeDefinition {
 export const THEMES: readonly ThemeDefinition[] = [
   {
     id: 'classic',
-    label: 'Classic',
-    blurb: 'Green felt and brass, the tournament look',
+    label: 'Classique',
+    blurb: 'Feutre vert et laiton, le style tournoi',
     themeColor: '#03130d',
   },
   {
     id: 'midnight',
-    label: 'Midnight',
-    blurb: 'Cool indigo, for playing with the lights off',
+    label: 'Minuit',
+    blurb: 'Indigo froid, pour jouer lumières éteintes',
     themeColor: '#080b16',
   },
   {
     id: 'parchment',
-    label: 'Parchment',
-    blurb: 'Cream paper and a wooden board',
+    label: 'Parchemin',
+    blurb: 'Papier crème et plateau de bois',
     themeColor: '#f5ecd9',
   },
 ];

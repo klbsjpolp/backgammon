@@ -132,7 +132,7 @@ describe('useOnlineGame', () => {
   });
 
   it('surfaces a failure to reach the server', async () => {
-    createRoomMock.mockRejectedValue(new Error('Online play is not configured.'));
+    createRoomMock.mockRejectedValue(new Error("Le jeu en ligne n'est pas configuré."));
     const { result } = renderHook(() => useOnlineGame());
 
     await act(async () => {
@@ -140,7 +140,7 @@ describe('useOnlineGame', () => {
     });
 
     expect(result.current.status).toBe('error');
-    expect(result.current.error).toMatch(/not configured/);
+    expect(result.current.error).toMatch(/n'est pas configuré/);
   });
 
   it('authenticates on open and enters the lobby on presence', async () => {
@@ -220,7 +220,7 @@ describe('useOnlineGame', () => {
     socket().emit({ type: 'snapshotRestore', payload: { seating: [0, 1], state: { board: null } } });
 
     expect(result.current.state).toEqual(before);
-    expect(result.current.error).toMatch(/could not be restored/i);
+    expect(result.current.error).toMatch(/n'a pas pu être restauré/i);
   });
 
   it('reports a snapshot the host refuses instead of swallowing the throw', async () => {
@@ -238,7 +238,7 @@ describe('useOnlineGame', () => {
     });
 
     expect(result.current.state).toEqual(before);
-    expect(result.current.error).toMatch(/could not be restored/i);
+    expect(result.current.error).toMatch(/n'a pas pu être restauré/i);
     // Still the host it was: rolling has to keep working.
     act(() => result.current.rollDice());
     await waitFor(() => expect(result.current.state?.phase).toBe('moving'));
@@ -415,7 +415,7 @@ describe('useOnlineGame', () => {
     act(() => socket().onclose?.());
 
     expect(result.current.status).toBe('disconnected');
-    expect(result.current.error).toMatch(/lost/i);
+    expect(result.current.error).toMatch(/perdue/i);
   });
 
   it('reports a closed room and a rejected action', async () => {

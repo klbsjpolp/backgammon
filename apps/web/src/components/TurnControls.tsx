@@ -65,43 +65,43 @@ export const TurnControls = ({
   <>
     {isDoubleToYou ? (
       <Slot onClick={() => onRespond(true)} className="bg-positive text-positive-fg hover:bg-positive-hover">
-        Take
+        Prendre
       </Slot>
     ) : (
       <Slot onClick={onRoll} disabled={!canRoll} className="text-base">
-        Roll
+        Lancer
       </Slot>
     )}
 
     {isDoubleToYou ? (
       <Slot onClick={() => onRespond(false)} className="bg-danger text-danger-fg hover:bg-danger-hover">
-        Drop
+        Refuser
       </Slot>
     ) : isHolding ? (
       // Named for what it does to the checker in hand rather than for the
       // selection model behind it, and short enough to share slot 2's width.
       //
       // The spoken name leads with that same word rather than replacing it
-      // ("Clear selection", as it first did). WCAG 2.5.3 asks that the
+      // ("Annuler la sélection", as it first did). WCAG 2.5.3 asks that the
       // accessible name contain the visible label, because a speech-input user
-      // says what they can see: "click Cancel" has to reach the one control on
-      // screen for putting a checker back down. The rest of the phrase is the
-      // elaboration the four characters cannot carry.
+      // says what they can see: "cliquer Annuler" has to reach the one control
+      // on screen for putting a checker back down. The rest of the phrase is
+      // the elaboration the one word cannot carry.
       <Slot
         onClick={onClearSelection}
-        aria-label="Cancel, put the checker back"
+        aria-label="Annuler, reposer le pion"
         className="bg-neutral text-neutral-fg hover:bg-neutral-hover"
       >
-        Cancel
+        Annuler
       </Slot>
     ) : (
       <Slot onClick={onDouble} disabled={!canDouble} className="bg-info text-info-fg hover:bg-info-hover">
-        Double
+        Doubler
       </Slot>
     )}
 
     <Checkbox checked={autoRoll} onChange={onAutoRollChange}>
-      Auto-roll
+      Lancer auto
     </Checkbox>
   </>
 );

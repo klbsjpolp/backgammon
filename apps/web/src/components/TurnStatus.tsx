@@ -1,5 +1,6 @@
 import { pipCount, type GameState, type Player } from '@backgammon/core';
 import { cn } from '@/lib/cn';
+import { capitalise, SIDE, WIN_KIND } from '@/lib/french';
 
 /**
  * The line above the board, shared by both game modes.
@@ -11,9 +12,9 @@ import { cn } from '@/lib/cn';
  */
 interface TurnStatusProps {
   state: GameState;
-  /** The colour this client plays; "you" in every sentence below. */
+  /** The colour this client plays; "vous" in every sentence below. */
   you: Player;
-  /** What to call the other seat. `AI` locally; online it stays anonymous. */
+  /** What to call the other seat. `IA` locally; online it stays anonymous. */
   opponentLabel?: string;
 }
 
@@ -21,21 +22,22 @@ interface TurnStatusProps {
 const describeTurn = ({ state, you, opponentLabel }: TurnStatusProps): string => {
   if (state.phase === 'gameOver' && state.result) {
     const { winner, kind, points } = state.result;
-    const subject = winner === you ? 'You win' : `${winner} wins`;
-    return `${subject} a ${kind} — ${points} point${points === 1 ? '' : 's'}`;
+    const subject = winner === you ? 'Vous gagnez' : `${capitalise(SIDE[winner])} gagne`;
+    return `${subject} ${WIN_KIND[kind]} — ${points} point${points === 1 ? '' : 's'}`;
   }
 
   if (state.phase === 'doubleOffered' && state.doubleOfferedBy) {
-    const offerer = state.doubleOfferedBy === you ? 'You' : (opponentLabel ?? state.doubleOfferedBy);
+    const isYours = state.doubleOfferedBy === you;
+    const offerer = isYours ? 'Vous' : (opponentLabel ?? capitalise(SIDE[state.doubleOfferedBy]));
     // Only the player being asked needs the stake spelled out — it is what they
     // are deciding about.
-    const stake = state.doubleOfferedBy === you ? '' : ` — take at ×${state.cube.value * 2} or drop`;
-    return `${offerer} offer${state.doubleOfferedBy === you ? '' : 's'} a double${stake}`;
+    const stake = isYours ? '' : ` — prenez à ×${state.cube.value * 2} ou refusez`;
+    return `${offerer} propose${isYours ? 'z' : ''} un doublement${stake}`;
   }
 
-  const verb = state.phase === 'rolling' ? 'to roll' : 'to move';
-  const whose = state.turn === you ? ' (you)' : opponentLabel ? ` (${opponentLabel})` : '';
-  return `${state.turn} ${verb}${whose}`;
+  const verb = state.phase === 'rolling' ? 'lancer' : 'jouer';
+  const whose = state.turn === you ? ' (vous)' : opponentLabel ? ` (${opponentLabel})` : '';
+  return `${capitalise(SIDE[state.turn])} doit ${verb}${whose}`;
 };
 
 /**
@@ -46,8 +48,11 @@ const describeTurn = ({ state, you, opponentLabel }: TurnStatusProps): string =>
 const describeNoPlay = ({ state, you, opponentLabel }: TurnStatusProps): string | null => {
   if (!state.noPlay) return null;
   const { player, roll } = state.noPlay;
-  const subject = player === you ? 'You' : (opponentLabel ?? player);
-  return `${subject} rolled ${roll[0]}-${roll[1]} and could not move`;
+  // "Vous" takes its own conjugation, and there is no shorter way to say it
+  // that stays a sentence.
+  if (player === you) return `Vous avez fait ${roll[0]}-${roll[1]} et n'avez pas pu jouer`;
+  const subject = opponentLabel ?? capitalise(SIDE[player]);
+  return `${subject} a fait ${roll[0]}-${roll[1]} et n'a pas pu jouer`;
 };
 
 /**
@@ -59,7 +64,7 @@ const describeAloud = (props: TurnStatusProps): string => {
   const { state } = props;
   const parts = [describeTurn(props)];
   if (state.phase === 'moving' && state.roll) {
-    parts.push(`rolled ${state.roll[0]}-${state.roll[1]}, ${state.remaining.join(', ')} left to play`);
+    parts.push(`dés ${state.roll[0]}-${state.roll[1]}, il reste ${state.remaining.join(', ')} à jouer`);
   }
   const noPlay = describeNoPlay(props);
   if (noPlay) parts.push(noPlay);
@@ -93,8 +98,8 @@ export const TurnStatus = (props: TurnStatusProps) => {
       <div className="min-h-[2lh]">
         {/*
          * The result is the one line here worth more than the layout:
-         * "black wins a backgammon — 3 points" is ~220px and the landscape
-         * sidebar gives it ~156px, so truncating loses the win kind and the
+         * "Noir gagne un backgammon — 3 points" is ~240px — wider than the
+         * English it replaced — and the landscape sidebar gives it ~156px, so truncating loses the win kind and the
          * points — the sentence the whole game was played for, and the only
          * one with no later state that brings it back. So it wraps instead,
          * and the counts stand down beside it: a finished game has nothing
@@ -105,8 +110,12 @@ export const TurnStatus = (props: TurnStatusProps) => {
          * board that moved. It does not move on a phone or a desktop either
          * way, where the sentence fits the line the reservation already pays
          * for; only the sidebar, which needs three lines for it, grows.
+         *
+         * No `capitalize` either, which this line used to carry: the sentences
+         * start on a capital of their own now, and CSS would title-case every
+         * word after it — a French sentence set as an English headline.
          */}
-        <div className={cn('font-semibold capitalize', !isOver && 'truncate')}>{describeTurn(props)}</div>
+        <div className={cn('font-semibold', !isOver && 'truncate')}>{describeTurn(props)}</div>
 
         {/*
          * One line, three things, in the order they can least afford to be cut.
@@ -123,9 +132,9 @@ export const TurnStatus = (props: TurnStatusProps) => {
          */}
         {!isOver && (
           <div className="truncate text-muted">
-            cube ×{state.cube.value}
-            {state.cube.owner ? ` (${state.cube.owner})` : ''}
-            {noPlay ? ` · ${noPlay}` : ''} · pips W {pipCount(state.board, 'white')} / B{' '}
+            videau ×{state.cube.value}
+            {state.cube.owner ? ` (${SIDE[state.cube.owner]})` : ''}
+            {noPlay ? ` · ${noPlay}` : ''} · pips B {pipCount(state.board, 'white')} / N{' '}
             {pipCount(state.board, 'black')}
           </div>
         )}

@@ -12,6 +12,7 @@ import {
   type Player,
 } from '@backgammon/core';
 import { cn } from '@/lib/cn';
+import { SIDE, SIDE_PLURAL } from '@/lib/french';
 import { barPile, describeMotions, offPile, pointPile, type CheckerMotion, type PileId } from '@/lib/boardDiff';
 import { outerChecker } from '@/lib/checkerStack';
 import { centreOf, flyChecker, FLIGHT_MS, HIT_DELAY_MS, HIT_FLIGHT_MS, type StopFlight } from '@/lib/checkerFlight';
@@ -63,9 +64,10 @@ const pointNumber = (you: Player, index: number): number => (you === 'white' ? i
 
 /** How a point reads out loud: who is standing on it, and how many. */
 const describeOccupancy = (count: number): string => {
-  if (count === 0) return 'empty';
+  if (count === 0) return 'vide';
   const n = Math.abs(count);
-  return `${n} ${count > 0 ? 'white' : 'black'} checker${n === 1 ? '' : 's'}`;
+  const colour = count > 0 ? SIDE.white : SIDE.black;
+  return `${n} pion${n === 1 ? '' : 's'} ${colour}${n === 1 ? '' : 's'}`;
 };
 
 /**
@@ -155,7 +157,7 @@ interface PointProps {
  * The ring colours say selectable / held / reachable to anyone who can see them.
  * Everything below is the same three states said out loud, plus the occupancy a
  * sighted player reads off the checkers themselves — without it a point
- * announced as "point 13, button" and nothing else, which is not a board.
+ * announced as "flèche 13, bouton" and nothing else, which is not a board.
  *
  * Under a drag there is nothing new to say: the point being dragged from is the
  * held one and the point under the pointer is a destination, both of which the
@@ -178,11 +180,11 @@ const Point = ({
 }: PointProps) => {
   const playable = selectable || selected || target;
   const role = selected
-    ? ', holding the checker to move'
+    ? ', vous tenez le pion à déplacer'
     : selectable
-      ? ', has a checker you can move'
+      ? ', porte un pion que vous pouvez déplacer'
       : target
-        ? ', where the held checker can go'
+        ? ', destination possible du pion tenu'
         : '';
 
   return (
@@ -191,7 +193,7 @@ const Point = ({
       onClick={onClick}
       onDoubleClick={onDoubleClick}
       onPointerDown={onPointerDown}
-      aria-label={`point ${number}, ${describeOccupancy(count)}${role}`}
+      aria-label={`flèche ${number}, ${describeOccupancy(count)}${role}`}
       aria-pressed={selectable || selected ? selected : undefined}
       // Not `disabled`: the point still has to be readable, and a disabled
       // button drops out of the accessible tree in some readers. This keeps it
@@ -248,9 +250,9 @@ const Tray = ({ label, owner, value, active, over, onClick }: TrayProps) => (
     // reaching past it to the nearest point that *is* a destination.
     data-drop-zone={onClick ? OFF : 'none'}
     // The count and the caption are two elements, so the default accessible name
-    // comes out as the bare "12 white off"; spelling it out says what the number
-    // counts and what is left to bear off.
-    aria-label={`${label}, ${value} of ${CHECKERS_PER_SIDE} borne off`}
+    // comes out as the bare "12 blancs sortis"; spelling it out says what the
+    // number counts and what is left to bear off.
+    aria-label={`${label}, ${value} sur ${CHECKERS_PER_SIDE}`}
     className={cn(
       'flex h-board-tray-depth w-board-tray flex-col items-center justify-center',
       'rounded-md border border-tray-line bg-tray text-tray-fg',
@@ -302,8 +304,8 @@ const Bar = ({
     aria-label={
       // Being on the bar decides the whole turn — nothing else may move until it
       // is entered — so the count belongs in the name, not just in the pips.
-      `bar, ${Math.abs(yours)} of your checkers, ${Math.abs(theirs)} of theirs` +
-      (selected ? ', holding the checker to enter' : selectable ? ', you must enter from here' : '')
+      `barre, ${Math.abs(yours)} de vos pions, ${Math.abs(theirs)} des siens` +
+      (selected ? ', vous tenez le pion à faire entrer' : selectable ? ', vous devez entrer depuis la barre' : '')
     }
     aria-pressed={selectable || selected ? selected : undefined}
     aria-disabled={selectable || selected ? undefined : true}
@@ -319,7 +321,7 @@ const Bar = ({
     )}
   >
     <Checkers count={theirs} pile={theirsPile} />
-    <span className="board-label text-board-label leading-none text-bar-label uppercase">bar</span>
+    <span className="board-label text-board-label leading-none text-bar-label uppercase">barre</span>
     <Checkers count={yours} pile={yoursPile} lifted={lifted} />
   </button>
 );
@@ -581,9 +583,9 @@ export const Board = ({ controller }: { controller: BoardController }) => {
 
           {/* The near tray is always this client's, so either color can bear off. */}
           <div className="flex flex-col justify-between gap-board-gutter">
-            <Tray label={`${them} off`} owner={them} value={board.off[them]} />
+            <Tray label={`${SIDE_PLURAL[them]} sortis`} owner={them} value={board.off[them]} />
             <Tray
-              label={`${you} off`}
+              label={`${SIDE_PLURAL[you]} sortis`}
               owner={you}
               value={board.off[you]}
               active={targets.includes(OFF)}
