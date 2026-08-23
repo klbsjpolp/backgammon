@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 import { UpdateBanner, UpdateRequiredOverlay, UpdatedNotice, VersionLine } from '@/components/AppUpdates';
+import { FullscreenButton } from '@/components/FullscreenButton';
 import { LocalPanel } from '@/components/LocalPanel';
 import { OnlinePanel } from '@/components/OnlinePanel';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
@@ -44,6 +45,11 @@ export const App = () => {
           // is scaled around the board, not the other way round.
           'max-sm:gap-2 max-sm:py-2',
           'compact:max-w-none compact:gap-1 compact:py-1',
+          // Fullscreen keeps the header and status/controls where they always
+          // are — see FullscreenButton — and only gives up the width cap and
+          // the padding around it, the same trade the phone variants above
+          // already make for their own reasons.
+          'fullscreen:max-w-none fullscreen:gap-2 fullscreen:py-2',
         )}
       >
         {/*
@@ -98,6 +104,7 @@ export const App = () => {
             </div>
 
             <ThemeSwitcher />
+            <FullscreenButton />
           </div>
         </div>
 
@@ -124,8 +131,9 @@ export const App = () => {
         )}
 
         {/* A landscape phone has no height to give a footer; the same line is one
-            rotation away, and an update that matters still banners itself. */}
-        <div className="w-full compact:hidden">
+            rotation away, and an update that matters still banners itself.
+            Fullscreen spends it on the board for the same reason. */}
+        <div className="w-full compact:hidden fullscreen:hidden">
           <VersionLine
             version={updates.currentVersion}
             isUpdateAvailable={updates.isUpdateAvailable}
