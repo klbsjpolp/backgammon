@@ -1,5 +1,6 @@
 import type { GameState } from '@backgammon/core';
 import { cn } from '@/lib/cn';
+import {useFullscreenState} from "@/fullscreen.ts";
 
 /**
  * Pip centres on a 100 × 100 face, in the arrangement a real die uses: the odd
@@ -57,7 +58,9 @@ interface Face {
  *
  * Sized in `em` so the size stays the caller's, set with `text-*` as before.
  */
-const Die = ({ value, played }: Face) => (
+const Die = ({ value, played }: Face) => {
+  const { isFullscreen } = useFullscreenState();
+  return (
   <svg
     viewBox="0 0 100 100"
     // The pips are decoration: what a reader needs is the list below, which says
@@ -65,14 +68,18 @@ const Die = ({ value, played }: Face) => (
     aria-hidden="true"
     data-face={value}
     data-played={played}
-    className={cn('size-[1em] shrink-0 transition-opacity', played && 'opacity-30')}
+    className={cn(
+      'shrink-0 transition-opacity',
+      played && 'opacity-30',
+      isFullscreen ? 'size-15' : 'size-10'
+    )}
   >
     <rect x="2" y="2" width="96" height="96" rx="22" className="fill-dice" />
     {PIPS[value]?.map(([cx, cy], i) => (
       <circle key={i} cx={cx} cy={cy} r="10" className="fill-dice-pip" />
     ))}
   </svg>
-);
+)};
 
 /**
  * The dice this turn still has: four of them on doubles, since that is how many

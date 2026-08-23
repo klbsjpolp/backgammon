@@ -73,6 +73,27 @@ export const TurnControls = ({
       </Slot>
     )}
 
+    <Checkbox checked={autoRoll} onChange={onAutoRollChange} label="Lancer auto">
+      {/*
+       * A phone drops the word rather than the row. The three controls need
+       * 342px and a 360px screen offers the row 328, so it wrapped onto a
+       * second line there and cost the board 52px that `index.css` had not
+       * reserved — the same 52px the three fixed slots above were introduced to
+       * stop moving. At 375px it fit by a single pixel, which is not a fit: it
+       * is the system font's metrics agreeing with us on the phones we happened
+       * to measure.
+       *
+       * "Lancer" is the button immediately to the left, so the shorter form
+       * loses nothing a player can see. This is two spans rather than one
+       * element moved by CSS, which the dice deliberately are not — but the
+       * rule there is about a control a screen reader would find twice, and
+       * there is one input and one name here whatever CSS shows: `label` above
+       * pins it to the full phrase.
+       */}
+      <span className="max-sm:hidden">Lancer auto</span>
+      <span className="hidden max-sm:inline">Auto</span>
+    </Checkbox>
+
     {isDoubleToYou ? (
       <Slot onClick={() => onRespond(false)} className="bg-danger text-danger-fg hover:bg-danger-hover">
         Refuser
@@ -99,26 +120,5 @@ export const TurnControls = ({
         Doubler
       </Slot>
     )}
-
-    <Checkbox checked={autoRoll} onChange={onAutoRollChange} label="Lancer auto">
-      {/*
-       * A phone drops the word rather than the row. The three controls need
-       * 342px and a 360px screen offers the row 328, so it wrapped onto a
-       * second line there and cost the board 52px that `index.css` had not
-       * reserved — the same 52px the three fixed slots above were introduced to
-       * stop moving. At 375px it fit by a single pixel, which is not a fit: it
-       * is the system font's metrics agreeing with us on the phones we happened
-       * to measure.
-       *
-       * "Lancer" is the button immediately to the left, so the shorter form
-       * loses nothing a player can see. This is two spans rather than one
-       * element moved by CSS, which the dice deliberately are not — but the
-       * rule there is about a control a screen reader would find twice, and
-       * there is one input and one name here whatever CSS shows: `label` above
-       * pins it to the full phrase.
-       */}
-      <span className="max-sm:hidden">Lancer auto</span>
-      <span className="hidden max-sm:inline">Auto</span>
-    </Checkbox>
   </>
 );
