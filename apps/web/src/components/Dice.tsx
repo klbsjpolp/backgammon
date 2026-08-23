@@ -1,6 +1,6 @@
 import type { GameState } from '@backgammon/core';
 import { cn } from '@/lib/cn';
-import {useFullscreenState} from "@/fullscreen.ts";
+import { useFullscreenState } from '@/fullscreen.ts';
 
 /**
  * Pip centres on a 100 × 100 face, in the arrangement a real die uses: the odd
@@ -61,25 +61,38 @@ interface Face {
 const Die = ({ value, played }: Face) => {
   const { isFullscreen } = useFullscreenState();
   return (
-  <svg
-    viewBox="0 0 100 100"
-    // The pips are decoration: what a reader needs is the list below, which says
-    // what is *left* rather than making it count faded faces.
-    aria-hidden="true"
-    data-face={value}
-    data-played={played}
-    className={cn(
-      'shrink-0 transition-opacity',
-      played && 'opacity-30',
-      isFullscreen ? 'size-15' : 'size-10'
-    )}
-  >
-    <rect x="2" y="2" width="96" height="96" rx="22" className="fill-dice" />
-    {PIPS[value]?.map(([cx, cy], i) => (
-      <circle key={i} cx={cx} cy={cy} r="10" className="fill-dice-pip" />
-    ))}
-  </svg>
-)};
+    <svg
+      viewBox="0 0 100 100"
+      // The pips are decoration: what a reader needs is the list below, which says
+      // what is *left* rather than making it count faded faces.
+      aria-hidden="true"
+      data-face={value}
+      data-played={played}
+      className={cn(
+        'shrink-0 transition-opacity',
+        played && 'opacity-30',
+        // Fullscreen has room for a die that reads across a desk, and there the
+        // size comes from the board's own unit — see `--spacing-board-die`,
+        // which is the width the band's controls half has left once the three
+        // buttons beside the dice have taken theirs. A flat size cannot work in
+        // both places: those buttons cost the same pixels whatever the board's
+        // size, so the room for dice is what is left over, not a proportion.
+        //
+        // Everywhere else the size stays the caller's `1em`, because `Controls`
+        // reserves the dice cell at the width of four of them (`min-w-33`,
+        // measured at the 1.875rem a phone sets). A flat `size-10` made a double
+        // 171px wide against that 132px reservation, and the fourth die spent
+        // the difference underneath the new-game button on a 360px screen.
+        isFullscreen ? 'size-board-die' : 'size-[1em]',
+      )}
+    >
+      <rect x="2" y="2" width="96" height="96" rx="22" className="fill-dice" />
+      {PIPS[value]?.map(([cx, cy], i) => (
+        <circle key={i} cx={cx} cy={cy} r="10" className="fill-dice-pip" />
+      ))}
+    </svg>
+  );
+};
 
 /**
  * The dice this turn still has: four of them on doubles, since that is how many

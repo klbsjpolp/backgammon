@@ -98,6 +98,20 @@ body {
   --spacing-board-bar-gap: calc(var(--pt) * 0.2);
   --spacing-board-bar-pad: calc(var(--pt) * 0.1);
 
+  /*
+   * A die in the fullscreen band, which is the one place the dice are not sized
+   * by the caller's `1em`: there the board is the only thing on the page, and a
+   * die scaled with it reads from across a desk.
+   *
+   * A proportion of --pt rather than a flat size, because the three controls
+   * beside the dice cost the same pixels whatever the board's size — a flat
+   * `size-15` fitted a 1920px screen and hung 139px off the left edge of a
+   * 1280px one. The cap keeps a 4K board from drawing dice the size of the
+   * points. Where even this does not fit, the band's row wraps and the dice
+   * take a line of their own — see `Controls`.
+   */
+  --spacing-board-die: min(calc(var(--pt) * 0.5), 4rem);
+
   /* Floored, or the point numbers stop being legible on a small phone. */
   --text-board-label: max(0.5rem, calc(var(--pt) * 0.22));
   --text-board-checker: calc(var(--pt) * 0.3);
