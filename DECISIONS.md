@@ -501,6 +501,44 @@ left to throw away, and the guard was then only friction between the result and 
 game. Every button carries a 44px minimum touch target, and the page reserves
 `env(safe-area-inset-bottom)`.
 
+## The abandon button rides in the header
+
+On a desktop screen the board was drawn at its 2.5rem cap with the page half empty
+below it, and a 44px row holding one button — **Nouvelle partie**, or **Quitter** online —
+sat under the board spending height the board was not allowed to use. Moving that row into
+the header costs the page nothing there: the switch cluster is already 40px tall for the
+mode buttons, so taking the button grew it by 4px and gave the board back the row, the rule
+above it and both grid gaps — 69px out, 4px back, **65px** measured rather than estimated,
+which is what `--avail-h` drops by (20.25rem → 16.25rem windowed, 18.75rem → 14.75rem in
+fullscreen).
+
+It is a **portal**, not a copy hidden by a media query. The rule the dice already
+established holds here for the same reason — a second copy is a second "Nouvelle partie"
+for a screen reader to find, and the media query that hides one does not run in jsdom, so
+the tests would not see the duplicate they were meant to catch. The header lends out a DOM
+node and `Controls` renders into it; there is exactly one such button in the accessible
+tree at any width, and it is the same element either way, so the `ConfirmButton`'s armed
+state survives a resize across the breakpoint.
+
+That makes this the one placement on the page CSS cannot decide, which is why
+`useRoomyScreen` exists and why it is the only JS breakpoint here. The dice are moved
+between layouts by grid placement because their three homes are all cells of one grid; the
+header is a different container entirely, and nothing in CSS moves an element between
+containers. `display: contents` on the whole chain would, and would take the panel's
+layout and its accessible tree with it. The cost is a media query string that duplicates
+the `max-sm` and `compact` breakpoints and has to be kept in step with them by hand — noted
+where it is written, and the reason that hook does nothing else.
+
+jsdom implements no `matchMedia` at all, so the hook answers false without one. That is
+deliberate rather than incidental: the phone layout is the branch that needs no slot to
+exist, so every test that does not ask about placement sees the arrangement it always saw,
+and the one that does installs a `matchMedia` of its own.
+
+Not done: hoisting the header itself into the panels so both rows could be siblings of one
+grid, which would have been the CSS-only answer. Online opens on a room picker with no
+`GameLayout` at all, so the header would have had to be rendered from two places, or from
+inside a panel that does not always draw a board — a worse trade than one media query.
+
 ## Full screen
 
 On a desktop monitor `--pt` was still capped at the 2.5rem chosen for a windowed browser, so

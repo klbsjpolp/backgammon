@@ -4,15 +4,29 @@ import { FullscreenButton } from '@/components/FullscreenButton';
 import { LocalPanel } from '@/components/LocalPanel';
 import { OnlinePanel } from '@/components/OnlinePanel';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
+import { HeaderSlotContext } from '@/headerSlot';
 import { cn } from '@/lib/cn';
 import { ThemeProvider } from '@/theme/ThemeProvider';
 import { useAppUpdates } from '@/useAppUpdates';
+import { useRoomyScreen } from '@/useRoomyScreen';
 
 type Mode = 'local' | 'online';
 
 export const App = () => {
   const [mode, setMode] = useState<Mode>('local');
   const [isOnlineBusy, setIsOnlineBusy] = useState(false);
+  /*
+   * The header lends the panels a slot for their abandon-the-game controls, but
+   * only where the header row is a line of its own with room going spare — a
+   * phone's is already one nowrap line that must never become two, and it is the
+   * title that gives when it does.
+   *
+   * A callback ref into state rather than a `useRef`: the panel portals into this
+   * node, and a ref set during commit does not re-render the consumer that has to
+   * read it.
+   */
+  const isRoomy = useRoomyScreen();
+  const [headerSlot, setHeaderSlot] = useState<HTMLElement | null>(null);
   // A local game is always live on screen, so an automatic reload would throw it
   // away; online only has something to lose once a room is joined. Either way the
   // update lands on the next deliberate start — see `applyPendingUpdate`.
@@ -105,6 +119,14 @@ export const App = () => {
 
             <ThemeSwitcher />
             <FullscreenButton />
+
+            {/*
+             * Last in the row, so the switches beside it keep their position when
+             * a panel puts a button here, takes it away, or swaps its width for a
+             * confirmation. Rendered only when it will be used: an empty flex
+             * child still spends the row's `gap-2`.
+             */}
+            {isRoomy && <div ref={setHeaderSlot} className="flex items-center gap-2" />}
           </div>
         </div>
 
@@ -124,11 +146,15 @@ export const App = () => {
           />
         )}
 
-        {mode === 'local' ? (
-          <LocalPanel applyPendingUpdate={applyPendingUpdate} />
-        ) : (
-          <OnlinePanel applyPendingUpdate={applyPendingUpdate} onBusyChange={setIsOnlineBusy} />
-        )}
+        {/* Null until the slot above has mounted, and on a phone for good — either
+            way the panels keep their controls under the board until told otherwise. */}
+        <HeaderSlotContext.Provider value={isRoomy ? headerSlot : null}>
+          {mode === 'local' ? (
+            <LocalPanel applyPendingUpdate={applyPendingUpdate} />
+          ) : (
+            <OnlinePanel applyPendingUpdate={applyPendingUpdate} onBusyChange={setIsOnlineBusy} />
+          )}
+        </HeaderSlotContext.Provider>
 
         {/* A landscape phone has no height to give a footer; the same line is one
             rotation away, and an update that matters still banners itself.

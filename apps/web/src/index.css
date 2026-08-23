@@ -53,8 +53,13 @@ body {
    * 19rem of page chrome, plus the line the status bar now keeps reserved for a
    * turn that could not be played — see TurnStatus, which holds that line whether
    * or not there is anything on it so the board does not move when there is.
+   *
+   * Less the 65px the abandon-the-game row gave back when it moved into the
+   * header (44px of buttons, the rule that separated them and both grid gaps,
+   * against the 4px the header grew by taking them) — measured, not estimated,
+   * the way every other number in this block was.
    */
-  --avail-h: calc(100svh - 20.25rem);
+  --avail-h: calc(100svh - 16.25rem);
   --pt: clamp(1rem, min(calc(var(--avail-w) / 17), calc(var(--avail-h) / 8.6)), 2.5rem);
 
   position: relative;
@@ -229,6 +234,6 @@ body[data-drag-active] {
  * has to move if that reservation ever does.
  */
 body[data-fullscreen] .board-fit {
-  --avail-h: calc(100svh - 18.75rem);
+  --avail-h: calc(100svh - 14.75rem);
   --pt: clamp(1rem, min(calc(var(--avail-w) / 17), calc(var(--avail-h) / 8.6)), 9rem);
 }
