@@ -120,7 +120,15 @@ export const Controls = ({
         {dice}
       </div>
 
-      <ControlRow className="col-start-2 col-end-3 row-start-1 w-full max-sm:col-start-1 max-sm:col-end-4 compact:col-start-1 compact:col-end-4 compact:row-start-2">
+      {/*
+       * `max-sm:flex-nowrap` is what makes the portrait height budget true by
+       * construction rather than by measurement: this row is 44px on every
+       * phone, because it is no longer allowed to become 96. It used to wrap at
+       * 360px and under, which is 52px the board had already been promised —
+       * the page then scrolled by exactly that on every screen of the game.
+       * The controls that give when it is tight are named in `TurnControls`.
+       */}
+      <ControlRow className="col-start-2 col-end-3 row-start-1 w-full max-sm:col-start-1 max-sm:col-end-4 max-sm:flex-nowrap compact:col-start-1 compact:col-end-4 compact:row-start-2">
         {primary}
       </ControlRow>
 

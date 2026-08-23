@@ -31,6 +31,21 @@ describe('TurnControls — the row that must not grow', () => {
     expect(screen.getByRole('button', { name: /^doubler$/i })).toBeDefined();
   });
 
+  it('keeps one spoken name for auto-roll, whichever half of its label the screen shows', () => {
+    // The visible text is "Lancer auto" with room and "Auto" without it, because
+    // three controls need 342px and a 360px phone gives the row 328 — the width
+    // that used to wrap it. Which half CSS shows cannot decide the accessible
+    // name: no stylesheet runs here, and a name that moved with the viewport
+    // would strand a speech-input user on the narrow one. So it is pinned, and
+    // it contains "Auto", which is what WCAG 2.5.3 asks of a shortened label.
+    const p = props();
+    render(<TurnControls {...p} />);
+
+    const auto = screen.getByRole('checkbox', { name: 'Lancer auto' });
+    fireEvent.click(auto);
+    expect(p.onAutoRollChange).toHaveBeenCalledWith(true);
+  });
+
   it('names the cancel button so a speech-input user can say what they see', () => {
     // WCAG 2.5.3: the accessible name has to contain the visible label, or
     // "click Cancel" reaches nothing — on the one control for putting a held
