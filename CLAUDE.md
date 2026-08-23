@@ -78,9 +78,13 @@ The UI numbers points a third way: each player sees their own 1..24, counting fr
   one entry in `themes.ts`, one id in the pre-paint script in `index.html` — and it must pass `contrast.test.ts`,
   which holds every theme to WCAG 3:1 for the board's state rings against both point colours.
 - **Accessibility is tested, not aspirational.** There is exactly **one** always-mounted `sr-only` polite live region
-  (in `TurnStatus`) and it carries everything worth hearing. A live region must be in the tree _before_ its content
-  changes or nothing is announced — never render one together with its text. Points out of play are `aria-disabled`
-  with `tabIndex={-1}` (not `disabled`, which drops them from the accessible tree in some readers).
+  (`TurnAnnouncer`) and it carries everything worth hearing. A live region must be in the tree _before_ its content
+  changes or nothing is announced — never render one together with its text. That is why the panels mount it as a
+  **sibling of `GameLayout`** rather than inside `TurnStatus`: fullscreen draws the status inside the board's frame,
+  and a subtree that changes position in the tree is rebuilt, not moved — which put the region back on screen together
+  with its text on every toggle. Anything that relocates the status must leave the announcer where it is. Points out
+  of play are `aria-disabled` with `tabIndex={-1}` (not `disabled`, which drops them from the accessible tree in some
+  readers).
 - **Both game modes share their chrome.** `TurnStatus` and `TurnControls` are common to `LocalPanel` and
   `OnlinePanel`; only the wiring differs. Don't re-implement status text in a panel — that is exactly how they drifted
   apart before. The same goes for holding a checker and playing it: `useCheckerSelection` is the one copy, and the two

@@ -71,6 +71,27 @@ const describeAloud = (props: TurnStatusProps): string => {
   return parts.join('. ');
 };
 
+/**
+ * The one live region, and the only thing in this file that speaks.
+ *
+ * It is a component of its own, rendered by the panels as a sibling of
+ * `GameLayout` rather than inside `TurnStatus`, because the visible lines below
+ * *move*: fullscreen draws them inside the board's frame, and a subtree that
+ * changes position in the tree is unmounted and rebuilt, not relocated. That put
+ * the region back in the tree together with its text on every toggle, which is
+ * exactly the silence the comment below describes — the invariant is that this
+ * is mounted *before* anything it announces changes, so it must outlive every
+ * layout the status line is drawn in.
+ *
+ * Polite: a turn changing is worth hearing, not worth cutting off whatever the
+ * player is already being read.
+ */
+export const TurnAnnouncer = (props: TurnStatusProps) => (
+  <span aria-live="polite" className="sr-only">
+    {describeAloud(props)}
+  </span>
+);
+
 export const TurnStatus = (props: TurnStatusProps) => {
   const { state } = props;
   const noPlay = describeNoPlay(props);
@@ -146,16 +167,13 @@ export const TurnStatus = (props: TurnStatusProps) => {
        * its content changes for the change to be announced; one that appears
        * together with its text is silent in NVDA, JAWS and VoiceOver alike,
        * which is what the conditionally-rendered regions here and in `<Dice>`
-       * were. The visible lines above carry no `aria-live` of their own, so
-       * this is also the only thing that speaks — and the only place the tail
-       * of a truncated line survives.
+       * were. It lives in {@link TurnAnnouncer} above, outside this component
+       * and outside every layout, for the same reason.
        *
-       * Polite: a turn changing is worth hearing, not worth cutting off
-       * whatever the player is already being read.
+       * The visible lines here carry no `aria-live` of their own, so that
+       * region is the only thing that speaks — and the only place the tail of
+       * a truncated line survives.
        */}
-      <span aria-live="polite" className="sr-only">
-        {describeAloud(props)}
-      </span>
     </div>
   );
 };

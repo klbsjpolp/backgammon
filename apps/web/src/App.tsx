@@ -53,10 +53,17 @@ export const App = () => {
   }, [applyUpdate, isUpdateAvailable, isUpdateRequired]);
 
   /*
-   * One element, drawn in the footer or in the header's third column — never in
-   * both. Rendering it twice and hiding one with a media query would put a second
+   * Drawn in the footer or in the header's third column — never in both.
+   * Rendering it twice and hiding one with a media query would put a second
    * "Rechercher une mise à jour" in the accessible tree, which is the rule the
    * dice and the abandon buttons already follow.
+   *
+   * One *variable*, not one element across the move: the two positions differ,
+   * so React rebuilds `VersionLine` on a fullscreen toggle and its "À jour"
+   * flash is dropped if one is showing. That flash is two seconds of cosmetic
+   * feedback about a check the player just ran by hand, so it is not worth
+   * lifting state out of the component to preserve; the announcer that has to
+   * survive a relocation is handled properly instead — see `TurnAnnouncer`.
    */
   const versionLine = (
     <VersionLine
