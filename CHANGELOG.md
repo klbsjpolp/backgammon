@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.1.34](https://github.com/klbsjpolp/backgammon/compare/v0.1.33...v0.1.34) (2026-08-23)
+
+### Features
+
+* **web:** add a fullscreen toggle that grows the board past its desktop cap ([d357c2b](https://github.com/klbsjpolp/backgammon/commit/d357c2b0cefee540195220276f6cda596164b6da))
+* **web:** adjust die size based on fullscreen state and improve auto roll checkbox accessibility ([3cf99c6](https://github.com/klbsjpolp/backgammon/commit/3cf99c623acca1055a92c29219ac68618555fdd8))
+* **web:** move the abandon-the-game buttons into the header row ([1d3fa62](https://github.com/klbsjpolp/backgammon/commit/1d3fa62ffab696970fdb7f33fe21754a4c4bde70))
+* **web:** put the controls and the status inside the board in fullscreen ([cc036c9](https://github.com/klbsjpolp/backgammon/commit/cc036c9d9b19dbed34cf26b7994b32d164a99cc7))
+
+### Bug Fixes
+
+* **web:** keep the live region mounted when the status moves into the board ([b238efd](https://github.com/klbsjpolp/backgammon/commit/b238efd152203511f558f1dbc6c69598d18953d7))
+* **web:** size the fullscreen dice from the board, not a flat pixel count ([3e62edf](https://github.com/klbsjpolp/backgammon/commit/3e62edf3dd89a96619988d0797767f620baf5628))
+* **web:** stop the control row wrapping a portrait phone into a scroll ([ce5d780](https://github.com/klbsjpolp/backgammon/commit/ce5d780ea4b764b6c4bfdb2060a4c0a7aae4ca80))
 ## [0.1.33](https://github.com/klbsjpolp/backgammon/compare/v0.1.32...v0.1.33) (2026-08-23)
 ## [0.1.32](https://github.com/klbsjpolp/backgammon/compare/v0.1.31...v0.1.32) (2026-08-22)
 
