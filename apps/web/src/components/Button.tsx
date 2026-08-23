@@ -9,8 +9,15 @@ export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement>;
  * that sits beside a button — see {@link Checkbox} — builds on this, so the
  * touch-target rule has one place to change.
  */
+/**
+ * `whitespace-nowrap` because a control's height is a reservation the board has
+ * already been promised, not a consequence of its label: "Nouvelle partie" broke
+ * onto two lines at 344px and grew its row from 44px to 56, and the page scrolled
+ * by exactly that. A label that does not fit is one to shorten — see the
+ * auto-roll checkbox, which does — not one to wrap.
+ */
 export const CONTROL_BASE =
-  'inline-flex min-h-11 touch-manipulation items-center justify-center text-sm font-semibold transition select-none';
+  'inline-flex min-h-11 touch-manipulation items-center justify-center whitespace-nowrap text-sm font-semibold transition select-none';
 
 export const Button = ({ className, ...props }: ButtonProps) => (
   <button

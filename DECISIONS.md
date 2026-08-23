@@ -484,6 +484,32 @@ to play on a phone:
   the header, with nothing left in it but the title, stops truncating "Backgammon" on a
   phone.
 
+- **A reservation the markup cannot break.** All of the above is a count of what the
+  chrome measures, which is only true while the chrome cannot decide to measure more. It
+  could: the primary control row is `flex-wrap`, and its three controls need 342px against
+  the 328 a 360px phone gives them, so it wrapped onto a second line there and every
+  portrait screen narrower than 375px scrolled by exactly the 52px that cost. Not for one
+  state of the game — for all of them, the whole way through.
+
+  375px is the tell. It fit by **one pixel**, which is not fitting; it is the system font's
+  metrics agreeing with us on the handset we happened to measure, and the same row on a
+  phone whose font is a hair wider was already broken. So the row is now `flex-nowrap` on a
+  phone and the 44px is true by construction, the auto-roll checkbox says "Auto" there
+  rather than "Lancer auto" (the word is the button immediately to its left, and dropping it
+  buys 57px), and it is the checkbox that shrinks and ellipsises if a font still runs long —
+  never the two buttons beside it, whose slot width is what keeps them from sliding under a
+  thumb already on its way down. `CONTROL_BASE` carries `whitespace-nowrap` for the same
+  reason one step further out: "Nouvelle partie" broke onto two lines at 344px, and a
+  control's height here is a promise made to the board rather than a consequence of its
+  label.
+
+  Every portrait and landscape phone from 344px up now fits its viewport exactly. 320px
+  does not, by 15px: four dice on a double reserve 132px beside a 157px button in a row
+  300px wide, and the only ways out are shrinking the dice — which would undo the
+  legibility the drawn faces were introduced for, on every phone, to serve one below the
+  360px floor this file has documented throughout — or letting the reservation go and
+  having the buttons slide when a double lands. Left as it is, deliberately.
+
 Between them the checkers came out ~85% larger in landscape and ~40% in portrait on a
 modern phone, with the page still fitting the viewport exactly (no scroll). Where the
 screen's height is what binds — a tall phone, either way up — the board is already using
