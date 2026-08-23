@@ -147,7 +147,15 @@ export const Controls = ({
     // In the board's band the three columns have nothing to centre against —
     // the band's own half is the frame — so the grid collapses to one row and
     // the dice simply lead it, immediately left of Roll as on a roomy page.
-    <div className="grid w-full grid-cols-[1fr_auto_1fr] items-center gap-3 fullscreen:flex fullscreen:justify-center">
+    //
+    // It may wrap there, unlike anywhere else: the three buttons cost a fixed
+    // width and the band's half is 6.6 × --pt, so below roughly 1700px of
+    // fullscreen the two do not both fit and the dice take a line of their own
+    // rather than hanging off the edge of the board. The band has the height
+    // for it, and which way it goes depends only on the viewport — the dice
+    // cell holds its reservation whether or not a roll is on screen, so this
+    // cannot flip mid-game.
+    <div className="grid w-full grid-cols-[1fr_auto_1fr] items-center gap-3 fullscreen:flex fullscreen:flex-wrap fullscreen:justify-center">
       {/*
        * Reserved at the width of a double — four dice — so that rolling one does
        * not slide the buttons sideways mid-turn.
