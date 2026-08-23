@@ -543,8 +543,18 @@ established holds here for the same reason — a second copy is a second "Nouvel
 for a screen reader to find, and the media query that hides one does not run in jsdom, so
 the tests would not see the duplicate they were meant to catch. The header lends out a DOM
 node and `Controls` renders into it; there is exactly one such button in the accessible
-tree at any width, and it is the same element either way, so the `ConfirmButton`'s armed
-state survives a resize across the breakpoint.
+tree at any width.
+
+It is **not**, however, the same React element across the move, and an earlier version of
+this entry claimed it was. The two branches are a portal and a fragment at the same child
+position, and React reconciles by type-at-position: crossing the breakpoint unmounts the
+button and mounts a new one, so a `ConfirmButton` left armed is disarmed by the resize.
+Changing the portal's target does the same thing, so there is no arrangement of portals
+that preserves it — only lifting the `armed` state out of the button would. That is not
+worth doing: disarming is the fail-safe direction (the guard can only be lost, never
+spuriously gained), and the button already disarms on `blur`, so anything the player
+touches next clears it anyway. What matters is that the accessible tree never holds two of
+these, and that survives the move.
 
 That makes this the one placement on the page CSS cannot decide, which is why
 `useRoomyScreen` exists and why it is the only JS breakpoint here. The dice are moved
@@ -629,6 +639,35 @@ Three things had to be true of that band, and each was found by getting it wrong
 to 10.7 because the board itself is taller. The band's own floor is `max(3.5rem, 2.1 × --pt)`:
 the multiple is what pays for it on a real fullscreen screen, and the 3.5rem is there so a
 short window still gets a band a 44px button fits in.
+
+### What a relocation costs, and the one case where that mattered
+
+Moving the status into the board is a change of _position in the tree_, and React reconciles
+by position: the two layouts are structurally different, so entering fullscreen unmounts the
+status subtree and builds a new one. Three pieces of local state ride on that, and only one
+of them was worth defending.
+
+The one that was is the **live region**. `TurnStatus` documented it as load-bearing and
+`CLAUDE.md` states it project-wide: a region has to be in the accessible tree _before_ its
+content changes, or the change is announced to nobody. Rebuilding it on every toggle put it
+back on screen together with its text, which is precisely the silent case. So it is now
+`TurnAnnouncer`, mounted by each panel as a **sibling of `GameLayout`** — outside every
+layout `GameLayout` can choose, and therefore outside anything that can take it down. The
+test asserts the DOM node's _identity_ across the toggle rather than that a region exists on
+both sides, because the second is true of the broken version too.
+
+The other two are left alone, deliberately. A `ConfirmButton` caught mid-arm is disarmed by
+the move, which is the fail-safe direction — the two-tap guard can only be lost, never
+spuriously gained — and the button already disarms on `blur`, so the next thing the player
+touches would clear it anyway. `VersionLine`'s "À jour" flash is two seconds of cosmetic
+feedback about a check the player just ran by hand. Preserving either would mean lifting
+state out of a component to survive a layout change, which is a real cost against no real
+failure.
+
+The general shape is worth keeping in mind: **a portal keeps an element out of the tree
+twice, not its state across a move.** Changing a portal's target unmounts it just as a
+branch swap does. Anything whose state must outlive a relocation has to be mounted somewhere
+the relocation does not reach.
 
 The cap itself moved twice: to 6rem, then to 9rem. 6rem turned out to already be the binding
 limit on a 1920×1080 screen (`--avail-h` gives less than that once the reservation is paid),

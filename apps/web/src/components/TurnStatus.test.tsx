@@ -1,7 +1,20 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { applyRoll, createInitialState, type GameState } from '@backgammon/core';
-import { TurnStatus } from './TurnStatus';
+import { TurnAnnouncer, TurnStatus } from './TurnStatus';
+
+/**
+ * The pair as a panel mounts it: the region that speaks is a sibling of the
+ * visible lines, not a child of them, so that a layout which moves the lines —
+ * fullscreen draws them inside the board — cannot take the region down with
+ * them. These tests are about what is announced, so they need both halves.
+ */
+const Status = (props: React.ComponentProps<typeof TurnStatus>) => (
+  <>
+    <TurnAnnouncer {...props} />
+    <TurnStatus {...props} />
+  </>
+);
 
 /** The one region that speaks. It has to be the same element across renders. */
 const liveRegion = (container: HTMLElement) => container.querySelector('[aria-live="polite"]');
@@ -10,7 +23,7 @@ describe('TurnStatus — what is announced', () => {
   it('keeps a single live region mounted before there is anything to say', () => {
     // The point of the whole exercise: a region inserted alongside its content
     // is silent in every major screen reader, so it has to already be there.
-    const { container } = render(<TurnStatus state={createInitialState('white')} you="white" opponentLabel="IA" />);
+    const { container } = render(<Status state={createInitialState('white')} you="white" opponentLabel="IA" />);
     const regions = container.querySelectorAll('[aria-live]');
     expect(regions).toHaveLength(1);
     expect(liveRegion(container)?.textContent).toMatch(/blanc doit lancer/i);
@@ -18,10 +31,10 @@ describe('TurnStatus — what is announced', () => {
 
   it('survives the roll it is meant to announce, rather than being remounted by it', () => {
     const before = createInitialState('white');
-    const { container, rerender } = render(<TurnStatus state={before} you="white" opponentLabel="IA" />);
+    const { container, rerender } = render(<Status state={before} you="white" opponentLabel="IA" />);
     const region = liveRegion(container);
 
-    rerender(<TurnStatus state={applyRoll(before, [6, 5])} you="white" opponentLabel="IA" />);
+    rerender(<Status state={applyRoll(before, [6, 5])} you="white" opponentLabel="IA" />);
 
     // Same node, new text — which is what fires an announcement.
     expect(liveRegion(container)).toBe(region);
@@ -30,7 +43,7 @@ describe('TurnStatus — what is announced', () => {
 
   it('speaks the dice, which are drawn somewhere with nothing permanent to say them', () => {
     const { container } = render(
-      <TurnStatus state={applyRoll(createInitialState('white'), [3, 3])} you="white" opponentLabel="IA" />,
+      <Status state={applyRoll(createInitialState('white'), [3, 3])} you="white" opponentLabel="IA" />,
     );
     // `<Dice>` is unmounted until a roll lands, so it can never announce one.
     expect(liveRegion(container)?.textContent).toMatch(/dés 3-3, il reste 3, 3, 3, 3 à jouer/i);
@@ -39,11 +52,11 @@ describe('TurnStatus — what is announced', () => {
   it('carries a roll nobody could play without remounting either', () => {
     const passed: GameState = { ...createInitialState('white'), noPlay: { player: 'black', roll: [6, 5] } };
     const { container, rerender } = render(
-      <TurnStatus state={createInitialState('white')} you="white" opponentLabel="IA" />,
+      <Status state={createInitialState('white')} you="white" opponentLabel="IA" />,
     );
     const region = liveRegion(container);
 
-    rerender(<TurnStatus state={passed} you="white" opponentLabel="IA" />);
+    rerender(<Status state={passed} you="white" opponentLabel="IA" />);
 
     expect(liveRegion(container)).toBe(region);
     expect(region?.textContent).toMatch(/IA a fait 6-5 et n'a pas pu jouer/i);
@@ -56,15 +69,15 @@ describe('TurnStatus — what is announced', () => {
     // back to the colour — which is the one path through `describeNoPlay` that
     // reads a name out of the engine's own vocabulary.
     const passed: GameState = { ...createInitialState('white'), noPlay: { player: 'black', roll: [6, 5] } };
-    const { container } = render(<TurnStatus state={passed} you="white" />);
+    const { container } = render(<Status state={passed} you="white" />);
 
     expect(liveRegion(container)?.textContent).toMatch(/Noir a fait 6-5 et n'a pas pu jouer/);
   });
 
   it('stays two lines whether or not a roll went unplayed', () => {
-    const quiet = render(<TurnStatus state={createInitialState('white')} you="white" opponentLabel="IA" />);
+    const quiet = render(<Status state={createInitialState('white')} you="white" opponentLabel="IA" />);
     const passed: GameState = { ...createInitialState('white'), noPlay: { player: 'black', roll: [6, 5] } };
-    const loud = render(<TurnStatus state={passed} you="white" opponentLabel="IA" />);
+    const loud = render(<Status state={passed} you="white" opponentLabel="IA" />);
 
     // The height of this box is the position of the board under it, so the
     // number of lines has to be the same in both.
@@ -82,7 +95,7 @@ describe('TurnStatus — what is announced', () => {
       cube: { value: 2, owner: 'white' },
       noPlay: { player: 'black', roll: [6, 5] },
     };
-    render(<TurnStatus state={doubled} you="white" opponentLabel="IA" />);
+    render(<Status state={doubled} you="white" opponentLabel="IA" />);
 
     const line = screen.getByText(/videau ×2 \(blanc\)/, { ignore: '[aria-live]' });
     expect(line.textContent).toMatch(/^videau ×2 \(blanc\) · IA a fait 6-5 et n'a pas pu jouer · pips/);
@@ -92,7 +105,7 @@ describe('TurnStatus — what is announced', () => {
     // `noPlay` lives until the player who rolled it rolls again, which is a
     // whole turn cycle — long enough that the counts cannot go away for it.
     const passed: GameState = { ...createInitialState('white'), noPlay: { player: 'black', roll: [6, 5] } };
-    render(<TurnStatus state={passed} you="white" opponentLabel="IA" />);
+    render(<Status state={passed} you="white" opponentLabel="IA" />);
 
     const line = screen.getByText(/n'a pas pu jouer/, { ignore: '[aria-live]' });
     expect(line.textContent).toMatch(/pips B 167 \/ N 167$/);
@@ -104,7 +117,7 @@ describe('TurnStatus — what is announced', () => {
       phase: 'gameOver',
       result: { winner: 'black', kind: 'backgammon', points: 3, cubeValue: 1 },
     };
-    const { container } = render(<TurnStatus state={won} you="white" opponentLabel="IA" />);
+    const { container } = render(<Status state={won} you="white" opponentLabel="IA" />);
 
     // The landscape sidebar is ~156px and the sentence is ~220px, so on one
     // truncated line the win kind and the points — what the game was played
@@ -120,7 +133,7 @@ describe('TurnStatus — what is announced', () => {
 
   it('leaves the visible spans silent so nothing is said twice', () => {
     const { container } = render(
-      <TurnStatus state={applyRoll(createInitialState('white'), [6, 5])} you="white" opponentLabel="IA" />,
+      <Status state={applyRoll(createInitialState('white'), [6, 5])} you="white" opponentLabel="IA" />,
     );
     expect(container.querySelectorAll('[aria-live]')).toHaveLength(1);
     expect(liveRegion(container)?.className).toContain('sr-only');

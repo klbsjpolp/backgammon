@@ -5,7 +5,7 @@ import { Button, ConfirmButton } from '@/components/Button';
 import { Dice } from '@/components/Dice';
 import { Controls, GameLayout, ShortcutHint } from '@/components/GameLayout';
 import { TurnControls } from '@/components/TurnControls';
-import { TurnStatus } from '@/components/TurnStatus';
+import { TurnAnnouncer, TurnStatus } from '@/components/TurnStatus';
 import { cn } from '@/lib/cn';
 import { SIDE_PLURAL } from '@/lib/french';
 import { useOnlineGame } from '@/online/useOnlineGame';
@@ -169,48 +169,62 @@ export const OnlinePanel = ({ applyPendingUpdate, onBusyChange }: OnlinePanelPro
     state.phase === 'doubleOffered' && g.myPlayer != null && state.doubleOfferedBy === opponent(g.myPlayer);
 
   return (
-    <GameLayout
-      hint={
-        <>
-          Vous jouez les {SIDE_PLURAL[controller.you]}. Faites glisser un pion là où il va, ou cliquez-le puis sa
-          destination.
-          <ShortcutHint />
-        </>
-      }
-      status={
-        <div className="flex w-full flex-col gap-2">
-          {g.status === 'disconnected' && <Banner tone="error">{g.error ?? 'Connexion perdue.'}</Banner>}
-          <TurnStatus state={state} you={controller.you} />
-        </div>
-      }
-      board={<Board controller={controller} />}
-      controls={
-        <Controls
-          dice={<Dice state={state} />}
-          primary={
-            <TurnControls
-              canRoll={g.canRoll}
-              canDouble={g.myPlayer != null && canDouble(state, g.myPlayer)}
-              isDoubleToYou={doubleToMe}
-              isHolding={g.selectedFrom !== null}
-              autoRoll={g.autoRoll}
-              onRoll={g.rollDice}
-              onAutoRollChange={g.setAutoRoll}
-              onDouble={g.double}
-              onRespond={g.respond}
-              onClearSelection={g.clearSelection}
-            />
-          }
-          danger={
-            <ConfirmButton
-              label="Quitter"
-              confirmLabel="Quitter la partie ?"
-              onConfirm={g.leave}
-              className="bg-neutral text-neutral-fg hover:bg-neutral-hover"
-            />
-          }
-        />
-      }
-    />
+    <>
+      {/* Outside `GameLayout`, and so outside the layout it chooses — see
+          `LocalPanel`, and `TurnAnnouncer` itself. */}
+      <TurnAnnouncer state={state} you={controller.you} />
+      <GameLayout
+        hint={
+          <>
+            Vous jouez les {SIDE_PLURAL[controller.you]}. Faites glisser un pion là où il va, ou cliquez-le puis sa
+            destination.
+            <ShortcutHint />
+          </>
+        }
+        status={
+          <div className="flex w-full flex-col gap-2">
+            {g.status === 'disconnected' && <Banner tone="error">{g.error ?? 'Connexion perdue.'}</Banner>}
+            <TurnStatus state={state} you={controller.you} />
+          </div>
+        }
+        board={<Board controller={controller} />}
+        controls={
+          <Controls
+            dice={<Dice state={state} />}
+            primary={
+              <TurnControls
+                canRoll={g.canRoll}
+                canDouble={g.myPlayer != null && canDouble(state, g.myPlayer)}
+                isDoubleToYou={doubleToMe}
+                isHolding={g.selectedFrom !== null}
+                autoRoll={g.autoRoll}
+                onRoll={g.rollDice}
+                onAutoRollChange={g.setAutoRoll}
+                onDouble={g.double}
+                onRespond={g.respond}
+                onClearSelection={g.clearSelection}
+              />
+            }
+            danger={
+              /*
+               * "Quitter ?" rather than "Quitter la partie ?": this is the one
+               * `ConfirmButton` that sits in the narrow danger row beside the
+               * dice, and the button sizes to the wider of its two labels. The
+               * long form needed 173px against the 157 the local button takes,
+               * which — now that `CONTROL_BASE` forbids wrapping — was 1px of
+               * horizontal scroll at 344px instead of a wrapped line. The lobby
+               * one below keeps its full wording: it sits in a row that may wrap.
+               */
+              <ConfirmButton
+                label="Quitter"
+                confirmLabel="Quitter ?"
+                onConfirm={g.leave}
+                className="bg-neutral text-neutral-fg hover:bg-neutral-hover"
+              />
+            }
+          />
+        }
+      />
+    </>
   );
 };

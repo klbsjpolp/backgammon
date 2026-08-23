@@ -102,6 +102,30 @@ describe('the fullscreen layout', () => {
     expect(screen.getAllByTestId('app-version')).toHaveLength(1);
   });
 
+  it('keeps the one live region mounted across the toggle, node and all', async () => {
+    // The layout swap rebuilds the status subtree rather than relocating it —
+    // React reconciles by position, and the two branches are different trees. A
+    // live region that goes down and comes back up with its text already in it
+    // announces nothing, which is the failure `TurnStatus` documents. So the
+    // region is a sibling of `GameLayout`, not a child of the part that moves,
+    // and this asserts the *node identity* survives rather than merely that a
+    // region exists on both sides.
+    // Scoped to the sr-only one: `VersionLine` has a polite region of its own
+    // for its "À jour" flash, and that one is visible text rather than the
+    // game's single announcer.
+    const announcer = () => document.querySelectorAll('.sr-only[aria-live="polite"]');
+
+    render(<App />);
+    const before = announcer();
+    expect(before).toHaveLength(1);
+
+    await enterFullscreen();
+
+    const after = announcer();
+    expect(after).toHaveLength(1);
+    expect(after[0]).toBe(before[0]);
+  });
+
   it('drops the hint, which has no row left to sit in', async () => {
     render(<App />);
     expect(screen.getByText(/faites glisser un pion/i)).toBeDefined();
