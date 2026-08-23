@@ -1,3 +1,5 @@
+import { createPortal } from 'react-dom';
+import { useHeaderSlot } from '@/headerSlot';
 import { cn } from '@/lib/cn';
 
 interface GameLayoutProps {
@@ -78,6 +80,10 @@ export const ControlRow = ({ className, children }: { className?: string; childr
  *   landscape — a line of its own at the top of the sidebar, which is the right
  *               of the screen and directly above Roll. The sidebar has height
  *               going spare where the board has none.
+ *
+ * On a roomy screen the danger group leaves this grid altogether and is portaled
+ * into the page header — see {@link useHeaderSlot}. It takes its separating rule
+ * with it, which has nothing left to separate once the row below it is gone.
  */
 export const Controls = ({
   dice,
@@ -87,40 +93,54 @@ export const Controls = ({
   dice: React.ReactNode;
   primary: React.ReactNode;
   danger: React.ReactNode;
-}) => (
-  <div className="grid w-full grid-cols-[1fr_auto_1fr] items-center gap-3">
-    {/*
-     * Reserved at the width of a double — four dice — so that rolling one does
-     * not slide the buttons sideways mid-turn.
-     *
-     * And at the height of one die, because `<Dice>` renders nothing at all
-     * until a roll lands. Where the cell shares a row with the buttons that is
-     * free — a control row is 44px and a die is 30px — but in landscape the
-     * dice have a line of their own at the top of the sidebar, and there an
-     * empty cell collapsed: rolling pushed everything under it 30px down the
-     * screen and the next player's turn pulled it back up. The sidebar is the
-     * one column with height going spare, so it pays the 30px permanently.
-     */}
-    <div
-      className={cn(
-        'col-start-1 col-end-2 row-start-1 flex min-h-[1em] min-w-33 justify-end text-3xl',
-        'max-sm:row-start-3 max-sm:justify-start',
-        'compact:col-end-4 compact:row-start-1 compact:justify-start',
+}) => {
+  const headerSlot = useHeaderSlot();
+
+  return (
+    <div className="grid w-full grid-cols-[1fr_auto_1fr] items-center gap-3">
+      {/*
+       * Reserved at the width of a double — four dice — so that rolling one does
+       * not slide the buttons sideways mid-turn.
+       *
+       * And at the height of one die, because `<Dice>` renders nothing at all
+       * until a roll lands. Where the cell shares a row with the buttons that is
+       * free — a control row is 44px and a die is 30px — but in landscape the
+       * dice have a line of their own at the top of the sidebar, and there an
+       * empty cell collapsed: rolling pushed everything under it 30px down the
+       * screen and the next player's turn pulled it back up. The sidebar is the
+       * one column with height going spare, so it pays the 30px permanently.
+       */}
+      <div
+        className={cn(
+          'col-start-1 col-end-2 row-start-1 flex min-h-[1em] min-w-33 justify-end text-3xl',
+          'max-sm:row-start-3 max-sm:justify-start',
+          'compact:col-end-4 compact:row-start-1 compact:justify-start',
+        )}
+      >
+        {dice}
+      </div>
+
+      <ControlRow className="col-start-2 col-end-3 row-start-1 w-full max-sm:col-start-1 max-sm:col-end-4 compact:col-start-1 compact:col-end-4 compact:row-start-2">
+        {primary}
+      </ControlRow>
+
+      {headerSlot ? (
+        // The header row is already a group of chrome, so the buttons need no
+        // rule to be told apart from the play controls — they are now the far
+        // side of the board from them, which is more distance than the rule
+        // ever bought.
+        createPortal(<div className="flex items-center gap-2">{danger}</div>, headerSlot)
+      ) : (
+        <>
+          {/* Its own element rather than a border on the row below, which now starts
+            in the second column and would draw a rule only as wide as its button. */}
+          <div className="col-start-1 col-end-4 row-start-2 h-px w-full max-w-xs justify-self-center bg-line compact:row-start-3 compact:max-w-none" />
+
+          <ControlRow className="col-start-2 col-end-3 row-start-3 w-full compact:col-start-1 compact:col-end-4 compact:row-start-4 compact:grid-cols-1">
+            {danger}
+          </ControlRow>
+        </>
       )}
-    >
-      {dice}
     </div>
-
-    <ControlRow className="col-start-2 col-end-3 row-start-1 w-full max-sm:col-start-1 max-sm:col-end-4 compact:col-start-1 compact:col-end-4 compact:row-start-2">
-      {primary}
-    </ControlRow>
-
-    {/* Its own element rather than a border on the row below, which now starts
-      in the second column and would draw a rule only as wide as its button. */}
-    <div className="col-start-1 col-end-4 row-start-2 h-px w-full max-w-xs justify-self-center bg-line compact:row-start-3 compact:max-w-none" />
-
-    <ControlRow className="col-start-2 col-end-3 row-start-3 w-full compact:col-start-1 compact:col-end-4 compact:row-start-4 compact:grid-cols-1">
-      {danger}
-    </ControlRow>
-  </div>
-);
+  );
+};
