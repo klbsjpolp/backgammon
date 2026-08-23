@@ -16,6 +16,7 @@ import { SIDE, SIDE_PLURAL } from '@/lib/french';
 import { barPile, describeMotions, offPile, pointPile, type CheckerMotion, type PileId } from '@/lib/boardDiff';
 import { outerChecker } from '@/lib/checkerStack';
 import { centreOf, flyChecker, FLIGHT_MS, HIT_DELAY_MS, HIT_FLIGHT_MS, type StopFlight } from '@/lib/checkerFlight';
+import { useBoardBand } from '@/boardBand';
 import { useCheckerDrag, type CheckerDrag, type DragRelease } from '@/useCheckerDrag';
 
 /** Minimal surface the board needs; satisfied by both the local and online games. */
@@ -513,6 +514,7 @@ const useBoardClicks = (controller: BoardController, board: BoardState) => {
 
 export const Board = ({ controller }: { controller: BoardController }) => {
   const { state, you, selectableFroms, selectedFrom, targets, targetsFrom, selectFrom, moveChecker } = controller;
+  const band = useBoardBand();
   const board = state.board;
   const them = opponent(you);
   const { top, bottom } = rowsFor(you);
@@ -594,6 +596,10 @@ export const Board = ({ controller }: { controller: BoardController }) => {
             />
           </div>
         </div>
+
+        {/* Inside `.board-fit` rather than around it, so it inherits `--pt` and
+            can line its columns up with the frame's own — see `boardBand.ts`. */}
+        {band}
       </div>
       {drag && <DragGhost drag={drag} />}
     </div>

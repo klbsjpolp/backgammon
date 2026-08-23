@@ -1,4 +1,6 @@
 import { createPortal } from 'react-dom';
+import { BoardBandContext } from '@/boardBand';
+import { useFullscreenState } from '@/fullscreen';
 import { useHeaderSlot } from '@/headerSlot';
 import { cn } from '@/lib/cn';
 
@@ -23,29 +25,74 @@ export const ShortcutHint = () => (
 );
 
 /**
+ * Fullscreen moves the controls and the status *inside* the board, into a band
+ * opened between its two halves — see the `body[data-fullscreen]` rule in
+ * `index.css`, which makes the frame tall enough that `justify-between` pushes
+ * the point rows apart and leaves the gap this sits in.
+ *
+ * It is the same trade the whole fullscreen mode is: a strip of felt that was
+ * drawing nothing costs the board no height, where the two rows under it cost it
+ * theirs. The band is an overlay rather than a row of the board's own flex, which
+ * would have meant restructuring a frame whose bar and trays deliberately span
+ * its full height.
+ *
+ * `pointer-events-none` on the band and `auto` on its two halves: the gap has no
+ * points in it, but the band's box is a rectangle and the row edges are close.
+ */
+const FullscreenBand = ({ status, controls }: Pick<GameLayoutProps, 'status' | 'controls'>) => (
+  <div className="pointer-events-none absolute inset-x-0 top-1/2 flex -translate-y-1/2 items-center gap-board-gutter px-board-pad">
+    {/*
+     * The three widths are the frame's own, in the frame's own unit: six points
+     * and the five gutters between them, then the bar, then everything left.
+     * The middle one is empty on purpose — the bar centres its checkers, so a
+     * player entering from the bar has them exactly here, and a panel laid over
+     * the bar would hide both them and the target they have to be dropped on.
+     */}
+    <div className="pointer-events-auto flex w-[calc(var(--pt)*6.6)] items-center justify-center">{controls}</div>
+    <div className="w-board-bar" />
+    {/* `min-w-0`, or a long result — "Noir gagne un backgammon" — pushes the
+        controls out of their half instead of wrapping inside its own. */}
+    <div className="pointer-events-auto min-w-0 flex-1">{status}</div>
+  </div>
+);
+
+/**
  * Portrait stacks status → board → controls. Landscape phones are too short for
  * that (the buttons end up below the fold, right where a thumb rests), so the
  * board moves to the left and everything else becomes a column beside it.
+ * Fullscreen puts both inside the board — see {@link FullscreenBand}.
  */
-export const GameLayout = ({ status, board, controls, hint }: GameLayoutProps) => (
-  <div
-    className={cn(
-      'grid w-full justify-items-center gap-3',
-      // The sidebar is the tallest thing on a landscape phone once the dice
-      // hold their line, and 320px of height is 4px short of it — which the
-      // rows give up more cheaply than the column gap beside the board does.
-      'compact:grid-cols-[auto_minmax(11rem,15rem)] compact:items-start compact:gap-x-4 compact:gap-y-3',
-    )}
-  >
-    <div className="w-full compact:col-start-2 compact:row-start-1">{status}</div>
-    <div className="compact:col-start-1 compact:row-span-3 compact:row-start-1">{board}</div>
-    <div className="w-full compact:col-start-2 compact:row-start-2">{controls}</div>
-    {/* Landscape has no height to spare once take/drop show up: the hint goes
-        first — fullscreen for the same reason, once the board is the only
-        thing spending it. */}
-    <p className="text-center text-xs text-muted compact:hidden fullscreen:hidden">{hint}</p>
-  </div>
-);
+export const GameLayout = ({ status, board, controls, hint }: GameLayoutProps) => {
+  const { isFullscreen } = useFullscreenState();
+
+  if (isFullscreen) {
+    return (
+      // The band is handed to `<Board>` rather than drawn here: it has to be a
+      // child of `.board-fit` to inherit `--pt`. See `boardBand.ts`.
+      <BoardBandContext.Provider value={<FullscreenBand status={status} controls={controls} />}>
+        <div className="grid w-full justify-items-center">{board}</div>
+      </BoardBandContext.Provider>
+    );
+  }
+
+  return (
+    <div
+      className={cn(
+        'grid w-full justify-items-center gap-3',
+        // The sidebar is the tallest thing on a landscape phone once the dice
+        // hold their line, and 320px of height is 4px short of it — which the
+        // rows give up more cheaply than the column gap beside the board does.
+        'compact:grid-cols-[auto_minmax(11rem,15rem)] compact:items-start compact:gap-x-4 compact:gap-y-3',
+      )}
+    >
+      <div className="w-full compact:col-start-2 compact:row-start-1">{status}</div>
+      <div className="compact:col-start-1 compact:row-span-3 compact:row-start-1">{board}</div>
+      <div className="w-full compact:col-start-2 compact:row-start-2">{controls}</div>
+      {/* Landscape has no height to spare once take/drop show up: the hint goes first. */}
+      <p className="text-center text-xs text-muted compact:hidden">{hint}</p>
+    </div>
+  );
+};
 
 /**
  * One group of buttons: a centred wrapping row in portrait, and a two-up grid in
@@ -97,7 +144,10 @@ export const Controls = ({
   const headerSlot = useHeaderSlot();
 
   return (
-    <div className="grid w-full grid-cols-[1fr_auto_1fr] items-center gap-3">
+    // In the board's band the three columns have nothing to centre against —
+    // the band's own half is the frame — so the grid collapses to one row and
+    // the dice simply lead it, immediately left of Roll as on a roomy page.
+    <div className="grid w-full grid-cols-[1fr_auto_1fr] items-center gap-3 fullscreen:flex fullscreen:justify-center">
       {/*
        * Reserved at the width of a double — four dice — so that rolling one does
        * not slide the buttons sideways mid-turn.
@@ -128,7 +178,7 @@ export const Controls = ({
        * the page then scrolled by exactly that on every screen of the game.
        * The controls that give when it is tight are named in `TurnControls`.
        */}
-      <ControlRow className="col-start-2 col-end-3 row-start-1 w-full max-sm:col-start-1 max-sm:col-end-4 max-sm:flex-nowrap compact:col-start-1 compact:col-end-4 compact:row-start-2">
+      <ControlRow className="col-start-2 col-end-3 row-start-1 w-full max-sm:col-start-1 max-sm:col-end-4 max-sm:flex-nowrap compact:col-start-1 compact:col-end-4 compact:row-start-2 fullscreen:w-auto fullscreen:flex-nowrap">
         {primary}
       </ControlRow>
 

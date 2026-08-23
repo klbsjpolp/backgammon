@@ -229,11 +229,35 @@ body[data-drag-active] {
  * address bar — is gone, which is room the formula above never sees, since it
  * only ever reads the viewport the browser still reports. The 2.5rem cap on
  * `--pt` was chosen for a windowed desktop; fullscreen has enough real estate
- * to raise it. `--avail-h` reclaims what App.tsx and GameLayout give back —
- * the footer and the hint line, plus the tighter padding — so the number here
- * has to move if that reservation ever does.
+ * to raise it.
+ *
+ * Only the header row is left outside the board here — it takes the title and
+ * the version line onto the switches' line — so `--avail-h` reserves that one
+ * row, the page's padding and its single gap, and nothing else.
+ *
+ * The divisor grows instead, from 8.6 to 10.7, because the board itself is
+ * taller now: `.board-frame` below opens a band between its two halves for the
+ * controls and the status. That is the whole trade — the strip of felt between
+ * the point rows was drawing nothing, and it costs the board far less than two
+ * rows of page chrome under it did.
  */
 body[data-fullscreen] .board-fit {
-  --avail-h: calc(100svh - 14.75rem);
-  --pt: clamp(1rem, min(calc(var(--avail-w) / 17), calc(var(--avail-h) / 8.6)), 9rem);
+  --avail-h: calc(100svh - 5rem);
+  --pt: clamp(1rem, min(calc(var(--avail-w) / 17), calc(var(--avail-h) / 10.7)), 9rem);
+}
+
+/*
+ * The band. Nothing here places it: the frame is a row of columns that are each
+ * `justify-between`, so height given to the frame is height that opens between
+ * every column's top and bottom row at once — points, bar and trays together.
+ * `GameLayout` then draws into the gap with an overlay.
+ *
+ * The floor is what a control row needs (44px) plus air. It only binds on a
+ * short fullscreen window, where `--pt` is small enough that 2.1 of it is less
+ * than a button; the divisor above is what pays for the band everywhere else,
+ * so if this floor is doing the work the page will start to scroll and the
+ * divisor is what wants raising.
+ */
+body[data-fullscreen] .board-frame {
+  min-height: calc(var(--pt) * 8.32 + max(3.5rem, calc(var(--pt) * 2.1)));
 }

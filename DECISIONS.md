@@ -584,10 +584,51 @@ switches stay, on purpose: the one thing still needed once the game is the only 
 screen is a way back out, and hiding it too would strand the toggle itself as a fixed-position
 exile with nowhere natural to sit once the row that held it collapsed.
 
-The state lives on the DOM attribute rather than threaded through props, matching
-`data-drag-active` and `data-stack`: every consumer — the board's `--pt` cap, the footer, the
-hint line — is already a CSS selector, not a component that would otherwise need the flag
-passed down through `GameLayout`.
+The state lives on the DOM attribute wherever the consumer is a CSS selector, matching
+`data-drag-active` and `data-stack` — the `--pt` cap, the header's columns, the page's own
+padding. It is also read once in `App` and handed down through `FullscreenContext`, because
+two consumers do not change how something looks but _where it is drawn_: the version line,
+which moves into the header row, and the controls and status, which move inside the board.
+Neither is a move CSS can make, and a second `useFullscreen()` would put two effects on the
+same attribute, racing to set and clear it.
+
+### Everything that can be, is inside the board
+
+The first version kept the page's own rows and only grew the board into what was left. That
+was still three things stacked outside it — header, status, controls — each costing the board
+its height, on the one screen with height going spare. So fullscreen now leaves **one** row
+outside: the title, the switches and the version line share it, as a three-column grid rather
+than `justify-between`, or the switches would only sit on the page's centre when the title and
+the version happened to be the same width.
+
+The status and the controls move into the board, into a band opened between its two halves.
+Nothing places that band: the frame is a row of columns that are each `justify-between`, so
+height given to the frame opens between every column's top and bottom row at once — points,
+bar and trays together — and `GameLayout` draws into the gap. It costs the board a strip of
+felt that was drawing nothing, against two rows of chrome that were costing it real height:
+at 1920×1080 the board went from 1532×763 through 1657×824 to **1579×974**, and at 2560×1440
+to 2144×1324.
+
+Three things had to be true of that band, and each was found by getting it wrong first:
+
+- It is drawn **inside `.board-fit`**, reaching `<Board>` through `BoardBandContext` rather
+  than a prop, because the panels build the board and hand it to `GameLayout` already
+  constructed. That is not indirection for its own sake: `--pt` is declared on `.board-fit`,
+  so anywhere else the band's widths silently resolve to nothing — the first version's
+  `left-board-pad` was dropped by the browser as an invalid `calc`, and the band quietly
+  spanned the page instead of the frame.
+- Its columns are **the frame's own**, in the frame's own unit: six points and their five
+  gutters, then the bar, then what is left. The middle one is empty on purpose. The bar
+  centres its checkers, so a player entering from the bar has them exactly where a band laid
+  across the full width would hide them — along with the target they have to be dropped on.
+- The controls collapse to a single unwrapped row there. `Controls` is a three-column grid so
+  that the buttons stay on the page's centre whatever the dice take; inside half a board there
+  is nothing to centre against, so the grid becomes a flex row and the dice simply lead it.
+
+`--avail-h` then reserves that one header row and nothing else, and the divisor grows from 8.6
+to 10.7 because the board itself is taller. The band's own floor is `max(3.5rem, 2.1 × --pt)`:
+the multiple is what pays for it on a real fullscreen screen, and the 3.5rem is there so a
+short window still gets a band a 44px button fits in.
 
 The cap itself moved twice: to 6rem, then to 9rem. 6rem turned out to already be the binding
 limit on a 1920×1080 screen (`--avail-h` gives less than that once the reservation is paid),

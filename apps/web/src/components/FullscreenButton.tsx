@@ -1,5 +1,5 @@
+import { useFullscreenState } from '@/fullscreen';
 import { cn } from '@/lib/cn';
-import { useFullscreen } from '@/useFullscreen';
 
 /**
  * Corner brackets, drawn rather than borrowed from a font — see `Dice` for why
@@ -33,7 +33,7 @@ const FullscreenIcon = ({ active }: { active: boolean }) => (
  * or is already using its whole screen via the portrait/compact layouts.
  */
 export const FullscreenButton = ({ className }: { className?: string }) => {
-  const { isFullscreen, isSupported, toggle } = useFullscreen();
+  const { isFullscreen, isSupported, toggle } = useFullscreenState();
 
   if (!isSupported) return null;
 

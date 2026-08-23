@@ -1,6 +1,23 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, fireEvent, render, screen } from '@testing-library/react';
+import { FullscreenContext } from '@/fullscreen';
+import { useFullscreen } from '@/useFullscreen';
 import { FullscreenButton } from './FullscreenButton';
+
+/**
+ * The button reads the state rather than owning it — `App` holds the one copy,
+ * because fullscreen also decides where the version line and the controls are
+ * drawn. This harness is that wiring, so these stay tests of the hook and the
+ * button together rather than of the button's props.
+ */
+const Fullscreenable = () => {
+  const fullscreen = useFullscreen();
+  return (
+    <FullscreenContext.Provider value={fullscreen}>
+      <FullscreenButton />
+    </FullscreenContext.Provider>
+  );
+};
 
 /**
  * jsdom has no Fullscreen API of its own, so each test wires up just enough of
@@ -39,13 +56,13 @@ describe('FullscreenButton', () => {
 
   it('renders nothing where the Fullscreen API does not exist', () => {
     Object.defineProperty(document, 'fullscreenEnabled', { value: false, configurable: true });
-    render(<FullscreenButton />);
+    render(<Fullscreenable />);
     expect(screen.queryByRole('button')).toBeNull();
   });
 
   it('enters and leaves fullscreen from the one button, tracking the real state', async () => {
     installFullscreenApi();
-    render(<FullscreenButton />);
+    render(<Fullscreenable />);
 
     const button = screen.getByRole('button', { name: 'Plein écran' });
     expect(button.getAttribute('aria-pressed')).toBe('false');
@@ -68,7 +85,7 @@ describe('FullscreenButton', () => {
 
   it('sets body[data-fullscreen] only while active, for the CSS that reads it', async () => {
     installFullscreenApi();
-    render(<FullscreenButton />);
+    render(<Fullscreenable />);
 
     expect(document.body.hasAttribute('data-fullscreen')).toBe(false);
 
@@ -94,7 +111,7 @@ describe('FullscreenButton cleanup', () => {
   });
 
   it('drops body[data-fullscreen] on unmount rather than leaving the board stuck grown', async () => {
-    const { unmount } = render(<FullscreenButton />);
+    const { unmount } = render(<Fullscreenable />);
 
     await act(async () => {
       fireEvent.click(screen.getByRole('button'));
