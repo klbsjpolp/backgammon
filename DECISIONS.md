@@ -501,6 +501,43 @@ left to throw away, and the guard was then only friction between the result and 
 game. Every button carries a 44px minimum touch target, and the page reserves
 `env(safe-area-inset-bottom)`.
 
+## Full screen
+
+On a desktop monitor `--pt` was still capped at the 2.5rem chosen for a windowed browser, so
+a 1920×1080 screen and a 13" laptop drew the identical board — all the extra room outside the
+cap went to nothing. The toggle (`FullscreenButton`, `useFullscreen`) requests the real
+Fullscreen API on `document.documentElement` rather than adding a CSS-only "big board" mode:
+the browser's own chrome (tabs, address bar) is gone once it succeeds, and `100svh` reports
+the difference for free, without a second formula to keep in step with the first.
+
+Raising the cap alone overflowed the page: `--avail-h`'s reservation was tuned for the header,
+hint line and version footer all still on screen, and those numbers do not shrink just because
+fullscreen is active. So the hint and the footer go, on the same `body[data-fullscreen]`
+attribute selector the drag lock already sets on `<body>` — a `@custom-variant fullscreen
+(body[data-fullscreen] &)` reads exactly like `compact`, and `--avail-h`'s reservation drops
+with them, from 20.25rem windowed to 18.75rem in fullscreen. The header and its mode/theme
+switches stay, on purpose: the one thing still needed once the game is the only thing on
+screen is a way back out, and hiding it too would strand the toggle itself as a fixed-position
+exile with nowhere natural to sit once the row that held it collapsed.
+
+The state lives on the DOM attribute rather than threaded through props, matching
+`data-drag-active` and `data-stack`: every consumer — the board's `--pt` cap, the footer, the
+hint line — is already a CSS selector, not a component that would otherwise need the flag
+passed down through `GameLayout`.
+
+The cap itself moved twice: to 6rem, then to 9rem. 6rem turned out to already be the binding
+limit on a 1920×1080 screen (`--avail-h` gives less than that once the reservation is paid),
+but a 2560×1440 or 4K display was hitting the cap rather than the geometry, so the extra
+headroom was free — measured at 1532×763 (1920×1080), 2236×1111 (2560×1440) and 2428×1206
+(3840×2160), all with zero scroll overflow. The number came from measuring, not guessing:
+each reservation change was checked against real viewport sizes with a headless browser before
+being kept, the same discipline the phone breakpoints above were tuned with.
+
+Restricted to screens roomy enough to be worth it — `max-sm:hidden compact:hidden` on the
+button, stacked on `isSupported` dropping it outright where the API does not exist (iOS
+Safari) — since a phone is either already using its whole screen through the portrait/compact
+layouts above, or cannot ask for fullscreen at all.
+
 ## Nothing on the page moves during a game
 
 The board was measured at every resolution it is drawn at, playing a real game rather

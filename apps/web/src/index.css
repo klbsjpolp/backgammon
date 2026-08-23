@@ -8,6 +8,14 @@
  */
 @custom-variant compact (@media (orientation: landscape) and (max-height: 640px));
 
+/*
+ * The Fullscreen API, toggled from the header (see FullscreenButton). A plain
+ * attribute selector rather than a media query — nothing about the viewport
+ * changes that CSS can detect on its own, so the state has to come from JS,
+ * same as `body[data-drag-active]` below.
+ */
+@custom-variant fullscreen (body[data-fullscreen] &);
+
 html,
 body,
 #root {
@@ -209,4 +217,18 @@ body[data-drag-active] {
   .board-label {
     transform: rotate(-90deg);
   }
+}
+
+/*
+ * Real fullscreen (see FullscreenButton): the browser's own chrome — tabs,
+ * address bar — is gone, which is room the formula above never sees, since it
+ * only ever reads the viewport the browser still reports. The 2.5rem cap on
+ * `--pt` was chosen for a windowed desktop; fullscreen has enough real estate
+ * to raise it. `--avail-h` reclaims what App.tsx and GameLayout give back —
+ * the footer and the hint line, plus the tighter padding — so the number here
+ * has to move if that reservation ever does.
+ */
+body[data-fullscreen] .board-fit {
+  --avail-h: calc(100svh - 18.75rem);
+  --pt: clamp(1rem, min(calc(var(--avail-w) / 17), calc(var(--avail-h) / 8.6)), 9rem);
 }
