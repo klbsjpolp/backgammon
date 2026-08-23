@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { createInitialState, type GameState } from '@backgammon/core';
+import { FullscreenContext } from '@/fullscreen';
 import { Dice } from './Dice';
 
 const moving = (roll: [number, number], remaining: number[]): GameState => ({
@@ -68,6 +69,35 @@ describe('Dice', () => {
   it('draws nothing before the roll', () => {
     render(<Dice state={{ ...createInitialState('white'), phase: 'rolling', roll: null, remaining: [] }} />);
     expect(screen.queryByLabelText('dice')).toBeNull();
+  });
+});
+
+describe('Dice — the size the caller asked for', () => {
+  /**
+   * The one thing a die's size must never be is a flat pixel count. `Controls`
+   * reserves the dice cell at the width of four of them, measured against the
+   * `1em` the caller sets — a fixed 40px made a double 171px wide against that
+   * 132px reservation, and on a 360px phone the fourth die was drawn under the
+   * new-game button. Fullscreen is the one exception, and it is derived from
+   * the board's own unit rather than fixed, because the buttons beside the dice
+   * cost the same pixels whatever the board's size.
+   */
+  const die = (container: HTMLElement) => container.querySelector('svg[data-face]');
+
+  it('takes its size from the caller everywhere but fullscreen', () => {
+    const { container } = render(<Dice state={moving([6, 5], [6, 5])} />);
+    expect(die(container)?.getAttribute('class')).toContain('size-[1em]');
+  });
+
+  it('takes it from the board in fullscreen, where the caller has no say', () => {
+    const { container } = render(
+      <FullscreenContext.Provider value={{ isFullscreen: true, isSupported: true, toggle: () => {} }}>
+        <Dice state={moving([6, 5], [6, 5])} />
+      </FullscreenContext.Provider>,
+    );
+    const cls = die(container)?.getAttribute('class');
+    expect(cls).toContain('size-board-die');
+    expect(cls).not.toContain('size-[1em]');
   });
 });
 
