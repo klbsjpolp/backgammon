@@ -214,7 +214,7 @@ body[data-drag-active] {
        scrolled a hair on every screen. This is what the chrome actually
        occupies, checked from 360px up — below that `--pt` is already pinned at
        its 1rem floor and no reservation can buy the board anything. */
-    --avail-w: calc(100svh - 19.875rem - env(safe-area-inset-bottom));
+    --avail-w: calc(100svh - 2rem - env(safe-area-inset-bottom));
     /* The page padding, and nothing else: with the dice up in the header row the
        turned board has the full width of the screen to be deep in. A narrow phone
        is the one that notices — this is what limits it, where a tall one is

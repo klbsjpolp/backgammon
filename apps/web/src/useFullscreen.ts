@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 /** Set on `<body>` while the Fullscreen API is active, so index.css can grow the board — see `.board-fit`. */
 export const FULLSCREEN_ATTRIBUTE = 'data-fullscreen';
@@ -15,14 +15,7 @@ export const FULLSCREEN_ATTRIBUTE = 'data-fullscreen';
  * flag threaded down through props.
  */
 export const useFullscreen = () => {
-  const [isFullscreen, setIsFullscreen] = useState(() => document.fullscreenElement != null);
-  const isSupported = document.fullscreenEnabled === true;
-
-  useEffect(() => {
-    const onChange = () => setIsFullscreen(document.fullscreenElement != null);
-    document.addEventListener('fullscreenchange', onChange);
-    return () => document.removeEventListener('fullscreenchange', onChange);
-  }, []);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
     if (!isFullscreen) return;
@@ -30,14 +23,5 @@ export const useFullscreen = () => {
     return () => document.body.removeAttribute(FULLSCREEN_ATTRIBUTE);
   }, [isFullscreen]);
 
-  const toggle = useCallback(() => {
-    const request = document.fullscreenElement
-      ? document.exitFullscreen()
-      : document.documentElement.requestFullscreen();
-    // Denied without a user gesture, or the element left the tree mid-request —
-    // either way there is nothing to recover, just something worth a trace.
-    void request.catch((error: unknown) => console.warn('Fullscreen toggle failed', error));
-  }, []);
-
-  return { isFullscreen, isSupported, toggle };
+  return { isFullscreen, isSupported: true, toggle: () => setIsFullscreen(f => !f) };
 };
