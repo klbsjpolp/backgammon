@@ -4,10 +4,9 @@ import { useEffect, useState } from 'react';
 export const FULLSCREEN_ATTRIBUTE = 'data-fullscreen';
 
 /**
- * Wraps the Fullscreen API on `document.documentElement`. `isSupported` is
- * false on browsers that never fire `fullscreenchange` at all (iOS Safari),
- * so the caller can drop the button rather than offer one that silently does
- * nothing.
+ * A CSS-only fullscreen: local state drives `body[data-fullscreen]`, and no
+ * `requestFullscreen`/`exitFullscreen` call is made. `isSupported` is always
+ * true, since there is nothing left that a browser could fail to support.
  *
  * The DOM attribute is the state every consumer actually wants: the board's
  * `--pt` cap, the footer and the hint line are CSS selectors already (see

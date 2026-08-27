@@ -313,6 +313,8 @@ describe('engine invariants', () => {
   it('conserves thirty checkers and never mixes colours on a point', () => {
     // Random legal play, which is the only way to reach the awkward positions
     // (dancing off a closed board, forced bear-offs) that hand-written cases miss.
+    // 25 seeds of this routinely run close to vitest's 5000ms default, so it
+    // needs its own longer budget rather than tripping on machine variance.
     for (let seed = 1; seed <= 25; seed++) {
       const rng = createRng(seed * 7919);
       let s = createInitialState(seed % 2 ? 'white' : 'black');
@@ -337,7 +339,7 @@ describe('engine invariants', () => {
       expect(s.phase, `seed ${seed} never finished`).toBe('gameOver');
       expect(s.board.off[s.result!.winner]).toBe(15);
     }
-  });
+  }, 20000);
 
   it('only offers moves that belong to a longest sequence', () => {
     // The use-both-dice rule, checked against a brute force that shares no code

@@ -28,9 +28,10 @@ const FullscreenIcon = ({ active }: { active: boolean }) => (
 /**
  * Grows the board past the cap a windowed desktop leaves headroom for — see
  * the `body[data-fullscreen]` rule in index.css. Restricted to screens roomy
- * enough for it to be worth the real Fullscreen API round trip: a phone
- * either has no support for it (iOS Safari, caught below by `isSupported`)
- * or is already using its whole screen via the portrait/compact layouts.
+ * enough for it to be worth offering: a phone is already using its whole
+ * screen via the portrait/compact layouts. `isSupported` gates on the
+ * provider rather than the browser — a panel rendered outside it (a test)
+ * gets no button, per {@link FullscreenContext}'s default.
  */
 export const FullscreenButton = ({ className }: { className?: string }) => {
   const { isFullscreen, isSupported, toggle } = useFullscreenState();
