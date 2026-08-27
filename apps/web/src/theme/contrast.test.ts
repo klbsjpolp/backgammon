@@ -173,7 +173,10 @@ describe.each(THEMES.map((theme) => theme.id))('%s', (id) => {
       `checker-${side}-fg on checker-${side}: ${Math.max(pip, MIN_NON_TEXT_CONTRAST).toFixed(2)}`,
     );
 
-    const edge = Math.max(contrast(vars[`checker-${side}`], vars.canvas), contrast(vars[`checker-${side}-line`], vars.canvas));
+    const edge = Math.max(
+      contrast(vars[`checker-${side}`], vars.canvas),
+      contrast(vars[`checker-${side}-line`], vars.canvas),
+    );
     expect(`checker-${side} on canvas: ${edge.toFixed(2)}`).toBe(
       `checker-${side} on canvas: ${Math.max(edge, MIN_NON_TEXT_CONTRAST).toFixed(2)}`,
     );
