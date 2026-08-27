@@ -161,7 +161,7 @@ describe('Board', () => {
     const points = [...state.board.points];
     points[2] = 2;
     points[4] = 5;
-    points[5] = 9; // deeper than five, which is as deep as the stack is ever drawn
+    points[5] = 9; // deeper than five, which is where the old cap used to kick in
     render(<Board controller={controllerFor('white', { state: { ...state, board: { ...state.board, points } } })} />);
 
     const depthOn = (point: number) =>
@@ -175,7 +175,7 @@ describe('Board', () => {
     // until a rotation forced a recalc.
     expect(depthOn(3)).toBe('2');
     expect(depthOn(5)).toBe('5');
-    expect(depthOn(6)).toBe('5');
+    expect(depthOn(6)).toBe('9');
   });
 });
 
