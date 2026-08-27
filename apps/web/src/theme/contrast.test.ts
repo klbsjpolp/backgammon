@@ -163,17 +163,20 @@ describe.each(THEMES.map((theme) => theme.id))('%s', (id) => {
     }
   });
 
-  // The dice are drawn, not typed, so a theme now picks two colours for them and
-  // both have somewhere to be legible: the pips against the face they sit on, and
-  // the face against the page it floats on with nothing but its own fill to draw
-  // its edge. A theme that gives the die the canvas's own luminance loses the die.
-  it('the dice read against their face and the page', () => {
-    for (const [name, against] of [
-      ['dice-pip on dice', contrast(vars['dice-pip'], vars.dice)],
-      ['dice on canvas', contrast(vars.dice, vars.canvas)],
-    ] as const) {
-      expect(`${name}: ${against.toFixed(2)}`).toBe(`${name}: ${Math.max(against, MIN_NON_TEXT_CONTRAST).toFixed(2)}`);
-    }
+  // The dice are drawn in the rolling player's own checker colour (rim included),
+  // so both have somewhere to be legible: the pips against the face they sit on,
+  // and the face — or, where the face alone cannot, its rim — against the page it
+  // floats on rather than the felt a checker sits on.
+  it.each(['light', 'dark'])('the %s die reads against its face and the page', (side) => {
+    const pip = contrast(vars[`checker-${side}-fg`], vars[`checker-${side}`]);
+    expect(`checker-${side}-fg on checker-${side}: ${pip.toFixed(2)}`).toBe(
+      `checker-${side}-fg on checker-${side}: ${Math.max(pip, MIN_NON_TEXT_CONTRAST).toFixed(2)}`,
+    );
+
+    const edge = Math.max(contrast(vars[`checker-${side}`], vars.canvas), contrast(vars[`checker-${side}-line`], vars.canvas));
+    expect(`checker-${side} on canvas: ${edge.toFixed(2)}`).toBe(
+      `checker-${side} on canvas: ${Math.max(edge, MIN_NON_TEXT_CONTRAST).toFixed(2)}`,
+    );
   });
 
   // Either the body or the rim has to draw the checker's edge. In the dark themes

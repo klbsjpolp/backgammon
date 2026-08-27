@@ -1,4 +1,4 @@
-import type { GameState } from '@backgammon/core';
+import type { GameState, Player } from '@backgammon/core';
 import { cn } from '@/lib/cn';
 import { useFullscreenState } from '@/fullscreen.ts';
 
@@ -45,6 +45,8 @@ interface Face {
   value: number;
   /** Already spent on a checker move — drawn faded rather than dropped. */
   played: boolean;
+  /** Whose roll this is — the die is drawn in that player's own checker colour. */
+  player: Player;
 }
 
 /**
@@ -58,8 +60,16 @@ interface Face {
  *
  * Sized in `em` so the size stays the caller's, set with `text-*` as before.
  */
-const Die = ({ value, played }: Face) => {
+const Die = ({ value, played, player }: Face) => {
   const { isFullscreen } = useFullscreenState();
+  // Same colours as that player's checker, and the same reason the checker needs
+  // a rim: the dark theme's dark checker sits within a hair of the canvas's own
+  // luminance (and the light theme's pale one of its canvas), so the die would
+  // vanish into the page behind it without the line to draw its edge.
+  const [face, line, pip] =
+    player === 'white'
+      ? ['fill-checker-light', 'stroke-checker-light-line', 'fill-checker-light-fg']
+      : ['fill-checker-dark', 'stroke-checker-dark-line', 'fill-checker-dark-fg'];
   return (
     <svg
       viewBox="0 0 100 100"
@@ -86,9 +96,9 @@ const Die = ({ value, played }: Face) => {
         isFullscreen ? 'size-board-die' : 'size-[1em]',
       )}
     >
-      <rect x="2" y="2" width="96" height="96" rx="22" className="fill-dice" />
+      <rect x="2" y="2" width="96" height="96" rx="22" strokeWidth="4" className={cn(face, line)} />
       {PIPS[value]?.map(([cx, cy], i) => (
-        <circle key={i} cx={cx} cy={cy} r="10" className="fill-dice-pip" />
+        <circle key={i} cx={cx} cy={cy} r="10" className={pip} />
       ))}
     </svg>
   );
@@ -100,16 +110,16 @@ const Die = ({ value, played }: Face) => {
  * is matched to it by value — the first face of a value is the one still to play,
  * which is enough to show *how many* of a value are left.
  */
-const facesFor = (roll: readonly [number, number], remaining: readonly number[]): Face[] => {
+const facesFor = (roll: readonly [number, number], remaining: readonly number[], player: Player): Face[] => {
   const values = roll[0] === roll[1] ? [roll[0], roll[0], roll[0], roll[0]] : [roll[0], roll[1]];
   const left = new Map<number, number>();
   for (const value of remaining) left.set(value, (left.get(value) ?? 0) + 1);
 
   return values.map((value) => {
     const count = left.get(value) ?? 0;
-    if (count === 0) return { value, played: true };
+    if (count === 0) return { value, played: true, player };
     left.set(value, count - 1);
-    return { value, played: false };
+    return { value, played: false, player };
   });
 };
 
@@ -129,8 +139,8 @@ export const Dice = ({ state, className }: { state: GameState; className?: strin
 
   return (
     <div role="group" aria-label="dés" className={cn('flex items-center gap-[0.12em] leading-none', className)}>
-      {facesFor(state.roll, state.remaining).map((face, i) => (
-        <Die key={i} value={face.value} played={face.played} />
+      {facesFor(state.roll, state.remaining, state.turn).map((face, i) => (
+        <Die key={i} value={face.value} played={face.played} player={face.player} />
       ))}
       {state.remaining.length > 0 && (
         // The pips carry this to anyone who can see them; a screen reader that

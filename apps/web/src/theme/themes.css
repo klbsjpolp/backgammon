@@ -99,8 +99,6 @@
   --pick: #f9cd53;
   --pick-strong: #fde68a;
   --move: #38bdf8;
-  --dice: #fde68a;
-  --dice-pip: #422006;
 }
 
 /* --- Midnight: cool indigo, for playing with the lights off --------------- */
@@ -172,8 +170,6 @@
   --pick: #818cf8;
   --pick-strong: #c7d2fe;
   --move: #e5a91d;
-  --dice: #c7d2fe;
-  --dice-pip: #1b1f3b;
 }
 
 /* --- Parchment: the one light theme — cream paper and a wooden board ------ */
@@ -269,8 +265,6 @@
   --pick: #983c00;
   --pick-strong: #743206;
   --move: #002864;
-  --dice: #8a4b1d;
-  --dice-pip: #f7ecd8;
 }
 
 /*
@@ -335,6 +329,4 @@
   --color-pick: var(--pick);
   --color-pick-strong: var(--pick-strong);
   --color-move: var(--move);
-  --color-dice: var(--dice);
-  --color-dice-pip: var(--dice-pip);
 }
