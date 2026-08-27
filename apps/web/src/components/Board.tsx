@@ -106,7 +106,7 @@ const Checkers = ({ count, pile, arrivesAt = 'last', lifted = false }: CheckersP
   const n = Math.abs(count);
   if (n === 0) return null;
   const color = checkerColor(count > 0 ? 'white' : 'black');
-  const shown = Math.min(n, 5);
+  const shown = n;
   const outer = arrivesAt === 'first' ? 0 : shown - 1;
   return (
     // `board-stack` is what lets the deepest stacks overlap, and `data-stack` is
