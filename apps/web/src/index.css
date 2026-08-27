@@ -141,8 +141,59 @@ body {
   margin-top: calc(var(--pt) * -0.03);
 }
 
-.board-stack[data-stack='5'] > * + * {
-  margin-top: calc(var(--pt) * -0.25);
+/*
+ * Five and up overlap for real: n checkers of face 0.85 × --pt (the same fraction
+ * --spacing-board-checker uses) packed into an envelope 3.24 × --pt deep, the most
+ * that still reads as a stack rather than a smear. margin = (T − c) / (n − 1) − c,
+ * solved for the envelope depth T with c = 0.85 — one formula standing in for five
+ * hand-tuned numbers, matching each of them to the 0.01 they were rounded to.
+ */
+.board-stack[data-stack='5'] {
+  --board-stack-count: 5;
+}
+.board-stack[data-stack='6'] {
+  --board-stack-count: 6;
+}
+.board-stack[data-stack='7'] {
+  --board-stack-count: 7;
+}
+.board-stack[data-stack='8'] {
+  --board-stack-count: 8;
+}
+.board-stack[data-stack='9'] {
+  --board-stack-count: 9;
+}
+.board-stack[data-stack='10'] {
+  --board-stack-count: 10;
+}
+.board-stack[data-stack='11'] {
+  --board-stack-count: 11;
+}
+.board-stack[data-stack='12'] {
+  --board-stack-count: 12;
+}
+.board-stack[data-stack='13'] {
+  --board-stack-count: 13;
+}
+.board-stack[data-stack='14'] {
+  --board-stack-count: 14;
+}
+.board-stack[data-stack='15'] {
+  --board-stack-count: 15;
+}
+
+.board-stack[data-stack='5'] > * + *,
+.board-stack[data-stack='6'] > * + *,
+.board-stack[data-stack='7'] > * + *,
+.board-stack[data-stack='8'] > * + *,
+.board-stack[data-stack='9'] > * + *,
+.board-stack[data-stack='10'] > * + *,
+.board-stack[data-stack='11'] > * + *,
+.board-stack[data-stack='12'] > * + *,
+.board-stack[data-stack='13'] > * + *,
+.board-stack[data-stack='14'] > * + *,
+.board-stack[data-stack='15'] > * + * {
+  margin-top: calc(var(--pt) * ((3.24 - 0.85) / (var(--board-stack-count) - 1) - 0.85));
 }
 
 /*
