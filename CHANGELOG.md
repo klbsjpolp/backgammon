@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.1.36](https://github.com/klbsjpolp/backgammon/compare/v0.1.35...v0.1.36) (2026-08-27)
+
+### Bug Fixes
+
+* **web:** adjust fullscreen handling and improve CSS variable calculations ([e4e0c84](https://github.com/klbsjpolp/backgammon/commit/e4e0c8407835a496b7ed5ffd11ce231412746922))
 ## [0.1.35](https://github.com/klbsjpolp/backgammon/compare/v0.1.34...v0.1.35) (2026-08-26)
 ## [0.1.34](https://github.com/klbsjpolp/backgammon/compare/v0.1.33...v0.1.34) (2026-08-23)
 
