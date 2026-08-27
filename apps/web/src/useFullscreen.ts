@@ -22,5 +22,5 @@ export const useFullscreen = () => {
     return () => document.body.removeAttribute(FULLSCREEN_ATTRIBUTE);
   }, [isFullscreen]);
 
-  return { isFullscreen, isSupported: true, toggle: () => setIsFullscreen(f => !f) };
+  return { isFullscreen, isSupported: true, toggle: () => setIsFullscreen((f) => !f) };
 };
