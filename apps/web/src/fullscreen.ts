@@ -2,13 +2,13 @@ import { createContext, useContext } from 'react';
 
 export interface FullscreenState {
   isFullscreen: boolean;
-  /** False where the Fullscreen API does not exist at all — iOS Safari. */
+  /** False only for a consumer rendered outside {@link FullscreenContext.Provider} — see its default below. */
   isSupported: boolean;
   toggle: () => void;
 }
 
 /**
- * Whether the page is in real fullscreen, shared rather than read twice.
+ * Whether the board is in the CSS-only fullscreen, shared rather than read twice.
  *
  * `body[data-fullscreen]` already carries this to every consumer that is a CSS
  * selector, and that stays the mechanism for anything CSS can do on its own.
