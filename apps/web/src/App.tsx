@@ -99,7 +99,7 @@ export const App = () => {
         >
           {/*
            * Phones put the title and both switches on one line, and this row must
-           * never become two: the portrait board budgets a fixed 18.5rem of page
+           * never become two: the portrait board budgets a fixed 19.875rem of page
            * chrome in `index.css`, so a second row is ~36px the board never gets
            * back and the controls under it fall past the fold.
            *

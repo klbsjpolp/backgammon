@@ -510,6 +510,20 @@ to play on a phone:
   360px floor this file has documented throughout — or letting the reservation go and
   having the buttons slide when a double lands. Left as it is, deliberately.
 
+- **The reservation is not slack.** `--avail-w` in portrait was cut from 19.875rem to
+  2rem in passing, during work on fullscreen, and the comment above it went on
+  describing the chrome it had stopped reserving, so the file read as though nothing had
+  changed. A portrait phone then drew `--pt` at its 2.5rem cap rather than the 30.9px
+  that fits: the board came out ~30% too tall, 997px of page in an 844px viewport on a
+  390px handset, with the roll button and everything under it past the fold. Nothing failed, because nothing
+  can: `--avail-w` is a hand-maintained count of what the chrome measures, and CSS has no
+  opinion about whether the count is true. The one check that catches it is
+  `document.scrollHeight === document.clientHeight` on a phone-sized viewport, which is
+  what "check a portrait phone and a landscape one" in the layout skill is asking for —
+  it is a one-line reading in devtools, and it is the only reason any of these numbers
+  can be trusted. Restoring the 19.875rem puts every portrait phone from 360px up back to
+  fitting its viewport to the pixel.
+
 Between them the checkers came out ~85% larger in landscape and ~40% in portrait on a
 modern phone, with the page still fitting the viewport exactly (no scroll). Where the
 screen's height is what binds — a tall phone, either way up — the board is already using
