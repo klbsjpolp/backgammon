@@ -213,8 +213,14 @@ body[data-drag-active] {
        5px even before the status bar reserved its second line, so a phone
        scrolled a hair on every screen. This is what the chrome actually
        occupies, checked from 360px up — below that `--pt` is already pinned at
-       its 1rem floor and no reservation can buy the board anything. */
-    --avail-w: calc(100svh - 2rem - env(safe-area-inset-bottom));
+       its 1rem floor and no reservation can buy the board anything.
+
+       It is a reservation, not slack: cut to 2rem it let `--pt` run to its cap
+       and the page came out 997px tall in an 844px viewport, which puts the
+       controls under the board past the fold. Anything that moves this number
+       wants re-measuring against `document.scrollHeight` on a phone-sized
+       viewport, not adjusting by eye. */
+    --avail-w: calc(100svh - 19.875rem - env(safe-area-inset-bottom));
     /* The page padding, and nothing else: with the dice up in the header row the
        turned board has the full width of the screen to be deep in. A narrow phone
        is the one that notices — this is what limits it, where a tall one is
