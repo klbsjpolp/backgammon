@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.1.38](https://github.com/klbsjpolp/backgammon/compare/v0.1.37...v0.1.38) (2026-08-28)
+
+### Bug Fixes
+
+* **web:** give the portrait board back the height the page chrome uses ([a80def2](https://github.com/klbsjpolp/backgammon/commit/a80def2cafa22c64881da6bfa87747acd007a95a))
 ## [0.1.37](https://github.com/klbsjpolp/backgammon/compare/v0.1.36...v0.1.37) (2026-08-27)
 ## [0.1.36](https://github.com/klbsjpolp/backgammon/compare/v0.1.35...v0.1.36) (2026-08-27)
 
