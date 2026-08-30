@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.1.39](https://github.com/klbsjpolp/backgammon/compare/v0.1.38...v0.1.39) (2026-08-30)
+
+### Features
+
+* **web:** draw dice in the rolling player's checker colour ([1fa28c9](https://github.com/klbsjpolp/backgammon/commit/1fa28c932db6bf61c3182fdda6c1a22c25395519))
 ## [0.1.38](https://github.com/klbsjpolp/backgammon/compare/v0.1.37...v0.1.38) (2026-08-28)
 
 ### Bug Fixes
