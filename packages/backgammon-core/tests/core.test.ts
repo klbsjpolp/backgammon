@@ -184,6 +184,17 @@ describe('ai', () => {
     expect(evaluateBoard(covered, 'white')).toBeLessThan(evaluateBoard(clear, 'white'));
   });
 
+  it('keeps entry shots out of the cube calculation', () => {
+    // `winProbability` shares `directShots` with the evaluation and weighs it
+    // against a bar term tuned without entry shots, so counting them there
+    // re-tunes every doubling decision — 31 calls flipped over 800 measured
+    // games. Only checker play was measured, so only checker play sees them.
+    const clear = makeBoard({ 0: 1, 7: 1, 23: -1 }, { black: 1 });
+    const covered = makeBoard({ 3: 1, 4: 1, 23: -1 }, { black: 1 });
+    const state = (board: Board): GameState => ({ ...createInitialState('white'), board });
+    expect(winProbability(state(covered), 'white')).toBe(winProbability(state(clear), 'white'));
+  });
+
   it('prefers a checker still doing something to a sixth one on a made point', () => {
     // 43 pips and one made point on either side: nothing but the stack separates
     // them, and without a term for it the search took whichever it saw first.

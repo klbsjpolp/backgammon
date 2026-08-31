@@ -37,11 +37,27 @@ export const checkersOn = (board: Board, player: Player, index: number): number 
   return player === 'white' ? Math.max(0, v) : Math.max(0, -v);
 };
 
+/**
+ * First and last index of a player's home board — the six points they bear off
+ * from. White's is 0..5, black's the mirror.
+ *
+ * One definition, because the AI plays for it and the rules decide games by it:
+ * `detectResult` calls a loss a backgammon when the loser still has a checker in
+ * the winner's home board, and the evaluation has to price exactly that range or
+ * it plays for a rule the engine no longer applies.
+ */
+export const homeRange = (player: Player): readonly [number, number] => (player === 'white' ? [0, 5] : [18, 23]);
+
+/** Is `index` inside the player's own home board? */
+export const inHomeBoard = (player: Player, index: number): boolean => {
+  const [start, end] = homeRange(player);
+  return index >= start && index <= end;
+};
+
 /** Are all of a player's checkers in their home board (and none on the bar)? */
 export const allHome = (board: Board, player: Player): boolean => {
   if (board.bar[player] > 0) return false;
-  const homeStart = player === 'white' ? 0 : 18;
-  const homeEnd = player === 'white' ? 5 : 23;
+  const [homeStart, homeEnd] = homeRange(player);
   let homeCount = board.off[player];
   for (let i = homeStart; i <= homeEnd; i++) {
     homeCount += checkersOn(board, player, i);

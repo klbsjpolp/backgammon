@@ -50,18 +50,29 @@ played a game it could no longer win exactly as it played one it had already los
 winner's home board while the winner bore off around it, and was backgammoned in 79 of 1000 games. A backgammon is
 three points, and it was giving away the third one for nothing.
 
-`lossStakes` prices the difference. A loss with nothing borne off pays double, and one with nothing off and a checker
-still on the bar or in the winner's home board pays triple; both are read off the position at the instant the
-winner's fifteenth checker comes off, so both are still there to be played for. It counts trapped checkers rather
-than firing all-or-nothing — the stake only really falls when the last one leaves, but a search four half-moves deep
-needs a slope to walk down, not a cliff at the end of it.
+`backgammonStakes` prices the third point, and only the third point. A loss with nothing borne off pays double, and
+one with nothing off and a checker still on the bar or in the winner's home board pays triple; both are read off the
+position at the instant the winner's fifteenth checker comes off, so both are still there to be played for. The
+second point is nevertheless left to the `off * 120` bonus, which already dwarfs anything else the search can reach
+for and needs no help hunting the first checker off — four gammon-specific terms were tried (rushing checkers home,
+weighting the ones still outside, at four weights) and every one measured as nothing. So with no checker trapped this
+term is silent however far gone the game is. It counts trapped checkers rather than firing all-or-nothing — the stake
+only really falls when the last one leaves, but a search four half-moves deep needs a slope to walk down, not a cliff
+at the end of it.
 
 The threshold is the whole decision and it is not a safety margin. An anchor in the winner's home board is the last
 thing that can still win the game outright, because they have to bear off around it and will eventually be forced to
 leave a shot. Running early throws away real winning chances to protect a point that was never in danger; running
-late throws away the point. Eight of the opponent's fifteen off measured best: at five the AI loses games it should
-win, and waiting until eleven leaves twice as many backgammons on the board. Targeting only the deep anchors, where
+late throws away the point. `BACKGAMMON_ALARM` is 8 and the ramp is zero at eight, so nine of the opponent's fifteen
+off is where the AI stops playing to win and starts playing to save the third point. That measured best: leaving at
+five costs games it should win, and waiting until eleven leaves twice as many backgammons on the board. Targeting only the deep anchors, where
 the winning chances are thinnest, was tried and just scaled the whole effect down.
+
+The range it reads is `homeRange`, now the single definition in `board.ts` that `allHome`, `inHomeBoard`,
+`detectResult`'s backgammon test and this term all share. It used to be spelled out in four places, and one of those
+was `loserTrappedInWinnerHome` — the function that actually decides whether a game _is_ a backgammon. An evaluation
+playing for one transcription of a rule while the engine scores another is a bug waiting for someone to touch the
+rule, and nothing would have failed when they did.
 
 It costs gammons, and that is the honest price. Breaking the anchor gives up the shots that would sometimes have
 saved those too, so the AI is now gammoned in 24% of the games it loses rather than 18% — while being backgammoned
@@ -82,9 +93,18 @@ because a crossing is coarse: it cannot tell 23 → 18 from 8 → 3.
 `directShots` read hits off `points` alone, so a checker on the bar was not a hitter. It is the loudest one on the
 board: it enters on the far quadrant, it enters before anything else can be played, and all six faces are candidates.
 The AI was therefore blindest to the danger exactly when it was greatest, spreading blots across its own home board
-while the opponent waited on the bar to land on one. Six lines, and worth more than the other two changes together:
-55.1% of games and 809 points to 573 against the evaluation it replaces, over 1000 games with the sides swapped
-every game.
+while the opponent waited on the bar to land on one. `entryShots` is six lines and worth more than the other two
+changes together: 55.1% of games and 809 points to 573 against the evaluation it replaces, over 1000 games with the
+sides swapped every game.
+
+It is a term of its own rather than a fix inside `directShots`, and that is the interesting part. `directShots` has a
+second caller: `winProbability` weighs it at 1.5 against a bar term at 6, both tuned against a count that never saw
+the bar. Folding entry shots in there re-tunes every cube decision — 31 doubling calls flipped across 800 games, and
+a player _on the bar_ can come out ahead on the two terms combined, since six entry shots outweigh the six pips being
+on the bar costs. Measured, the cube came out level either way, which is not evidence that it is safe so much as
+evidence that 800 games cannot see it. The checker-play gain says nothing about the cube, so the cube keeps the input
+it was tuned for and `evaluateBoard` adds the new term at its own call site. A test pins the two positions that would
+drift apart if anyone folds them back together.
 
 ### Caution in a race is already free
 
