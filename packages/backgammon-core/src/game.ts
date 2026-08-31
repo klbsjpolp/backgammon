@@ -1,5 +1,5 @@
 import type { GameResult, GameState, Move, Player, WinKind } from './types.js';
-import { CHECKERS_PER_SIDE, checkersOn, createInitialBoard, opponent } from './board.js';
+import { CHECKERS_PER_SIDE, checkersOn, createInitialBoard, homeRange, opponent } from './board.js';
 import { applyMove, isLegalMove, legalMoves } from './moves.js';
 
 export type Rng = () => number;
@@ -46,7 +46,7 @@ const endTurn = (state: GameState): GameState => ({
 
 const loserTrappedInWinnerHome = (state: GameState, winner: Player, loser: Player): boolean => {
   if (state.board.bar[loser] > 0) return true;
-  const [start, end] = winner === 'white' ? [0, 5] : [18, 23];
+  const [start, end] = homeRange(winner);
   for (let i = start; i <= end; i++) {
     if (checkersOn(state.board, loser, i) > 0) return true;
   }
