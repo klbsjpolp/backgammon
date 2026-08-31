@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  allHome,
   applyAiTurn,
   applyLegalMove,
   applyMove,
@@ -161,6 +162,23 @@ describe('doubling cube', () => {
   it('only lets the cube owner double', () => {
     const state = { ...createInitialState('white'), cube: { value: 2, owner: 'black' as Player } };
     expect(canDouble(state, 'white')).toBe(false);
+  });
+});
+
+describe('allHome', () => {
+  // Exported, and the only reader of `homeRange` that nothing inside core calls:
+  // move generation runs in the normalized frame and has its own `allHomeNorm`.
+  // So the absolute-coordinate version, and its mirror, are only ever exercised
+  // here.
+  it('counts borne-off checkers as home, in both directions', () => {
+    expect(allHome(makeBoard({ 5: 10 }, {}, { white: 5 }), 'white')).toBe(true);
+    expect(allHome(makeBoard({ 18: -10 }, {}, { black: 5 }), 'black')).toBe(true);
+  });
+
+  it('is false with a checker outside the home board or on the bar', () => {
+    expect(allHome(makeBoard({ 5: 14, 6: 1 }), 'white')).toBe(false); // the 6 is one point out
+    expect(allHome(makeBoard({ 18: -14, 17: -1 }), 'black')).toBe(false); // mirrored
+    expect(allHome(makeBoard({ 5: 14 }, { white: 1 }), 'white')).toBe(false);
   });
 });
 
