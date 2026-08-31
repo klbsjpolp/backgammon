@@ -175,6 +175,44 @@ describe('ai', () => {
     const safe = makeBoard({ 12: 1, 0: -1 }); // black on 0 has no direct shot
     expect(evaluateBoard(exposed, 'white')).toBeLessThan(evaluateBoard(safe, 'white'));
   });
+
+  it('counts the shots an opponent on the bar plays as it enters', () => {
+    // Same two blots and the same pip count either way; only their exposure to
+    // black's entry differs. Reading shots off `points` alone scored these equal.
+    const clear = makeBoard({ 0: 1, 7: 1, 23: -1 }, { black: 1 }); // only a 1 enters onto a blot
+    const covered = makeBoard({ 3: 1, 4: 1, 23: -1 }, { black: 1 }); // a 4 and a 5 both do
+    expect(evaluateBoard(covered, 'white')).toBeLessThan(evaluateBoard(clear, 'white'));
+  });
+
+  it('prefers a checker still doing something to a sixth one on a made point', () => {
+    // 43 pips and one made point on either side: nothing but the stack separates
+    // them, and without a term for it the search took whichever it saw first.
+    const stacked = makeBoard({ 5: 5, 12: 1, 0: -1 });
+    const spread = makeBoard({ 5: 4, 9: 1, 8: 1, 0: -1 });
+    expect(pipCount(stacked, 'white')).toBe(pipCount(spread, 'white'));
+    expect(evaluateBoard(stacked, 'white')).toBeLessThan(evaluateBoard(spread, 'white'));
+  });
+
+  it("runs out of the winner's home board rather than tidying its own", () => {
+    // Black has twelve off and white has none, so white is playing for the two
+    // points a backgammon would cost rather than for a game it cannot win. Both
+    // plays below spend the same eleven pips; white used to choose 8->2, 5->0,
+    // leaving the anchor on 22 to be trebled.
+    const board = makeBoard({ 22: 2, 13: 2, 12: 2, 8: 3, 5: 6, 21: -2, 20: -1 }, {}, { black: 12 });
+    const after = applyAiTurn(movingState(board, 'white', [6, 5]));
+    let trapped = 0;
+    for (let i = 18; i <= 23; i++) trapped += checkersOn(after.board, 'white', i);
+    expect(trapped).toBe(0);
+  });
+
+  it('holds the anchor while the game is still winnable', () => {
+    // The same shape with black only four checkers into its bear-off: an anchor
+    // in the winner's home board is the last thing that can still win outright,
+    // so the backgammon term stays quiet until black has eight off.
+    const board = makeBoard({ 22: 2, 13: 2, 12: 2, 8: 3, 5: 6, 21: -2, 20: -1, 19: -6, 18: -2 }, {}, { black: 4 });
+    const after = applyAiTurn(movingState(board, 'white', [6, 5]));
+    expect(checkersOn(after.board, 'white', 22)).toBe(2);
+  });
 });
 
 describe('ai cube strategy', () => {
