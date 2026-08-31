@@ -205,6 +205,18 @@ describe('ai', () => {
     expect(trapped).toBe(0);
   });
 
+  it("runs out of the winner's home board as black too", () => {
+    // The same position mirrored across index 23 with the colours swapped. The
+    // trapped checkers are black's, on 1, and home is 0..5 rather than 18..23 —
+    // the one place in the evaluation that has to name a player's own end of the
+    // board, so it gets the mirror asserted rather than assumed.
+    const board = makeBoard({ 1: -2, 10: -2, 11: -2, 15: -3, 18: -6, 2: 2, 3: 1 }, {}, { white: 12 });
+    const after = applyAiTurn(movingState(board, 'black', [6, 5]));
+    let trapped = 0;
+    for (let i = 0; i <= 5; i++) trapped += checkersOn(after.board, 'black', i);
+    expect(trapped).toBe(0);
+  });
+
   it('holds the anchor while the game is still winnable', () => {
     // The same shape with black only four checkers into its bear-off: an anchor
     // in the winner's home board is the last thing that can still win outright,
