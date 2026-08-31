@@ -1,14 +1,24 @@
 import type { Board, GameState, Move, Player } from './types.js';
-import { CHECKERS_PER_SIDE, checkersOn, opponent, pipCount } from './board.js';
+import { CHECKERS_PER_SIDE, POINT_COUNT, checkersOn, opponent, pipCount } from './board.js';
 import { applyLegalMove, canDouble, currentLegalMoves } from './game.js';
 
 const inHomeBoard = (player: Player, index: number): boolean => (player === 'white' ? index <= 5 : index >= 18);
+
+/** First and last index of a player's home board, in absolute coordinates. */
+const homeRange = (player: Player): [number, number] => (player === 'white' ? [0, 5] : [18, 23]);
 
 /**
  * Count the opponent's *direct* shots at the player's blots: for each blot, how
  * many die faces (1..6) land an opponent checker exactly on it. A strong proxy
  * for how exposed the position is (indirect/combination shots are ignored for
  * speed).
+ *
+ * A checker on the bar is a hitter too, and the loudest one on the board: it has
+ * to come in on the far quadrant, it comes in before anything else can be
+ * played, and every one of the six faces is a candidate. Reading shots off
+ * `points` alone missed all of that, so the AI was blindest to the danger
+ * exactly when it was greatest — leaving blots across its own home board while
+ * the opponent sat on the bar waiting to enter on top of one.
  */
 const directShots = (board: Board, player: Player): number => {
   const opp = opponent(player);
@@ -20,6 +30,14 @@ const directShots = (board: Board, player: Player): number => {
       // `p - d` (black moves low->high).
       const q = opp === 'white' ? p + d : p - d;
       if (q >= 0 && q < 24 && checkersOn(board, opp, q) > 0) shots++;
+    }
+  }
+  if (board.bar[opp] > 0) {
+    for (let d = 1; d <= 6; d++) {
+      // Entry lands on the point `d` deep into the player's home board: white
+      // enters at 24 - d, black at d - 1.
+      const entry = opp === 'white' ? POINT_COUNT - d : d - 1;
+      if (checkersOn(board, player, entry) === 1) shots++;
     }
   }
   return shots;
@@ -40,10 +58,80 @@ const longestPrime = (board: Board, player: Player): number => {
   return best;
 };
 
+/** Checkers on a point beyond which the extra ones are doing nothing. */
+const BURY_DEPTH = 4;
+/** Per buried checker. */
+const BURY_COST = 2;
+
+/**
+ * Checkers the opponent has borne off before the AI starts playing to save the
+ * backgammon, and the whole of the trade.
+ *
+ * An anchor in the winner's home board is the last thing that can still win the
+ * game outright — they have to bear off around it and will eventually be forced
+ * to leave a shot — so breaking it early throws away real winning chances for a
+ * point that was never in danger. Breaking it late throws away the third point.
+ * Eight measured best: leaving at five costs games, waiting until eleven leaves
+ * twice as many backgammons on the table.
+ */
+const BACKGAMMON_ALARM = 8;
+/** Per trapped checker, at the moment the opponent bears off their last. */
+const BACKGAMMON_RISK = 40;
+
+/**
+ * Checkers piled beyond the fourth on a point.
+ *
+ * Nothing else here dislikes a tall stack. A made point scores the same whether
+ * it holds two checkers or six, and the pip count is indifferent to *which*
+ * checker moves — so a play that brought an outfield checker round and one that
+ * dropped another checker onto a home-board point the AI already owned came out
+ * exactly equal, and the search took whichever it saw first. That is the tidy,
+ * useless endgame the AI kept playing: material stacked where it can never be
+ * hit and can never do anything either, while the checkers that still had a
+ * journey ahead of them sat where they were.
+ */
+const buriedCheckers = (board: Board, player: Player): number => {
+  let total = 0;
+  for (let i = 0; i < POINT_COUNT; i++) {
+    total += Math.max(0, checkersOn(board, player, i) - BURY_DEPTH);
+  }
+  return total;
+};
+
+/**
+ * What a loss is about to cost beyond the single point it has to cost.
+ *
+ * A loss with nothing borne off is a gammon and pays double; a loss with nothing
+ * off *and* a checker still on the bar or in the winner's home board is a
+ * backgammon and pays triple. Both are read off the position at the instant the
+ * winner's fifteenth checker comes off, so a game that is already lost is still
+ * worth playing — and the evaluation had no term for any of it. It scored a
+ * position purely by how likely it was to win, which makes every lost game
+ * equally lost, so the AI held its anchor in the winner's home board to the end
+ * and was backgammoned in one self-play game out of seven.
+ *
+ * The penalty counts trapped checkers rather than firing all-or-nothing. The
+ * stake only actually falls when the last one leaves, but a search four
+ * half-moves deep needs a slope to walk down, not a cliff at the end of it.
+ */
+const lossStakes = (board: Board, player: Player): number => {
+  if (board.off[player] > 0) return 0; // the first checker off settles both
+  // How far into their bear-off the opponent is, from the alarm point to all
+  // fifteen off.
+  const progress = (board.off[opponent(player)] - BACKGAMMON_ALARM) / (CHECKERS_PER_SIDE - BACKGAMMON_ALARM);
+  if (progress <= 0) return 0;
+  const [start, end] = homeRange(opponent(player));
+  let trapped = board.bar[player];
+  for (let i = start; i <= end; i++) trapped += checkersOn(board, player, i);
+  return progress * trapped * BACKGAMMON_RISK;
+};
+
 /**
  * Static board evaluation from `player`'s perspective (higher is better). Beyond
  * the pip race it rewards made points, home-board structure and primes, and
- * penalizes blots by how many direct shots the opponent has at them.
+ * penalizes blots by how many direct shots the opponent has at them, checkers
+ * stacked past the point of being useful, and — once the game is being lost —
+ * the extra points a gammon or a backgammon would hand over.
  */
 export const evaluateBoard = (board: Board, player: Player): number => {
   const opp = opponent(player);
@@ -65,6 +153,8 @@ export const evaluateBoard = (board: Board, player: Player): number => {
   score += prime * prime; // primes are worth more the longer they get
 
   score -= directShots(board, player) * 8;
+  score -= buriedCheckers(board, player) * BURY_COST;
+  score -= lossStakes(board, player);
 
   score -= pipCount(board, player);
   score += pipCount(board, opp) * 0.4;

@@ -33,7 +33,8 @@ you think and record it" instruction). Open questions are at the bottom.
 
 - **Checker play**: full search over every legal move sequence for the dice (capped at
   60k nodes), keeping the sequence whose resulting board evaluates highest. The evaluation
-  weighs the pip race, made points, home-board structure, primes and direct shots at blots.
+  weighs the pip race, made points, home-board structure, primes, direct shots at blots,
+  checkers stacked past the point of being useful, and what a loss is about to cost.
 - **Cube play**: `winProbability` estimates the AI's chances from the pip race, corrected
   by primes, blot exposure and checkers on the bar, then squashed through a logistic scaled
   by how much race is left. It is a heuristic for cube decisions, not a rollout — it puts
@@ -41,6 +42,63 @@ you think and record it" instruction). Open questions are at the bottom.
   classic window (0.68–0.85: strong enough to gain, not so strong that playing on for the
   gammon beats cashing) and `shouldTakeDouble` uses a take point of 0.22, a little under the
   textbook 25% to account for owning the cube after taking.
+
+### Losing well
+
+The evaluation scored a position by how likely it was to win, and that makes every loss worth the same. So the AI
+played a game it could no longer win exactly as it played one it had already lost: it sat on its anchor in the
+winner's home board while the winner bore off around it, and was backgammoned in 79 of 1000 games. A backgammon is
+three points, and it was giving away the third one for nothing.
+
+`lossStakes` prices the difference. A loss with nothing borne off pays double, and one with nothing off and a checker
+still on the bar or in the winner's home board pays triple; both are read off the position at the instant the
+winner's fifteenth checker comes off, so both are still there to be played for. It counts trapped checkers rather
+than firing all-or-nothing — the stake only really falls when the last one leaves, but a search four half-moves deep
+needs a slope to walk down, not a cliff at the end of it.
+
+The threshold is the whole decision and it is not a safety margin. An anchor in the winner's home board is the last
+thing that can still win the game outright, because they have to bear off around it and will eventually be forced to
+leave a shot. Running early throws away real winning chances to protect a point that was never in danger; running
+late throws away the point. Eight of the opponent's fifteen off measured best: at five the AI loses games it should
+win, and waiting until eleven leaves twice as many backgammons on the board. Targeting only the deep anchors, where
+the winning chances are thinnest, was tried and just scaled the whole effect down.
+
+It costs gammons, and that is the honest price. Breaking the anchor gives up the shots that would sometimes have
+saved those too, so the AI is now gammoned in 24% of the games it loses rather than 18% — while being backgammoned
+in 2% rather than 14%. Per game lost it hands over 1.28 points instead of 1.47.
+
+### Two ties the pip count could not break
+
+Both of the AI's other endgame habits were the same bug wearing different clothes: two plays scored identically, and
+the search kept whichever it happened to reach first.
+
+Nothing in the evaluation disliked a tall stack. A made point scored the same holding two checkers or six, and the
+pip count does not care _which_ checker moves, so bringing an outfield checker round and dropping another checker
+onto a home-board point the AI already owned came out exactly equal. `buriedCheckers` charges 2 for every checker
+past the fourth on a point. The obvious alternative — counting quadrant crossings, so that a checker coming home
+outscores one shuffling inside the home board — is the more orthodox heuristic and measured as nothing at all,
+because a crossing is coarse: it cannot tell 23 → 18 from 8 → 3.
+
+`directShots` read hits off `points` alone, so a checker on the bar was not a hitter. It is the loudest one on the
+board: it enters on the far quadrant, it enters before anything else can be played, and all six faces are candidates.
+The AI was therefore blindest to the danger exactly when it was greatest, spreading blots across its own home board
+while the opponent waited on the bar to land on one. Six lines, and worth more than the other two changes together:
+55.1% of games and 809 points to 573 against the evaluation it replaces, over 1000 games with the sides swapped
+every game.
+
+### Caution in a race is already free
+
+Once the two sides have passed each other nothing can be hit again, and the obvious move is to stop paying for
+safety — drop the made points, the primes and the shot penalty and race. Measured, every version of that loses:
+dropping all three costs 2 points of win rate, dropping the primes or the made points alone costs about 1.5.
+
+The shot term was never the cost. `directShots` only counts an opponent checker that sits _behind_ a blot, and once
+the sides have crossed there is no such checker by construction — over 300 self-play games, 6488 positions where the
+sides had crossed and not one with a shot in it. It is already zero and has been all along. What the race branch
+actually removed was the made-point and prime bonuses, and those are not caution: spread across consecutive points is
+how a bear-off avoids gaps and wasted pips, and a `prime²` that peaks at six home points made is a distribution
+heuristic that happens to be spelled like a blockade. There is nothing cautious left in a race to remove, so there is
+no race branch.
 
 ## Trust boundaries
 
