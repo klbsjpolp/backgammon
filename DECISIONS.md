@@ -47,7 +47,7 @@ you think and record it" instruction). Open questions are at the bottom.
 
 The evaluation scored a position by how likely it was to win, and that makes every loss worth the same. So the AI
 played a game it could no longer win exactly as it played one it had already lost: it sat on its anchor in the
-winner's home board while the winner bore off around it, and was backgammoned in 79 of 1000 games. A backgammon is
+winner's home board while the winner bore off around it, and was backgammoned in 81 of 1000 games. A backgammon is
 three points, and it was giving away the third one for nothing.
 
 `backgammonStakes` prices the third point, and only the third point. A loss with nothing borne off pays double, and
@@ -75,8 +75,8 @@ playing for one transcription of a rule while the engine scores another is a bug
 rule, and nothing would have failed when they did.
 
 It costs gammons, and that is the honest price. Breaking the anchor gives up the shots that would sometimes have
-saved those too, so the AI is now gammoned in 24% of the games it loses rather than 18% — while being backgammoned
-in 2% rather than 14%. Per game lost it hands over 1.28 points instead of 1.47.
+saved those too, so the AI is now gammoned in 23.5% of the games it loses rather than 18.8% — while being backgammoned
+in 2.6% rather than 14.9%. Per game lost it hands over 1.29 points instead of 1.49.
 
 ### Two ties the pip count could not break
 
@@ -94,8 +94,17 @@ because a crossing is coarse: it cannot tell 23 → 18 from 8 → 3.
 board: it enters on the far quadrant, it enters before anything else can be played, and all six faces are candidates.
 The AI was therefore blindest to the danger exactly when it was greatest, spreading blots across its own home board
 while the opponent waited on the bar to land on one. `entryShots` is six lines and worth more than the other two
-changes together: 55.1% of games and 809 points to 573 against the evaluation it replaces, over 1000 games with the
-sides swapped every game.
+changes together: at weight 0 the package wins 0.143 points per game against the evaluation it replaces, and with the
+term 0.277.
+
+It is charged less than a board shot, at 6 against 8, and the reason is worth keeping. The two counts are not the
+same measurement — `directShots` counts single faces and ignores the combinations that also reach a blot, so it
+undercounts a hitter in play, while entry is exact, because a checker on the bar arrives with one die or not at all.
+More to the point, the only way to put a checker on the bar is to hit it, so every entry shot the AI is charged for
+is one its own hit created, and the term can only ever argue it _out_ of hitting. At 8 it did: it declined a hit that
+left four blots on the entry points — blots with no shots against them at all beforehand — for a quiet play worth 2.6
+less, and refused 7 hits in 376 chances that the old evaluation took. At 6 that is 3, and the strength is
+indistinguishable (+0.277 against +0.268 over 600 games, which is noise). The hitting is the reason, not the points.
 
 It is a term of its own rather than a fix inside `directShots`, and that is the interesting part. `directShots` has a
 second caller: `winProbability` weighs it at 1.5 against a bar term at 6, both tuned against a count that never saw

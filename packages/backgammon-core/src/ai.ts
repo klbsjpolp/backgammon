@@ -36,7 +36,7 @@ const directShots = (board: Board, player: Player): number => {
  * It is a separate term rather than part of `directShots` because the two
  * callers want different things and only one of them has been measured.
  * {@link evaluateBoard} adds it; `winProbability` deliberately does not — see
- * the note there.
+ * the note there. It also carries its own weight; see {@link ENTRY_SHOT_COST}.
  */
 const entryShots = (board: Board, player: Player): number => {
   const opp = opponent(player);
@@ -65,6 +65,29 @@ const longestPrime = (board: Board, player: Player): number => {
   }
   return best;
 };
+
+/** Per shot the opponent has at a blot from a checker already in play. */
+const SHOT_COST = 8;
+/**
+ * Per shot played off the bar, and deliberately less than {@link SHOT_COST}.
+ *
+ * The two counts are not the same measurement. `directShots` counts single
+ * faces and ignores the combinations that also reach a blot, so it *under*
+ * counts a hitter in play; entry is exact, because a checker on the bar reaches
+ * its point with one die or not at all. Charging both the same over-prices
+ * entry against everything else in the evaluation.
+ *
+ * The direction of that error is what makes it worth a constant of its own: the
+ * only way to put a checker on the bar is to hit it, so every entry shot the AI
+ * is charged for is one its own hit created, and the term can therefore only
+ * ever talk it *out* of hitting. At 8 it did — declining a hit that leaves four
+ * blots on the entry points for a quiet play worth 2.6 less, and 7 hits in 376
+ * chances that the evaluation this replaces took. At 6 that falls to 3, and the
+ * package measures slightly stronger rather than weaker: +0.277 points per game
+ * against +0.268. Below 6 both the hitting and the strength go back down, and at
+ * 0 the term is worth +0.143 — most of what it is here for.
+ */
+const ENTRY_SHOT_COST = 6;
 
 /** Checkers on a point beyond which the extra ones are doing nothing. */
 const BURY_DEPTH = 4;
@@ -169,7 +192,8 @@ export const evaluateBoard = (board: Board, player: Player): number => {
   const prime = longestPrime(board, player);
   score += prime * prime; // primes are worth more the longer they get
 
-  score -= (directShots(board, player) + entryShots(board, player)) * 8;
+  score -= directShots(board, player) * SHOT_COST;
+  score -= entryShots(board, player) * ENTRY_SHOT_COST;
   score -= buriedCheckers(board, player) * BURY_COST;
   score -= backgammonStakes(board, player);
 
