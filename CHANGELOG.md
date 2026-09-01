@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.1.42](https://github.com/klbsjpolp/backgammon/compare/v0.1.41...v0.1.42) (2026-09-01)
+
+### Features
+
+* **web:** draw the roll that could not be played, and hold on it ([648a12b](https://github.com/klbsjpolp/backgammon/commit/648a12b33ac18919e4e4cd788f7c590bc77b28b3))
+
+### Bug Fixes
+
+* **core:** let a taken double answer the roll that went unplayed ([b251e1e](https://github.com/klbsjpolp/backgammon/commit/b251e1ebcae6fa83b65fda390d18cb119ff2c209))
+* **web:** give the unplayable dice something a reader can land on ([dddcc16](https://github.com/klbsjpolp/backgammon/commit/dddcc16130504031f75f4de47f8482e7c76d7740))
+* **web:** keep the dashed rim inside the die's own viewBox ([0f1d057](https://github.com/klbsjpolp/backgammon/commit/0f1d05718de2e4a24c1a7cb4e80a85f8133b071e))
+* **web:** keep the unplayable dice up across a cube exchange ([601f1cf](https://github.com/klbsjpolp/backgammon/commit/601f1cfc36b39940c2a8e07adcd0e75f94c46ea6))
+* **web:** let the status line truncate instead of widening the page ([01aec86](https://github.com/klbsjpolp/backgammon/commit/01aec8650458b1485f068e5cc1cbb12ed0672875))
 ## [0.1.41](https://github.com/klbsjpolp/backgammon/compare/v0.1.40...v0.1.41) (2026-09-01)
 ## [0.1.40](https://github.com/klbsjpolp/backgammon/compare/v0.1.39...v0.1.40) (2026-09-01)
 
