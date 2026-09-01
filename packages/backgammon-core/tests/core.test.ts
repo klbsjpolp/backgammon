@@ -407,6 +407,20 @@ describe('a roll with no legal move', () => {
     };
     expect(applyRoll(backToWhite, [6, 5]).noPlay).toBeNull();
   });
+
+  it('is answered by a double being taken, not only by the next roll', () => {
+    // Taking a double returns to `rolling` with the same player on turn, so
+    // without clearing it here the state is indistinguishable from the one right
+    // after the failed roll — and a UI reading it as "this just happened" says so
+    // a second time, seconds after the cube changed hands.
+    const offered = offerDouble(danced());
+    expect(offered.noPlay).toEqual({ player: 'white', roll: [3, 4] });
+
+    const taken = respondDouble(offered, true);
+    expect(taken.phase).toBe('rolling');
+    expect(taken.turn).toBe('black');
+    expect(taken.noPlay).toBeNull();
+  });
 });
 
 describe('engine invariants', () => {
