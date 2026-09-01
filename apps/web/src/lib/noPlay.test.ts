@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyRoll, createInitialState, type GameState } from '@backgammon/core';
+import { applyRoll, createInitialState, offerDouble, respondDouble, type GameState } from '@backgammon/core';
 import { pendingNoPlay } from './noPlay';
 
 /**
@@ -35,6 +35,16 @@ describe('pendingNoPlay', () => {
     // roll, and it only has room for one.
     expect(answered.noPlay).toEqual({ player: 'white', roll: [6, 5] });
     expect(pendingNoPlay(answered)).toBeNull();
+  });
+
+  it('is nothing once a double taken in reply has answered it', () => {
+    // Taking a double comes back to `rolling` with the same player on turn, so
+    // the state alone cannot tell that beat from the one right after the failed
+    // roll. `respondDouble` clears the record for exactly that reason — without
+    // it the dice reappeared seconds after the cube changed hands.
+    const taken = respondDouble(offerDouble(applyRoll(barred(), [6, 5])), true);
+    expect(taken.phase).toBe('rolling');
+    expect(pendingNoPlay(taken)).toBeNull();
   });
 
   it('is nothing when the failure belongs to the player now on roll', () => {

@@ -79,8 +79,10 @@ export interface GameState {
    * The turn state alone cannot carry this: passing the turn clears `roll`, so
    * without it the dice are gone before anything has drawn them and the player
    * is told nothing except that it is suddenly the opponent's move. It stays set
-   * until the player who rolled it rolls again, which keeps it on screen for the
-   * whole of the opponent's reply rather than flashing past.
+   * until the player who rolled it rolls again — or until a double is taken,
+   * which is an exchange the player drove and so an answer to it as surely as a
+   * roll is. Either way it stays on screen for the whole of the opponent's reply
+   * rather than flashing past.
    */
   noPlay: NoPlay | null;
   result: GameResult | null;

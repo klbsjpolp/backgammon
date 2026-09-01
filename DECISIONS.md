@@ -216,6 +216,14 @@ says so. It is held until the player who rolled it rolls again, rather than bein
 cleared by the next roll of any kind, so it stays up for the whole of the
 opponent's reply instead of flashing past inside the AI's think time.
 
+A double taken in that reply ends it too, which is not symmetry for its own sake.
+`respondDouble` returns to `rolling` with the same player still on turn, so the
+state it hands back is otherwise indistinguishable from the one right after the
+failed roll — same turn, same phase, same record — and anything reading that
+shape as "this just happened" says so a second time, seconds after the cube
+changed hands. The exchange is an answer to the roll as surely as a roll is, and
+one the player drove themselves, so there is nothing left to tell them.
+
 ### Saying it in words was not enough
 
 A sentence naming the pips is not the same as seeing them, and on a phone the whole
