@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { NO_PLAY_HOLD_MS } from '@/lib/noPlay';
 
 /** Long enough that an auto-roll still reads as a roll and not as a jump cut. */
 const AUTO_ROLL_DELAY_MS = 300;
@@ -14,8 +15,13 @@ const AUTO_ROLL_DELAY_MS = 300;
  * frame the host broadcasts, and a dependency would restart the timer with each
  * one — a resync loop faster than the delay would starve the roll it is meant
  * to make.
+ *
+ * `hold` is the one thing that lengthens the delay: the opponent's roll went
+ * unplayed, and it is drawn in the cell this roll's dice are about to take.
+ * 300ms of it is a flicker — the player asked not to be asked for a roll, not to
+ * be shown nothing.
  */
-export const useAutoRoll = (enabled: boolean, canRoll: boolean, roll: () => void) => {
+export const useAutoRoll = (enabled: boolean, canRoll: boolean, roll: () => void, hold = false) => {
   // Kept current from an effect rather than during render: the timer reads it
   // 300ms later, long after the commit that last refreshed it.
   const rollRef = useRef(roll);
@@ -25,7 +31,7 @@ export const useAutoRoll = (enabled: boolean, canRoll: boolean, roll: () => void
 
   useEffect(() => {
     if (!enabled || !canRoll) return;
-    const timer = setTimeout(() => rollRef.current(), AUTO_ROLL_DELAY_MS);
+    const timer = setTimeout(() => rollRef.current(), hold ? NO_PLAY_HOLD_MS : AUTO_ROLL_DELAY_MS);
     return () => clearTimeout(timer);
-  }, [enabled, canRoll]);
+  }, [enabled, canRoll, hold]);
 };

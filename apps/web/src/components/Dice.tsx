@@ -1,5 +1,6 @@
-import type { GameState, Player } from '@backgammon/core';
+import type { GameState, NoPlay, Player } from '@backgammon/core';
 import { cn } from '@/lib/cn';
+import { pendingNoPlay } from '@/lib/noPlay';
 import { useFullscreenState } from '@/fullscreen.ts';
 
 /**
@@ -45,6 +46,12 @@ interface Face {
   value: number;
   /** Already spent on a checker move — drawn faded rather than dropped. */
   played: boolean;
+  /**
+   * The whole roll had no legal move, so this die was never spendable. Marked on
+   * its rim rather than faded: "spent" and "never playable" are exactly the two
+   * things a player has to be able to tell apart here, and fading says the first.
+   */
+  blocked?: boolean;
   /** Whose roll this is — the die is drawn in that player's own checker colour. */
   player: Player;
 }
@@ -60,7 +67,7 @@ interface Face {
  *
  * Sized in `em` so the size stays the caller's, set with `text-*` as before.
  */
-const Die = ({ value, played, player }: Face) => {
+const Die = ({ value, played, blocked, player }: Face) => {
   const { isFullscreen } = useFullscreenState();
   // Same colours as that player's checker, and the same reason the checker needs
   // a rim: the dark theme's dark checker sits within a hair of the canvas's own
@@ -78,6 +85,7 @@ const Die = ({ value, played, player }: Face) => {
       aria-hidden="true"
       data-face={value}
       data-played={played}
+      data-blocked={blocked ?? false}
       className={cn(
         'shrink-0 transition-opacity',
         played && 'opacity-30',
@@ -96,7 +104,27 @@ const Die = ({ value, played, player }: Face) => {
         isFullscreen ? 'size-board-die' : 'size-[1em]',
       )}
     >
-      <rect x="2" y="2" width="96" height="96" rx="22" strokeWidth="4" className={cn(face, line)} />
+      {/*
+       * The rim is dashed on a die that was never playable, and that is the only
+       * mark: everything else stays exactly as a live die is drawn.
+       *
+       * It started as a strike through the face, which is what "cancelled" looks
+       * like — and at the ~30px a phone draws a die, the stroke swallowed the
+       * pips it crossed, whichever diagonal it took and however thin it was cut.
+       * A 5 struck through reads as a 3. That is the opposite of the point:
+       * these dice are drawn precisely because the player never got to see them.
+       * The rim is the one part of the face carrying nothing to read.
+       */}
+      <rect
+        x="2"
+        y="2"
+        width="96"
+        height="96"
+        rx="22"
+        strokeWidth={blocked ? 6 : 4}
+        strokeDasharray={blocked ? '14 10' : undefined}
+        className={cn(face, line)}
+      />
       {PIPS[value]?.map(([cx, cy], i) => (
         <circle key={i} cx={cx} cy={cy} r="10" className={pip} />
       ))}
@@ -104,14 +132,17 @@ const Die = ({ value, played, player }: Face) => {
   );
 };
 
+/** A roll as the dice it is drawn with: four on doubles, since that is how many moves a double buys. */
+const facesOf = (roll: readonly [number, number]): number[] =>
+  roll[0] === roll[1] ? [roll[0], roll[0], roll[0], roll[0]] : [roll[0], roll[1]];
+
 /**
- * The dice this turn still has: four of them on doubles, since that is how many
- * moves a double buys. `remaining` carries values and not identities, so a face
- * is matched to it by value — the first face of a value is the one still to play,
- * which is enough to show *how many* of a value are left.
+ * The dice this turn still has. `remaining` carries values and not identities, so
+ * a face is matched to it by value — the first face of a value is the one still
+ * to play, which is enough to show *how many* of a value are left.
  */
 const facesFor = (roll: readonly [number, number], remaining: readonly number[], player: Player): Face[] => {
-  const values = roll[0] === roll[1] ? [roll[0], roll[0], roll[0], roll[0]] : [roll[0], roll[1]];
+  const values = facesOf(roll);
   const left = new Map<number, number>();
   for (const value of remaining) left.set(value, (left.get(value) ?? 0) + 1);
 
@@ -122,6 +153,15 @@ const facesFor = (roll: readonly [number, number], remaining: readonly number[],
     return { value, played: false, player };
   });
 };
+
+/**
+ * The roll that had no move in it, drawn in the colour of the player who rolled
+ * it — which is half of what says it is not the roll on play. Nothing is faded:
+ * no die was spent, and the point of drawing them at all is that the rules gave
+ * the player no chance to see them.
+ */
+const blockedFaces = ({ player, roll }: NoPlay): Face[] =>
+  facesOf(roll).map((value) => ({ value, played: false, blocked: true, player }));
 
 /**
  * The roll, drawn as pips rather than spelled out. Fading the dice already played
@@ -135,14 +175,32 @@ const facesFor = (roll: readonly [number, number], remaining: readonly number[],
  * gaps are what that cell reserves room for.
  */
 export const Dice = ({ state, className }: { state: GameState; className?: string }) => {
-  if (!state.roll || state.phase === 'rolling') return null;
+  // The cell holds one roll, so this is a choice and not a stack: the roll on
+  // play whenever there is one, and otherwise — for the beat between a roll
+  // nobody could play and the answer to it — the roll that failed. `endTurn`
+  // clears `roll`, so that one is only readable from `noPlay`, and without this
+  // it was never drawn at all: the turn passed back before the dice reached the
+  // screen, which is the complaint this answers.
+  const blocked = pendingNoPlay(state);
+  const faces = blocked
+    ? blockedFaces(blocked)
+    : state.roll && state.phase !== 'rolling'
+      ? facesFor(state.roll, state.remaining, state.turn)
+      : null;
+  if (!faces) return null;
 
   return (
-    <div role="group" aria-label="dés" className={cn('flex items-center gap-[0.12em] leading-none', className)}>
-      {facesFor(state.roll, state.remaining, state.turn).map((face, i) => (
-        <Die key={i} value={face.value} played={face.played} player={face.player} />
+    <div
+      role="group"
+      // Named for what it is: the dashed rim says this to everyone else, and a
+      // reader that lands here has nothing else to tell it from a live roll.
+      aria-label={blocked ? "dés qui n'ont pas pu être joués" : 'dés'}
+      className={cn('flex items-center gap-[0.12em] leading-none', className)}
+    >
+      {faces.map((face, i) => (
+        <Die key={i} value={face.value} played={face.played} blocked={face.blocked} player={face.player} />
       ))}
-      {state.remaining.length > 0 && (
+      {!blocked && state.remaining.length > 0 && (
         // The pips carry this to anyone who can see them; a screen reader that
         // lands here reads the list instead. Deliberately *not* a live region:
         // this element only exists once a roll has landed, so it enters the DOM

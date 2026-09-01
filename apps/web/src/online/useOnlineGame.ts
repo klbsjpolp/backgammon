@@ -11,6 +11,7 @@ import {
   type BackgammonView,
 } from '@backgammon/runtime';
 import { canDouble, opponent, type GameState, type Player } from '@backgammon/core';
+import { pendingNoPlay } from '@/lib/noPlay';
 import { useAutoRoll } from '@/useAutoRoll';
 import { useCheckerSelection } from '@/useCheckerSelection';
 import { createOnlineRoom, joinOnlineRoom } from './api';
@@ -320,7 +321,9 @@ export const useOnlineGame = (): OnlineGame => {
     if (canRoll) sendAction({ type: 'roll' });
   }, [canRoll, sendAction]);
 
-  useAutoRoll(autoRoll, canRoll, rollDice);
+  // Held a beat longer when the opponent's roll went unplayed: it is drawn in
+  // the cell this roll's dice are about to take — see `useAutoRoll`.
+  useAutoRoll(autoRoll, canRoll, rollDice, gameState ? pendingNoPlay(gameState) !== null : false);
 
   const double = useCallback(() => {
     if (gameState && myPlayer && canDouble(gameState, myPlayer)) sendAction({ type: 'offerDouble' });

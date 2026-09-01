@@ -216,6 +216,46 @@ says so. It is held until the player who rolled it rolls again, rather than bein
 cleared by the next roll of any kind, so it stays up for the whole of the
 opponent's reply instead of flashing past inside the AI's think time.
 
+### Saying it in words was not enough
+
+A sentence naming the pips is not the same as seeing them, and on a phone the whole
+episode was still over before it registered: the turn passed back inside the same
+state update, so the dice reached no frame at all, and the AI answered 600ms later.
+The player was left reading about a roll they never saw, on a board that had already
+moved on.
+
+Two things fix that, and neither is in `core` — the rules are right, it is the
+presentation that was missing.
+
+The **dice are drawn**, from `noPlay` rather than from `roll`, which by then is null.
+They go in the cell the live dice already have, because that cell is reserved at four
+dice wide and one die high whether or not a roll is on screen — anywhere else would
+have cost the board height to say something that happens a few times a game. That cell
+holds one roll, so this is a choice and not a stack: the roll on play whenever there
+is one, and otherwise the roll that failed. `pendingNoPlay` narrows the record to the
+beat it is news in — nothing rolled since, and the failure is the other seat's — since
+`noPlay` deliberately outlives that beat for the sentence's sake, and a turn later it
+would be redrawing dice the player on turn is about to replace.
+
+They are marked on the **rim**, dashed, and nowhere else. The obvious mark is a strike
+through the face, which is what cancelled looks like — and at the ~30px a phone draws a
+die, the stroke swallows the pips it crosses. Both diagonals run through the centre pip
+and two others of a 5; cutting the line thinner only made it merge with the pips
+instead of erasing them, and drawing it in the face's own colour under a narrower one
+cut a clean channel through pips that then could not be counted. A struck 5 reads as a 3. That is the exact opposite of the point — these dice are drawn _because_ the player
+never got to read them — so the mark went to the one part of the die carrying nothing:
+its edge. Fading them was the other candidate and was rejected for a smaller version of
+the same reason, plus one of its own: faded already means _spent_, which is the one
+thing these dice are not.
+
+And the answer to them **waits**. `NO_PLAY_HOLD_MS` is 1.5s, and it is the delay both
+of the automatic rolls take when a roll has just gone unplayed: the AI's reply, and an
+auto-roll for the player who asked not to be asked. Without it the pause is the AI's
+usual 600ms think time or auto-roll's 300ms, which is not enough time to look down at
+the dice cell and back. The hold is presentation only — the guard inside `roll` is what
+makes both safe — and it costs nothing in the ordinary case, because a roll that could
+be played never enters it.
+
 ## Watching the AI move
 
 `applyAiTurn` plays a whole turn in one call, which is right for the engine and wrong
