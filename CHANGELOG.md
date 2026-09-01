@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.1.40](https://github.com/klbsjpolp/backgammon/compare/v0.1.39...v0.1.40) (2026-09-01)
+
+### Features
+
+* **core:** make the ai play the end of a game it is losing ([b98a0e9](https://github.com/klbsjpolp/backgammon/commit/b98a0e95a3a4179966bea8fd112a1d439ce8fa83))
+
+### Bug Fixes
+
+* **core:** charge an entry shot less than a shot from the board ([3465cdc](https://github.com/klbsjpolp/backgammon/commit/3465cdc9579f914b6dd1bcbdd40481f4e5b20e82))
+* **core:** keep entry shots out of the cube, and say what the terms do ([f473e0f](https://github.com/klbsjpolp/backgammon/commit/f473e0f5cd3989bb501ba4c8a22de7eb69d3a613))
 ## [0.1.39](https://github.com/klbsjpolp/backgammon/compare/v0.1.38...v0.1.39) (2026-08-30)
 
 ### Features
