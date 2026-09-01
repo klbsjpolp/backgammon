@@ -112,6 +112,18 @@ describe('Dice — the roll nobody could play', () => {
     expect(container.querySelectorAll('circle')).toHaveLength(11);
   });
 
+  it('keeps the heavier rim inside the viewBox, where nothing clips it', () => {
+    // A stroke straddles its path and a non-root `<svg>` is `overflow: hidden`,
+    // so a 6-wide rim on the live die's `x=2` runs to -1 and loses a unit on all
+    // four sides — flattening the rounded dash caps that carry the whole mark.
+    const { container } = render(<Dice state={passed([6, 5])} />);
+    const rect = container.querySelector('rect');
+    const half = Number(rect?.getAttribute('stroke-width')) / 2;
+    const x = Number(rect?.getAttribute('x'));
+    expect(x - half).toBeGreaterThanOrEqual(0);
+    expect(x + Number(rect?.getAttribute('width')) + half).toBeLessThanOrEqual(100);
+  });
+
   it('draws four of them when the roll that failed was a double', () => {
     expect(render(<Dice state={passed([3, 3])} />) && drawn(dashed)).toHaveLength(4);
   });
