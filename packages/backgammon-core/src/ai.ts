@@ -82,10 +82,15 @@ const SHOT_COST = 8;
  * is charged for is one its own hit created, and the term can therefore only
  * ever talk it *out* of hitting. At 8 it did — declining a hit that leaves four
  * blots on the entry points for a quiet play worth 2.6 less, and 7 hits in 376
- * chances that the evaluation this replaces took. At 6 that falls to 3, and the
- * package measures slightly stronger rather than weaker: +0.277 points per game
- * against +0.268. Below 6 both the hitting and the strength go back down, and at
- * 0 the term is worth +0.143 — most of what it is here for.
+ * chances that the evaluation this replaces took. At 6 that falls to 3.
+ *
+ * Six buys back the hits that matter, not all of them: the refusals fall, they
+ * do not stop, and no positive weight makes them, because a term that can only
+ * subtract can never argue *for* a hit. Nor is 6 stronger than 8 — played
+ * against each other over 400 games it is 197-203 and 249-262, which is a tie
+ * leaning the wrong way, and matches +0.277 against +0.268 being noise. The
+ * hitting is the whole reason for the number. Below 6 both it and the strength
+ * fall away, and at 0 the term is worth +0.143 — most of what it is here for.
  */
 const ENTRY_SHOT_COST = 6;
 

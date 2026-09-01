@@ -103,8 +103,13 @@ undercounts a hitter in play, while entry is exact, because a checker on the bar
 More to the point, the only way to put a checker on the bar is to hit it, so every entry shot the AI is charged for
 is one its own hit created, and the term can only ever argue it _out_ of hitting. At 8 it did: it declined a hit that
 left four blots on the entry points — blots with no shots against them at all beforehand — for a quiet play worth 2.6
-less, and refused 7 hits in 376 chances that the old evaluation took. At 6 that is 3, and the strength is
-indistinguishable (+0.277 against +0.268 over 600 games, which is noise). The hitting is the reason, not the points.
+less, and refused 7 hits in 376 chances that the old evaluation took. At 6 that is 3.
+
+Six buys back the hits that matter rather than all of them, and it is worth being plain about that: the refusals
+fall, they do not stop, and no positive weight stops them, because a term that can only subtract can never argue
+_for_ a hit. Nor is 6 the stronger number — played directly against 8 over 400 games it is 197-203 on games and
+249-262 on points, a tie leaning the wrong way, which is what +0.277 against +0.268 being noise looks like. The
+hitting is the reason for the weight; the points are not.
 
 It is a term of its own rather than a fix inside `directShots`, and that is the interesting part. `directShots` has a
 second caller: `winProbability` weighs it at 1.5 against a bar term at 6, both tuned against a count that never saw
