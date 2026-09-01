@@ -114,8 +114,9 @@ describe('Dice — the roll nobody could play', () => {
 
   it('keeps the heavier rim inside the viewBox, where nothing clips it', () => {
     // A stroke straddles its path and a non-root `<svg>` is `overflow: hidden`,
-    // so a 6-wide rim on the live die's `x=2` runs to -1 and loses a unit on all
-    // four sides — flattening the rounded dash caps that carry the whole mark.
+    // so a 6-wide rim on the live die's `x=2` runs to -1 and loses a unit off
+    // all four sides — cutting the `rx` corners flat and thinning the dashes
+    // along the edges, on the one line the whole mark is carried by.
     const { container } = render(<Dice state={passed([6, 5])} />);
     const rect = container.querySelector('rect');
     const half = Number(rect?.getAttribute('stroke-width')) / 2;
@@ -143,6 +144,15 @@ describe('Dice — the roll nobody could play', () => {
   it('says nothing about dice left to play, because there are none', () => {
     render(<Dice state={passed([6, 5])} />);
     expect(screen.queryByText('restants :')).toBeNull();
+  });
+
+  it('gives a reader something to land on, since every die is aria-hidden', () => {
+    render(<Dice state={passed([6, 5])} />);
+    // The pips are decoration and the "restants" span belongs to a live roll, so
+    // without this the group is a name over nothing: browse mode has no node to
+    // stop on and the label is never spoken — and the dashed rim, the one thing
+    // telling these dice from a live roll, is drawn rather than written.
+    expect(screen.getByLabelText(dashed).textContent).toBe('6-5, aucun coup possible');
   });
 });
 
