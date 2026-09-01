@@ -16,8 +16,8 @@ const moving = (roll: [number, number], remaining: number[]): GameState => ({
  * A drawn face has no text to match on, so the value it renders is read off the
  * attribute the component labels it with.
  */
-const drawn = () =>
-  [...screen.getByLabelText('dés').querySelectorAll('svg')].map((el) => ({
+const drawn = (label = 'dés') =>
+  [...screen.getByLabelText(label).querySelectorAll('svg')].map((el) => ({
     face: Number(el.getAttribute('data-face')),
     played: el.getAttribute('data-played') === 'true',
   }));
@@ -69,6 +69,68 @@ describe('Dice', () => {
   it('draws nothing before the roll', () => {
     render(<Dice state={{ ...createInitialState('white'), phase: 'rolling', roll: null, remaining: [] }} />);
     expect(screen.queryByLabelText('dice')).toBeNull();
+  });
+});
+
+/**
+ * The roll that had no legal move in it. The rules pass the turn straight back
+ * the instant that happens and `endTurn` clears `roll`, so before this the dice
+ * were never drawn at all: the player was told their roll was unplayable by a
+ * sentence about dice they had not seen.
+ */
+describe('Dice — the roll nobody could play', () => {
+  const dashed = "dés qui n'ont pas pu être joués";
+
+  const passed = (roll: [number, number]): GameState => ({
+    ...createInitialState('black'),
+    noPlay: { player: 'white', roll },
+  });
+
+  it('draws the roll that went unplayed, once the turn has already passed back', () => {
+    render(<Dice state={passed([6, 5])} />);
+    // Not faded: nothing was spent, and these are exactly the pips the player
+    // never got a chance to read.
+    expect(drawn(dashed)).toEqual([
+      { face: 6, played: false },
+      { face: 5, played: false },
+    ]);
+  });
+
+  it('draws it in the colour of the player who rolled it, not the one now on turn', () => {
+    const { container } = render(<Dice state={passed([6, 5])} />);
+    // White rolled it; the turn is black's. The colour is half of what says
+    // these dice are not the roll on play.
+    expect(container.querySelector('rect')?.getAttribute('class')).toContain('fill-checker-light');
+  });
+
+  it('marks it on the rim, where there is nothing to read', () => {
+    // A strike through the face swallowed the pips it crossed at the ~30px a
+    // phone draws a die — a struck 5 read as a 3, which is the opposite of the
+    // point.
+    const { container } = render(<Dice state={passed([6, 5])} />);
+    expect(container.querySelector('rect')?.getAttribute('stroke-dasharray')).toBe('14 10');
+    expect(container.querySelectorAll('circle')).toHaveLength(11);
+  });
+
+  it('draws four of them when the roll that failed was a double', () => {
+    expect(render(<Dice state={passed([3, 3])} />) && drawn(dashed)).toHaveLength(4);
+  });
+
+  it('gives way to the roll on play, since the cell holds one roll', () => {
+    // `noPlay` outlives this beat on purpose — the sentence about it stays up for
+    // the whole reply — so the reply's own dice have to win here.
+    const answered: GameState = { ...passed([6, 5]), phase: 'moving', roll: [3, 1], remaining: [3, 1] };
+    render(<Dice state={answered} />);
+    expect(screen.queryByLabelText(dashed)).toBeNull();
+    expect(drawn()).toEqual([
+      { face: 3, played: false },
+      { face: 1, played: false },
+    ]);
+  });
+
+  it('says nothing about dice left to play, because there are none', () => {
+    render(<Dice state={passed([6, 5])} />);
+    expect(screen.queryByText('restants :')).toBeNull();
   });
 });
 

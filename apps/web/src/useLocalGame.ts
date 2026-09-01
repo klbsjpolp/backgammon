@@ -15,6 +15,7 @@ import {
   type Move,
   type Player,
 } from '@backgammon/core';
+import { NO_PLAY_HOLD_MS, pendingNoPlay } from '@/lib/noPlay';
 import { useAutoRoll } from '@/useAutoRoll';
 import { useCheckerSelection } from '@/useCheckerSelection';
 
@@ -94,7 +95,10 @@ export const useLocalGame = (): LocalGame => {
   }, []);
 
   const canRoll = isHumanTurn && state.phase === 'rolling';
-  useAutoRoll(autoRoll, canRoll, rollDice);
+  // The roll that could not be played is drawn where this roll's dice go, so an
+  // auto-roll waits for it to have been seen — see `useAutoRoll`.
+  const noPlayToRead = pendingNoPlay(state) !== null;
+  useAutoRoll(autoRoll, canRoll, rollDice, noPlayToRead);
 
   // Drive the AI: offer a double when the cube is right, roll, play its turn a
   // checker at a time, or answer a human double offer.
@@ -108,7 +112,11 @@ export const useLocalGame = (): LocalGame => {
             if (!(s.turn === AI && s.phase === 'rolling')) return s;
             return shouldDouble(s, AI) ? offerDouble(s) : roll(s);
           }),
-        AI_DELAY_MS,
+        // Longer when the human's own roll had no move in it: the rules hand the
+        // turn back the instant that happens, so at the usual delay the dice
+        // they never got to play were replaced by the AI's inside 600ms. The
+        // pause is the only thing between the failure and the answer to it.
+        noPlayToRead ? NO_PLAY_HOLD_MS : AI_DELAY_MS,
       );
       return () => clearTimeout(t);
     }
@@ -150,7 +158,9 @@ export const useLocalGame = (): LocalGame => {
       );
       return () => clearTimeout(t);
     }
-  }, [state]);
+    // `noPlayToRead` is read off `state`, so it never changes on its own — it is
+    // named here because the rule asks for it, not because it can go stale.
+  }, [state, noPlayToRead]);
 
   return {
     ...selection,
