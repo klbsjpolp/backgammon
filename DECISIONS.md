@@ -224,6 +224,16 @@ shape as "this just happened" says so a second time, seconds after the cube
 changed hands. The exchange is an answer to the roll as surely as a roll is, and
 one the player drove themselves, so there is nothing left to tell them.
 
+That half of it is the host's, and online the guest is the one drawing the dice,
+so a guest on this build against a host one release behind still sees the old
+behaviour once per cube exchange — the dice redrawn, an auto-roll taking the long
+hold. It is the bug this removes rather than a new one, it is cosmetic, and it
+ends when the host updates. There is deliberately no client-side guard: the only
+thing separating the two states is the cube, and a test on the cube is wrong
+whenever it was already the dancer's — taken a turn or more before the dance, a
+legitimate `pendingNoPlay` such a guard would suppress. Nothing else in the state
+distinguishes them, which is the whole reason the fix belongs at the transition.
+
 ### Saying it in words was not enough
 
 A sentence naming the pips is not the same as seeing them, and on a phone the whole

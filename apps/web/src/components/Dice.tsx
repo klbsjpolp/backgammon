@@ -199,14 +199,26 @@ export const Dice = ({ state, className }: { state: GameState; className?: strin
   return (
     <div
       role="group"
-      // Named for what it is: the dashed rim says this to everyone else, and a
-      // reader that lands here has nothing else to tell it from a live roll.
+      // Named for what it is, since the dashed rim that says so is drawn and
+      // not written.
       aria-label={blocked ? "dés qui n'ont pas pu être joués" : 'dés'}
       className={cn('flex items-center gap-[0.12em] leading-none', className)}
     >
       {faces.map((face, i) => (
         <Die key={i} value={face.value} played={face.played} blocked={face.blocked} player={face.player} />
       ))}
+      {blocked && (
+        // Without this the group is a name with nothing under it: every die is
+        // `aria-hidden` — the pips are decoration — and the "restants" span
+        // below belongs to a live roll. Browse mode then has no node to stop
+        // on, so the label is never spoken and the dashed rim, the one thing
+        // telling these dice from a live roll, has no non-visual equivalent
+        // here at all. Not a live region, for the reason below: this enters the
+        // DOM with its text. `TurnAnnouncer` is what announces it.
+        <span className="sr-only">
+          {blocked.roll[0]}-{blocked.roll[1]}, aucun coup possible
+        </span>
+      )}
       {!blocked && state.remaining.length > 0 && (
         // The pips carry this to anyone who can see them; a screen reader that
         // lands here reads the list instead. Deliberately *not* a live region:
