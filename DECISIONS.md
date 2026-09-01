@@ -245,7 +245,10 @@ beat it is news in — nothing rolled since, and the failure is the other seat's
 `noPlay` deliberately outlives that beat for the sentence's sake, and a turn later it
 would be redrawing dice the player on turn is about to replace.
 
-They are marked on the **rim**, dashed, and nowhere else. The obvious mark is a strike
+They are marked on the **rim**, dashed, and nowhere else — inset by the half-width
+the heavier stroke gains, since a stroke straddles its path and a non-root `<svg>`
+is `overflow: hidden`, so the live die's `x=2` at width 6 would lose a unit off
+all four sides and flatten the rounded dash caps the mark is carried by. The obvious mark is a strike
 through the face, which is what cancelled looks like — and at the ~30px a phone draws a
 die, the stroke swallows the pips it crosses. Both diagonals run through the centre pip
 and two others of a 5; cutting the line thinner only made it merge with the pips

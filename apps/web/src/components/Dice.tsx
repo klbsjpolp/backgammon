@@ -114,12 +114,19 @@ const Die = ({ value, played, blocked, player }: Face) => {
        * A 5 struck through reads as a 3. That is the opposite of the point:
        * these dice are drawn precisely because the player never got to see them.
        * The rim is the one part of the face carrying nothing to read.
+       *
+       * The heavier rim is inset by the half-width it gains. A stroke straddles
+       * its path, so `x=2` at width 4 puts the outer edge exactly on the
+       * viewBox — which is where the 2 came from — and at width 6 it would run
+       * to -1. A non-root `<svg>` is `overflow: hidden` in the UA stylesheet, so
+       * that unit is cut off on all four sides, flattening the rounded corners
+       * of the one line the whole mark is carried by.
        */}
       <rect
-        x="2"
-        y="2"
-        width="96"
-        height="96"
+        x={blocked ? 3 : 2}
+        y={blocked ? 3 : 2}
+        width={blocked ? 94 : 96}
+        height={blocked ? 94 : 96}
         rx="22"
         strokeWidth={blocked ? 6 : 4}
         strokeDasharray={blocked ? '14 10' : undefined}
