@@ -85,7 +85,21 @@ export const GameLayout = ({ status, board, controls, hint }: GameLayoutProps) =
         'compact:grid-cols-[auto_minmax(11rem,15rem)] compact:items-start compact:gap-x-4 compact:gap-y-3',
       )}
     >
-      <div className="w-full compact:col-start-2 compact:row-start-1">{status}</div>
+      {/*
+       * `min-w-0`, and it is what keeps the board still. A grid item's automatic
+       * minimum size is its *min-content* width, and the status lines are
+       * `truncate` — `white-space: nowrap`, whose min-content is the whole
+       * sentence. So the column sized itself to the longest thing the status
+       * could ever say instead of letting it truncate: the sentence about a roll
+       * nobody could play made the page 464px wide inside a 390px phone, the
+       * board slid 53px to the right as it appeared, and the whole page gained a
+       * sideways scroll for the turn it was on screen. Exactly the shift the
+       * two-line reservation in `TurnStatus` was measured to avoid — vertical
+       * there, horizontal here.
+       *
+       * The band in fullscreen carries the same `min-w-0` for the same reason.
+       */}
+      <div className="w-full min-w-0 compact:col-start-2 compact:row-start-1">{status}</div>
       <div className="compact:col-start-1 compact:row-span-3 compact:row-start-1">{board}</div>
       <div className="w-full compact:col-start-2 compact:row-start-2">{controls}</div>
       {/* Landscape has no height to spare once take/drop show up: the hint goes first. */}

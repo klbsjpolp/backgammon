@@ -830,6 +830,20 @@ buttons under the player's hand.
   A phone and a desktop do not move even then — the sentence fits the line the
   reservation already pays for; only the sidebar grows.
 
+- **The truncating line did not truncate**, and that is the one shift that survived the
+  measurement above — because a roll nobody can play is rare enough not to have come up
+  in the games that were played to take it. `truncate` is `white-space: nowrap`, whose
+  min-content width is the whole sentence, and the automatic minimum size of a grid item
+  is its min-content: with nothing between the sentence and the column allowed to shrink,
+  the column sized itself to the longest thing the status could ever say. So the news
+  about an unplayable roll made the page 464px wide inside a 390px phone. The board slid
+  53px to the right as the message appeared, took a sideways scroll with it, and slid
+  back a turn later — the shift the two-line reservation was measured to prevent, in the
+  axis nobody had measured. One `min-w-0` on the cell that holds the status fixes it, and
+  the ellipsis the line was written for finally appears. The band in fullscreen had
+  carried that `min-w-0` from the start, for the same reason, which is the other half of
+  why this was never seen there.
+
 - **Take, drop and clear-selection were added to the primary control row**, which on a
   portrait phone wrapped it onto a second line. Picking a checker up moved the new-game
   button 52px down the screen and putting it down moved it back — on the single most

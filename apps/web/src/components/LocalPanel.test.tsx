@@ -177,6 +177,21 @@ describe('LocalPanel — a roll nobody could play', () => {
     expect(screen.getByText(/vous avez fait 6-5 et n'avez pas pu jouer/i, { ignore: '.sr-only' })).toBeDefined();
   });
 
+  it('lets the line saying so truncate instead of widening the whole page', () => {
+    renderPanel({ state: withNoPlay('black'), isHumanTurn: true });
+    const line = screen.getByText(/IA a fait 6-5/i, { ignore: '.sr-only' });
+
+    // `truncate` is `white-space: nowrap`, and the automatic minimum size of a
+    // grid item is its min-content — which for nowrap text is the whole
+    // sentence. With nothing between them allowed to shrink, the column sized
+    // itself to the longest thing the status could ever say: the page went 464px
+    // wide inside a 390px phone and the board slid 53px sideways as the message
+    // appeared, then back a turn later. The vertical half of that shift is what
+    // the two-line reservation above already pays for.
+    expect(line.className).toContain('truncate');
+    expect(line.closest('.min-w-0')).not.toBeNull();
+  });
+
   it('says nothing when the last roll was playable', () => {
     renderPanel();
     expect(screen.queryByText(/n'a pas pu jouer/i, { ignore: '.sr-only' })).toBeNull();
