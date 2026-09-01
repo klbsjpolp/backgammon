@@ -37,14 +37,29 @@ describe('pendingNoPlay', () => {
     expect(pendingNoPlay(answered)).toBeNull();
   });
 
-  it('is nothing once a double taken in reply has answered it', () => {
-    // Taking a double comes back to `rolling` with the same player on turn, so
-    // the state alone cannot tell that beat from the one right after the failed
-    // roll. `respondDouble` clears the record for exactly that reason — without
-    // it the dice reappeared seconds after the cube changed hands.
-    const taken = respondDouble(offerDouble(applyRoll(barred(), [6, 5])), true);
+  it('holds across a double offered in reply, rather than blinking off and back', () => {
+    // The turn does not change hands over a cube exchange, so the roll is still
+    // unanswered throughout it. Leaving `doubleOffered` out took the dice off
+    // the screen at the offer and put them back at the take — and coming back is
+    // what reads as news a second time. Staying is not news at all.
+    const passed = applyRoll(barred(), [6, 5]);
+    const offered = offerDouble(passed);
+    const taken = respondDouble(offered, true);
+
+    expect(offered.phase).toBe('doubleOffered');
     expect(taken.phase).toBe('rolling');
-    expect(pendingNoPlay(taken)).toBeNull();
+    for (const state of [passed, offered, taken]) {
+      expect(pendingNoPlay(state)).toEqual({ player: 'white', roll: [6, 5] });
+    }
+  });
+
+  it('is nothing once the game is over, whatever the record still says', () => {
+    // A refused double ends the game with the record still set. There are no
+    // more dice to draw under a result.
+    const dropped = respondDouble(offerDouble(applyRoll(barred(), [6, 5])), false);
+    expect(dropped.phase).toBe('gameOver');
+    expect(dropped.noPlay).not.toBeNull();
+    expect(pendingNoPlay(dropped)).toBeNull();
   });
 
   it('is nothing when the failure belongs to the player now on roll', () => {

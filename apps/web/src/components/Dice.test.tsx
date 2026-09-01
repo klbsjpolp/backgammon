@@ -129,6 +129,19 @@ describe('Dice — the roll nobody could play', () => {
     expect(render(<Dice state={passed([3, 3])} />) && drawn(dashed)).toHaveLength(4);
   });
 
+  it('stays drawn while a double offered in reply is being answered', () => {
+    // The cube exchange does not change hands, so the roll is still unanswered
+    // through it. Taking the dice down at the offer and putting them back at the
+    // take is what read as news twice — and they are worth seeing while
+    // deciding, being a roll the opponent could not play.
+    const offered: GameState = { ...passed([6, 5]), phase: 'doubleOffered', doubleOfferedBy: 'black' };
+    render(<Dice state={offered} />);
+    expect(drawn(dashed)).toEqual([
+      { face: 6, played: false },
+      { face: 5, played: false },
+    ]);
+  });
+
   it('gives way to the roll on play, since the cell holds one roll', () => {
     // `noPlay` outlives this beat on purpose — the sentence about it stays up for
     // the whole reply — so the reply's own dice have to win here.
@@ -153,6 +166,28 @@ describe('Dice — the roll nobody could play', () => {
     // stop on and the label is never spoken — and the dashed rim, the one thing
     // telling these dice from a live roll, is drawn rather than written.
     expect(screen.getByLabelText(dashed).textContent).toBe('6-5, aucun coup possible');
+  });
+});
+
+describe('Dice — the roll that ended the game', () => {
+  /**
+   * `applyLegalMove` returns `gameOver` with the roll still set and `remaining`
+   * emptied, so the winning throw stays drawn — the one live roll with nothing
+   * left to play, and it sits there for the whole final screen.
+   */
+  const won = (): GameState => ({
+    ...createInitialState('white'),
+    phase: 'gameOver',
+    roll: [6, 5],
+    remaining: [],
+    result: { winner: 'white', kind: 'single', points: 1, cubeValue: 1 },
+  });
+
+  it('still says what is drawn, rather than leaving a name over nothing', () => {
+    // Every die is `aria-hidden`, so without a text node the group is a label a
+    // reader can never land on.
+    render(<Dice state={won()} />);
+    expect(screen.getByLabelText('dés').textContent).toBe('6-5, plus rien à jouer');
   });
 });
 

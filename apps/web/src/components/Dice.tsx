@@ -189,11 +189,8 @@ export const Dice = ({ state, className }: { state: GameState; className?: strin
   // it was never drawn at all: the turn passed back before the dice reached the
   // screen, which is the complaint this answers.
   const blocked = pendingNoPlay(state);
-  const faces = blocked
-    ? blockedFaces(blocked)
-    : state.roll && state.phase !== 'rolling'
-      ? facesFor(state.roll, state.remaining, state.turn)
-      : null;
+  const live = !blocked && state.roll && state.phase !== 'rolling' ? state.roll : null;
+  const faces = blocked ? blockedFaces(blocked) : live ? facesFor(live, state.remaining, state.turn) : null;
   if (!faces) return null;
 
   return (
@@ -219,15 +216,31 @@ export const Dice = ({ state, className }: { state: GameState; className?: strin
           {blocked.roll[0]}-{blocked.roll[1]}, aucun coup possible
         </span>
       )}
-      {!blocked && state.remaining.length > 0 && (
+      {live && (
         // The pips carry this to anyone who can see them; a screen reader that
-        // lands here reads the list instead. Deliberately *not* a live region:
-        // this element only exists once a roll has landed, so it enters the DOM
-        // with its content and would never announce anyway. Saying it is the
-        // job of the one region that is always mounted — see `TurnStatus`.
+        // lands here reads it instead. Deliberately *not* a live region: this
+        // element only exists once a roll has landed, so it enters the DOM with
+        // its content and would never announce anyway. Saying it is the job of
+        // the one region that is always mounted — see `TurnStatus`.
+        //
+        // Unconditional, where the list used to be dropped on an empty
+        // `remaining`. That is not the impossible case it looks like: winning
+        // leaves `applyLegalMove` in `gameOver` with the roll still set and
+        // `remaining` emptied, so the throw that ended the game stays drawn —
+        // and dropping the text left a group labelled "dés" over nothing but
+        // `aria-hidden` pips, for the whole of the final screen rather than for
+        // a beat.
         <span className="sr-only">
-          <span>restants : </span>
-          {state.remaining.join(', ')}
+          {state.remaining.length > 0 ? (
+            <>
+              <span>restants : </span>
+              {state.remaining.join(', ')}
+            </>
+          ) : (
+            // What is on screen, and true whether the last die was spent or
+            // discarded by the win: nothing is left to play with.
+            `${live[0]}-${live[1]}, plus rien à jouer`
+          )}
         </span>
       )}
     </div>

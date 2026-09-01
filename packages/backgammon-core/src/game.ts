@@ -165,12 +165,5 @@ export const respondDouble = (state: GameState, accept: boolean): GameState => {
     phase: 'rolling',
     doubleOfferedBy: null,
     cube: { value: state.cube.value * 2, owner: responder },
-    // The exchange just answered whatever roll went unplayed before it, so the
-    // record is spent. Without this the state it returns to — same turn, back to
-    // `rolling`, `noPlay` untouched — is indistinguishable from the moment right
-    // after the failed roll, and the UI reads it as news a second time: the dice
-    // it draws struck out reappear seconds after the cube changed hands. Only
-    // the accepting branch needs it; refusing ends the game.
-    noPlay: null,
   };
 };

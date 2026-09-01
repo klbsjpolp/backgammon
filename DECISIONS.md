@@ -221,18 +221,27 @@ A double taken in that reply ends it too, which is not symmetry for its own sake
 state it hands back is otherwise indistinguishable from the one right after the
 failed roll — same turn, same phase, same record — and anything reading that
 shape as "this just happened" says so a second time, seconds after the cube
-changed hands. The exchange is an answer to the roll as surely as a roll is, and
-one the player drove themselves, so there is nothing left to tell them.
+changed hands. A double offered in reply is not an answer to it, though, and getting that wrong
+cost a detour worth recording. `respondDouble` comes back to `rolling` with the
+same player still on turn, so the state after a cube exchange is
+indistinguishable from the one right after the failed roll — and the dice, which
+were only drawn in `rolling`, went off the screen at the offer and came back at
+the take, reading as news a second time.
 
-That half of it is the host's, and online the guest is the one drawing the dice,
-so a guest on this build against a host one release behind still sees the old
-behaviour once per cube exchange — the dice redrawn, an auto-roll taking the long
-hold. It is the bug this removes rather than a new one, it is cosmetic, and it
-ends when the host updates. There is deliberately no client-side guard: the only
-thing separating the two states is the cube, and a test on the cube is wrong
-whenever it was already the dancer's — taken a turn or more before the dance, a
-legitimate `pendingNoPlay` such a guard would suppress. Nothing else in the state
-distinguishes them, which is the whole reason the fix belongs at the transition.
+The first fix was to clear `noPlay` in `respondDouble`, and it was the wrong
+layer: it deletes the sentence and the announcement too, and those are the ones
+with the long life. An opponent who taps Double a fifth of a second after the
+dance would have left the player told nothing at all about what they threw — the
+complaint this whole section exists to answer, reintroduced by its own fix.
+
+The record was never the thing appearing twice; only the dice were, and only
+because they were taken down in between. The cube exchange spans
+`rolling → doubleOffered → rolling` without the turn changing hands, so it is one
+unanswered roll throughout, and `pendingNoPlay` covers both phases. The dice
+never unmount, which is not merely quieter than reappearing — it is the honest
+picture, since they are still the last thing thrown, and a roll the opponent
+could not play is worth seeing while deciding whether to take. `core` is
+untouched, so nothing here depends on the host and guest agreeing on a new rule.
 
 ### Saying it in words was not enough
 

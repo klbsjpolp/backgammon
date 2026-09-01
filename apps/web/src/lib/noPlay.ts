@@ -13,32 +13,30 @@ import type { GameState, NoPlay } from '@backgammon/core';
 export const NO_PLAY_HOLD_MS = 1500;
 
 /**
- * The roll that just went unplayed, while it is still the last thing that
- * happened — or `null`.
+ * The roll that just went unplayed, for as long as it is still the last thing
+ * that happened — or `null`.
  *
- * `state.noPlay` deliberately outlives that moment: it is kept until the player
- * who rolled it rolls again, so the sentence about it stays on screen for the
- * whole of the reply. The dice cannot be kept that long, because the cell that
- * draws them holds one roll and the reply needs it. So this narrows the record
- * to the beat between the failed roll and the answer to it: nothing has been
- * rolled since (`rolling`), and the failure belongs to the other seat, which is
- * what tells this beat apart from the one a turn later — there `noPlay` is still
- * set, but it is the roll the player on turn is about to replace, not news.
- */
-/*
- * Online, this needs the host to be on a build that clears `noPlay` when a
- * double is taken — and a host a release behind is ordinary here. Against an
- * older one the record survives that exchange, the state comes back
- * indistinguishable from the failed roll's own, and this fires a second time:
- * the dice are redrawn and an auto-roll takes the long hold. It is the bug the
- * fix removes, not a new one, and it is cosmetic and transient.
+ * `state.noPlay` deliberately outlives that: it is kept until the player who
+ * rolled it rolls again, so the sentence about it stays on screen for the whole
+ * reply. The dice cannot be kept that long, because the cell that draws them
+ * holds one roll and the reply needs it. So this is the narrower question of
+ * whether the failed roll is still unanswered — which is exactly the two phases
+ * in which no roll is on play and the game is still going.
  *
- * There is no guard for it on this side. The only difference between the two
- * states is the cube, and a test on it is wrong in the case where the cube was
- * already the dancer's — taken a turn or more before the dance — which is a
- * legitimate `pendingNoPlay` that such a guard would suppress. Nothing else in
- * the state says which of the two beats this is, which is exactly why the fix
- * had to go where the transition happens.
+ * `doubleOffered` belongs in that list and leaving it out was a bug of its own.
+ * The turn does not change hands over a cube exchange, so an opponent who
+ * doubles instead of rolling has not answered the roll — but the phase moves
+ * `rolling → doubleOffered → rolling`, which took the dice off the screen and
+ * put them back. Coming back is what read as news a second time; staying is not
+ * news at all, and it is also the honest picture: those dice are still the last
+ * thing thrown, and a roll the opponent could not play is worth knowing while
+ * deciding whether to take.
+ *
+ * The second condition is what ends the episode without a roll: a turn later the
+ * record is still set, and it then belongs to the player about to replace it
+ * rather than to the one waiting to see it.
  */
 export const pendingNoPlay = (state: GameState): NoPlay | null =>
-  state.phase === 'rolling' && state.noPlay && state.noPlay.player !== state.turn ? state.noPlay : null;
+  (state.phase === 'rolling' || state.phase === 'doubleOffered') && state.noPlay && state.noPlay.player !== state.turn
+    ? state.noPlay
+    : null;

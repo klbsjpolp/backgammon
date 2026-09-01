@@ -408,18 +408,17 @@ describe('a roll with no legal move', () => {
     expect(applyRoll(backToWhite, [6, 5]).noPlay).toBeNull();
   });
 
-  it('is answered by a double being taken, not only by the next roll', () => {
-    // Taking a double returns to `rolling` with the same player on turn, so
-    // without clearing it here the state is indistinguishable from the one right
-    // after the failed roll — and a UI reading it as "this just happened" says so
-    // a second time, seconds after the cube changed hands.
+  it('survives a double offered and taken in reply, which is not an answer to it', () => {
+    // The turn does not change hands over a cube exchange, so the record has to
+    // outlive it: the opponent still has not rolled, and this is all the player
+    // has been told about what they threw.
     const offered = offerDouble(danced());
     expect(offered.noPlay).toEqual({ player: 'white', roll: [3, 4] });
 
     const taken = respondDouble(offered, true);
     expect(taken.phase).toBe('rolling');
     expect(taken.turn).toBe('black');
-    expect(taken.noPlay).toBeNull();
+    expect(taken.noPlay).toEqual({ player: 'white', roll: [3, 4] });
   });
 });
 
