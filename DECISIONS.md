@@ -216,17 +216,12 @@ says so. It is held until the player who rolled it rolls again, rather than bein
 cleared by the next roll of any kind, so it stays up for the whole of the
 opponent's reply instead of flashing past inside the AI's think time.
 
-A double taken in that reply ends it too, which is not symmetry for its own sake.
-`respondDouble` returns to `rolling` with the same player still on turn, so the
-state it hands back is otherwise indistinguishable from the one right after the
-failed roll — same turn, same phase, same record — and anything reading that
-shape as "this just happened" says so a second time, seconds after the cube
-changed hands. A double offered in reply is not an answer to it, though, and getting that wrong
-cost a detour worth recording. `respondDouble` comes back to `rolling` with the
-same player still on turn, so the state after a cube exchange is
-indistinguishable from the one right after the failed roll — and the dice, which
-were only drawn in `rolling`, went off the screen at the offer and came back at
-the take, reading as news a second time.
+A double offered in reply is not an answer to it, and getting that wrong cost a
+detour worth recording. `respondDouble` comes back to `rolling` with the same
+player still on turn, so the state after a cube exchange is indistinguishable
+from the one right after the failed roll — same turn, same phase, same record —
+and the dice, which were only drawn in `rolling`, went off the screen at the
+offer and came back at the take, reading as news a second time.
 
 The first fix was to clear `noPlay` in `respondDouble`, and it was the wrong
 layer: it deletes the sentence and the announcement too, and those are the ones
@@ -267,7 +262,10 @@ would be redrawing dice the player on turn is about to replace.
 They are marked on the **rim**, dashed, and nowhere else — inset by the half-width
 the heavier stroke gains, since a stroke straddles its path and a non-root `<svg>`
 is `overflow: hidden`, so the live die's `x=2` at width 6 would lose a unit off
-all four sides and flatten the rounded dash caps the mark is carried by. The obvious mark is a strike
+all four sides — cutting the `rx` corners flat and thinning the dashes along the
+edges, on the one line the mark is carried by. There is no round linecap on that
+rect; the dashes end square by default, so the caps are not what a clipped unit
+costs. The obvious mark is a strike
 through the face, which is what cancelled looks like — and at the ~30px a phone draws a
 die, the stroke swallows the pips it crosses. Both diagonals run through the centre pip
 and two others of a 5; cutting the line thinner only made it merge with the pips
@@ -285,6 +283,22 @@ usual 600ms think time or auto-roll's 300ms, which is not enough time to look do
 the dice cell and back. The hold is presentation only — the guard inside `roll` is what
 makes both safe — and it costs nothing in the ordinary case, because a roll that could
 be played never enters it.
+
+It does fire a second time when a cube exchange interrupts that beat, and it is left
+that way on purpose. Dance, opponent doubles, you take: the hold is unanswered
+throughout, so the automatic roll after the take waits 1.5s again rather than the
+usual 600ms or 300ms. Removing it needs the UI to remember that this record's hold
+has already been served, because no reading of the state distinguishes the two
+moments — the cube is the only field that differs, and a test on it is wrong whenever
+the cube was already the dancer's before the dance. That memory would have to live in
+two hooks, compare records by value rather than identity (online every frame is
+re-parsed), and clear itself when the episode ends — and online it would be fed by
+broadcast frames that can repeat or resync, so it would be least reliable exactly
+where it is hardest to reason about. Against ~900ms, once, in a sequence that needs a
+dance answered immediately by a double, and with the cube having just doubled — new
+information the player has to absorb, which the status line argues is the one thing
+that must be visible immediately — the pause is not dead time and the machinery is
+not worth it.
 
 ## Watching the AI move
 
