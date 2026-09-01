@@ -59,9 +59,26 @@ The UI numbers points a third way: each player sees their own 1..24, counting fr
   deferred mid-game, so a host one release behind is ordinary. A field you _add_ must be tolerated as absent —
   `.nullish().transform((v) => v ?? null)`, not `.nullable()`. A dropped frame is `console.warn`ed, because a silent
   incompatibility is the worst version of this bug.
+- **`directShots` has two callers.** `evaluateBoard` weighs it for checker play, `winProbability` for cube decisions.
+  Changing what counts as a shot silently re-tunes doubling, which no checker-play measurement covers — `entryShots`
+  is a separate term added only in `evaluateBoard` for exactly that reason.
 - **Checker count is 30, always.** Any change to `applyMove` / bearing off wants a test that asserts it.
 - **The version in `package.json` is derived, never hand-edited.** `commit-and-tag-version` computes it from the
   commit history on every push to `main`. Don't touch it, `CHANGELOG.md`, or the tags.
+
+## Changing the AI evaluation
+
+`evaluateBoard` is tuned, not derived, and reasoning about it is wrong often enough that nothing goes in unmeasured.
+
+- **Duel it, and run base-against-base first.** `npx tsx` a scratch script importing
+  `packages/backgammon-core/src/index.js`, play N seeded games swapping sides every game, and score points rather
+  than wins. The seed asymmetry alone moves the win rate ~2%, so without that control you will read noise as a
+  result. 600 games takes ~10s.
+- **Most good-sounding terms measure as nothing.** A race branch, quadrant crossovers and four gammon-specific terms
+  all tied or lost; what won was a stacking penalty, backgammon stakes and counting hits from the bar. DECISIONS.md
+  records which and why the losers lost — read it before re-deriving one of them.
+- **A term that can only subtract plays one-sided.** Entry shots at the board-shot weight talked the AI out of
+  hitting, because the hit is what puts the checker on the bar it is then charged for.
 
 ## Web app conventions
 
@@ -124,6 +141,9 @@ fixes what it can.
 Vitest. Core and runtime keep tests in `tests/`; the web app colocates `*.test.tsx` beside the component and uses
 jsdom + Testing Library. `createRng(seed)` in `core` gives deterministic dice — use it instead of stubbing
 `Math.random`. Test through the public API of a package rather than its internals.
+
+`npx vitest run --coverage --coverage.reporter=text` inside a package lists uncovered lines. Codecov comments on
+every PR and flags changed lines no test reaches.
 
 `apps/web/vitest.setup.ts` exists only to hand the web tests a working `localStorage` on Node ≥ 25, which defines an
 inert one that Vitest's jsdom environment then refuses to overwrite. It is inert itself on the Node versions CI runs;
