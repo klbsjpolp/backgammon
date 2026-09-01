@@ -202,6 +202,33 @@ describe('ai', () => {
     expect(evaluateBoard(covered, 'white')).toBeLessThan(evaluateBoard(clear, 'white'));
   });
 
+  it('still hits when the hit is what creates the entry shots', () => {
+    // The only way to put a checker on the bar is to hit it, so every entry shot
+    // the AI is charged for is one its own hit created — the term can only ever
+    // argue against hitting. Here 13/10* leaves four blots on black's entry
+    // points that had no shots against them at all beforehand, and pricing entry
+    // at the full shot weight talked the AI out of the hit.
+    const board = makeBoard({
+      1: 1,
+      2: 1,
+      3: 1,
+      4: 1,
+      13: 3,
+      20: 3,
+      21: 4,
+      22: 1,
+      10: -1,
+      17: -2,
+      18: -5,
+      19: -5,
+      23: -2,
+    });
+    const hit = applyMove(board, 'white', { from: 13, to: 10, die: 3, hit: true });
+    const quiet = applyMove(board, 'white', { from: 4, to: 1, die: 3, hit: false });
+    expect(hit.bar.black).toBe(1);
+    expect(evaluateBoard(hit, 'white')).toBeGreaterThan(evaluateBoard(quiet, 'white'));
+  });
+
   it('keeps entry shots out of the cube calculation', () => {
     // `winProbability` shares `directShots` with the evaluation and weighs it
     // against a bar term tuned without entry shots, so counting them there
