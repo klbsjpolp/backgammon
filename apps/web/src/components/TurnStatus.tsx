@@ -146,9 +146,8 @@ export const TurnStatus = (props: TurnStatusProps) => {
          * playing for has to be visible immediately, not once the opponent
          * rolls again. Then the roll nobody could play, which is gone for good
          * if it is missed — and which lives until the player who rolled it
-         * rolls again, or until a double offered in reply is taken (see
-         * `applyRoll` and `respondDouble`), so it is on screen for the reply
-         * and not for a moment. The pip counts come last because they
+         * rolls again (see `applyRoll`), so it is on screen for the whole of
+         * the reply, not for a moment. The pip counts come last because they
          * are the one thing here the board itself carries: on a phone with news
          * to report they are what runs off the end.
          */}
