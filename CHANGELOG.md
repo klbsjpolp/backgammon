@@ -2,6 +2,7 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.1.41](https://github.com/klbsjpolp/backgammon/compare/v0.1.40...v0.1.41) (2026-09-01)
 ## [0.1.40](https://github.com/klbsjpolp/backgammon/compare/v0.1.39...v0.1.40) (2026-09-01)
 
 ### Features
