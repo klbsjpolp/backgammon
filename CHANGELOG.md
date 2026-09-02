@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.1.43](https://github.com/klbsjpolp/backgammon/compare/v0.1.42...v0.1.43) (2026-09-02)
+
+### Features
+
+* **web:** name the cube in the sentence that ends the game ([f664e1b](https://github.com/klbsjpolp/backgammon/commit/f664e1b0fa48397ad54e7068b348bf970cf33863))
 ## [0.1.42](https://github.com/klbsjpolp/backgammon/compare/v0.1.41...v0.1.42) (2026-09-01)
 
 ### Features
