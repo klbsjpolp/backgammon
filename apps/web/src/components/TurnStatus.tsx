@@ -21,9 +21,13 @@ interface TurnStatusProps {
 /** The headline: who is on play, what they owe, or how the game ended. */
 const describeTurn = ({ state, you, opponentLabel }: TurnStatusProps): string => {
   if (state.phase === 'gameOver' && state.result) {
-    const { winner, kind, points } = state.result;
+    const { winner, kind, points, cubeValue } = state.result;
     const subject = winner === you ? 'Vous gagnez' : `${capitalise(SIDE[winner])} gagne`;
-    return `${subject} ${WIN_KIND[kind]} — ${points} point${points === 1 ? '' : 's'}`;
+    // The cube is the difference between the win kind and the points, and once
+    // the game is over nothing else on screen still shows it. A game played at
+    // ×1 says nothing: naming a multiplier that never moved reads as if it had.
+    const multiplier = cubeValue > 1 ? ` (×${cubeValue})` : '';
+    return `${subject} ${WIN_KIND[kind]}${multiplier} — ${points} point${points === 1 ? '' : 's'}`;
   }
 
   if (state.phase === 'doubleOffered' && state.doubleOfferedBy) {
