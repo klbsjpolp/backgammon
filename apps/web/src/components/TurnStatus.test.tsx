@@ -131,6 +131,22 @@ describe('TurnStatus — what is announced', () => {
     expect(box?.textContent).toBe('Noir gagne un backgammon — 3 points');
   });
 
+  it('names the cube in the result when it moved, and stays quiet when it did not', () => {
+    // Points alone leave the reader multiplying: a gammon is worth 2, so 4
+    // points only makes sense once the ×2 is on the line with it.
+    const doubled: GameState = {
+      ...createInitialState('white'),
+      phase: 'gameOver',
+      result: { winner: 'white', kind: 'gammon', points: 4, cubeValue: 2 },
+    };
+    const { container, rerender } = render(<Status state={doubled} you="white" opponentLabel="IA" />);
+    expect(container.querySelector('.min-h-\\[2lh\\]')?.textContent).toBe('Vous gagnez un gammon (×2) — 4 points');
+
+    const undoubled: GameState = { ...doubled, result: { winner: 'white', kind: 'single', points: 1, cubeValue: 1 } };
+    rerender(<Status state={undoubled} you="white" opponentLabel="IA" />);
+    expect(container.querySelector('.min-h-\\[2lh\\]')?.textContent).toBe('Vous gagnez une partie simple — 1 point');
+  });
+
   it('leaves the visible spans silent so nothing is said twice', () => {
     const { container } = render(
       <Status state={applyRoll(createInitialState('white'), [6, 5])} you="white" opponentLabel="IA" />,
