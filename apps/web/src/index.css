@@ -197,6 +197,151 @@ body {
 }
 
 /*
+ * Texture.
+ *
+ * Every surface on the board is one flat colour from the theme layer with a
+ * pattern of light and shadow poured over it: the weave of the cloth, the grain
+ * of the wood the points and the trays are cut from, the moulding of a checker.
+ * The pattern is geometry and lives here; how hard it is drawn is the theme's,
+ * since a cream board takes a shadow where a dark felt takes a highlight — see
+ * the texture group at the end of each block in `themes.css`.
+ *
+ * Two rules keep the texture from quietly undoing the palette work the contrast
+ * gate measures. It is only ever an overlay, so the colour underneath is still
+ * the hex `contrast.test.ts` reads off the stylesheet; and every alpha is low
+ * enough that the *mean* of a textured surface stays within a point or two of
+ * that hex. A weave that pulled the felt a shade darker would re-tune every ring
+ * on the board and nothing anywhere would fail.
+ *
+ * The periods scale with `--pt` and are clamped at both ends. A thread is a
+ * thread: it must not grow into rope on a fullscreen 4K board, and under about
+ * 2px a repeating gradient stops being a pattern and starts being moiré.
+ */
+
+/*
+ * The cloth. Warp and weft cross at one thread per period, which is what makes
+ * it read as woven rather than as ruled lines; the vignette is the light of a
+ * room falling on a table, and it is the only reason a large board does not read
+ * as a flat rectangle of green.
+ */
+.board-frame {
+  --weave: clamp(2px, calc(var(--pt) * 0.07), 4px);
+
+  background-image:
+    radial-gradient(120% 85% at 50% -8%, transparent 55%, var(--felt-vignette) 100%),
+    repeating-linear-gradient(90deg, var(--felt-warp) 0 1px, transparent 1px var(--weave)),
+    repeating-linear-gradient(0deg, var(--felt-weft) 0 1px, transparent 1px var(--weave));
+}
+
+/*
+ * The points, cut from a board with the grain running the length of each one —
+ * two stripe periods rather than one, at a ratio that is not a whole number, so
+ * the pattern does not visibly repeat down a point.
+ *
+ * The shading runs *to the tip*: a real point is a triangle and the tip is the
+ * end that darkens. Which end that is depends on the row, so the direction is an
+ * attribute rather than a constant. `--point-fade` keeps a default for the same
+ * reason `--board-stack-count` is written by the component — an element that
+ * somehow arrived without the attribute would make `linear-gradient()` invalid,
+ * and an invalid layer takes the whole stack with it.
+ */
+.board-point {
+  --grain: clamp(3px, calc(var(--pt) * 0.11), 7px);
+  --point-fade: to bottom;
+
+  background-image:
+    linear-gradient(var(--point-fade), var(--wood-sheen) 0%, transparent 40%, var(--wood-grain) 100%),
+    repeating-linear-gradient(90deg, var(--wood-grain) 0 1px, transparent 1px var(--grain)),
+    repeating-linear-gradient(90deg, var(--wood-sheen) 0 1px, transparent 1px calc(var(--grain) * 1.7));
+}
+
+.board-point[data-orientation='bottom'] {
+  --point-fade: to top;
+}
+
+/*
+ * The bar and the trays: the same wood, cut coarser and lit across their width
+ * rather than along their length. They are the raised furniture of the board and
+ * not part of its playing surface, and the barrel of light across them is what
+ * says so.
+ */
+.board-bar,
+.board-tray {
+  --grain: clamp(3px, calc(var(--pt) * 0.13), 8px);
+
+  background-image:
+    linear-gradient(90deg, var(--wood-sheen) 0%, transparent 20%, transparent 76%, var(--wood-grain) 100%),
+    repeating-linear-gradient(90deg, var(--wood-grain) 0 1px, transparent 1px var(--grain)),
+    repeating-linear-gradient(90deg, var(--wood-sheen) 0 1px, transparent 1px calc(var(--grain) * 2.3));
+}
+
+/*
+ * A checker, moulded rather than printed: light from the upper left, the shadow
+ * it leaves opposite, and the turned groove a real one carries a little inside
+ * its rim. The groove stops short of that rim on purpose — on three of the four
+ * checker/point pairs this board has, the rim is what carries the 3:1 the theme
+ * was tuned for, so it is the one part of a checker the texture may not touch.
+ *
+ * The contact shadow is a `filter` and not a `box-shadow` because the rim *is* a
+ * box-shadow: Tailwind composes its rings into that one property, and a plain
+ * rule here would win the cascade and take the rim off every checker on the
+ * board. It is also why the offset is in pixels rather than in `--pt` — the same
+ * class is worn by the ghost under the pointer, which is drawn on the page
+ * rather than in the board and never inherits the board's unit.
+ */
+.board-checker {
+  background-image:
+    radial-gradient(
+      circle at 50% 50%,
+      transparent 0 61%,
+      var(--checker-groove) 61% 68%,
+      var(--checker-sheen) 68% 72%,
+      transparent 72%
+    ),
+    radial-gradient(circle at 32% 28%, var(--checker-sheen) 0%, transparent 58%),
+    radial-gradient(circle at 68% 74%, var(--checker-shade) 0%, transparent 62%);
+  filter: drop-shadow(0 1px 1px var(--checker-cast));
+}
+
+/*
+ * The die's bevel. An `<svg>` has no `background-image` to pour a gradient into,
+ * so the gradient is declared in the markup and only its stops are coloured from
+ * here — which keeps `Dice.tsx` free of anything the theme layer owns, like
+ * every other component.
+ */
+.die-sheen {
+  stop-color: var(--die-sheen);
+}
+
+.die-shade {
+  stop-color: var(--die-shade);
+}
+
+/*
+ * Asked for more contrast, the board drops every texture and goes back to the
+ * flat colours the palette was measured at. Nothing above carries information —
+ * it is all light and shadow on surfaces that already say what they are — so
+ * there is nothing to lose here and a little edge definition to gain.
+ */
+@media (prefers-contrast: more) {
+  .board-frame,
+  .board-point,
+  .board-bar,
+  .board-tray,
+  .board-checker {
+    background-image: none;
+  }
+
+  .board-checker {
+    filter: none;
+  }
+
+  .die-bevel {
+    display: none;
+  }
+}
+
+/*
  * Dragging a checker.
  *
  * `touch-action: none` on the points you can actually play is the scroll lock: by
