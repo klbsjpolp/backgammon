@@ -1229,6 +1229,23 @@ there is nothing to lose there and a little edge definition to gain.
   reached from the other end. The check therefore sits with the `RELEASE_PUSH_TOKEN` guard, in
   the only window where a refusal still costs nothing.
 
+- **A version the commits cannot produce is a `workflow_dispatch` input, not a hand
+  edit.** `commit-and-tag-version` derives the version from the history and writes
+  `package.json`, `CHANGELOG.md` and the tag together, so editing any of them by hand
+  desynchronises the three. But conventional commits below 1.0.0 cannot _reach_ 1.0.0:
+  a breaking change bumps the minor while the major is 0. `release_as` therefore lets a
+  dispatched run pass `--release-as` to the same tool, which still generates the
+  changelog off the commits and still cuts one atomic release — the version is the only
+  thing named by hand, and only on a run someone deliberately started.
+- **`pnpm release -- --no-verify` never passed `--no-verify`.** pnpm takes the bare `--`
+  as an argument of its own, so `commit-and-tag-version` saw nothing after it and the
+  step had been running flagless since it was written. It cost nothing — the release
+  commit message satisfies commitlint, so the hook it meant to skip passed anyway —
+  which is exactly why it survived: a swallowed flag whose absence changes nothing
+  leaves no evidence. It stops being free the moment a flag carries a decision, and
+  `--release-as` swallowed the same way would cut the derived version while reporting
+  success. The flags go straight on the command now.
+
 - **`workflow_run` fires on completion, not on success.** Chaining Deploy to CI that way
   reads as "deploy what CI proved", but the event carries a `conclusion` that has to be
   checked or a red CI ships anyway. The gate lives in the `release` job's `if`, alongside

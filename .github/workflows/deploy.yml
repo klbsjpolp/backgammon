@@ -14,6 +14,11 @@ on:
     branches: [main]
   workflow_dispatch:
     inputs:
+      release_as:
+        description: 'Force the version this run releases (e.g. 1.0.0); blank derives it from the commits as usual'
+        type: string
+        required: false
+        default: ''
       minimum_supported_version:
         description: 'Oldest release tag still allowed to run (e.g. v1.4.0); blank leaves updates optional'
         type: string
@@ -95,9 +100,28 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
+      # `pnpm release -- --no-verify` does not do what it reads as: pnpm takes the
+      # bare `--` as an argument of its own and commit-and-tag-version never sees
+      # what follows it, so this step has been running with no flags at all. It
+      # happened not to matter — the release commit message satisfies commitlint,
+      # so the hook it meant to skip passed anyway — but it matters now, because
+      # `--release-as` swallowed the same way would quietly cut the derived
+      # version instead of the one that was asked for. The flags go straight on.
+      #
+      # `release_as` is how a version the commits cannot produce gets cut: from
+      # 0.x, conventional commits bump the minor for a breaking change and never
+      # reach 1.0.0 on their own. Blank on every scheduled run, so the derived
+      # version stays the default and this is a deliberate act each time.
       - name: Create release commit and tag
         shell: bash
-        run: pnpm release -- --no-verify
+        env:
+          RELEASE_AS: ${{ inputs.release_as }}
+        run: |
+          if [ -n "$RELEASE_AS" ]; then
+            pnpm release --no-verify --release-as "$RELEASE_AS"
+          else
+            pnpm release --no-verify
+          fi
 
       # --atomic is load-bearing: without it the tag and the branch are separate
       # ref updates, so a ruleset that declines the branch still publishes the
