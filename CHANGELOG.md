@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.0.0](https://github.com/klbsjpolp/backgammon/compare/v0.1.44...v1.0.0) (2026-09-03)
+
+### Features
+
+* **web:** draw the board's materials, not just its colours ([5f79976](https://github.com/klbsjpolp/backgammon/commit/5f79976acc00a1b8469479edbe643a7e74d636b6))
 ## [0.1.44](https://github.com/klbsjpolp/backgammon/compare/v0.1.43...v0.1.44) (2026-09-02)
 ## [0.1.43](https://github.com/klbsjpolp/backgammon/compare/v0.1.42...v0.1.43) (2026-09-02)
 
