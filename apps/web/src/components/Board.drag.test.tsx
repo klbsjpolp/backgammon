@@ -195,7 +195,11 @@ describe('dragging a checker', () => {
     // checker in the player's hand stops being drawn there.
     const lifted = source.querySelectorAll('.invisible');
     expect(lifted).toHaveLength(1);
-    expect(document.body.querySelector('[aria-hidden="true"].fixed')).not.toBeNull();
+    const ghost = document.body.querySelector('[aria-hidden="true"].fixed');
+    expect(ghost).not.toBeNull();
+    // Drawn on the page rather than in the board, and still the same checker —
+    // its moulding comes from a class that names no length of the board's own.
+    expect(ghost?.className).toContain('board-checker');
   });
 
   it('plays the move when it is let go over a destination', () => {

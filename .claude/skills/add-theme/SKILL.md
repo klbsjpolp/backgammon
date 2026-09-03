@@ -14,7 +14,10 @@ contrast gate is real and it is where every attempt fails first, so read the las
    recoloured. Every variable the other blocks declare must be present; a missing one silently falls through to
    Classic's `:root` copy and shows up as one wrong colour somewhere on the board. Set `color-scheme` (`dark` or
    `light`) so the UA's scrollbars and focus rings follow. Bake alpha into the value rather than leaving a `/60`
-   modifier to the markup.
+   modifier to the markup. The block ends with a **texture** group — how hard the felt's weave, the wood's grain and
+   a checker's moulding are drawn. Those are strengths and not colours, so on a dark board they are plain white and
+   black at an alpha; on a light one the direction inverts the way the rings do (a thread is drawn by its shadow, and
+   the shadow is warm). `index.css` owns the patterns; a theme only says how far to push them.
 2. **`apps/web/src/theme/themes.ts`** — add the id to the `ThemeId` union and an entry to `THEMES` with `label`,
    `blurb` (the swatch tooltip) and `themeColor` (mobile browser chrome; mirror the block's `--canvas`).
 3. **`apps/web/index.html`** — add the id and the same chrome colour to the `colors` object in the pre-paint script.

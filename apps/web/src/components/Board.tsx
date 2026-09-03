@@ -123,7 +123,7 @@ const Checkers = ({ count, pile, arrivesAt = 'last', lifted = false }: CheckersP
         <div
           key={i}
           className={cn(
-            'flex size-board-checker items-center justify-center rounded-full',
+            'board-checker flex size-board-checker items-center justify-center rounded-full',
             'text-board-checker leading-none font-bold ring-1',
             color,
             lifted && i === outer && 'invisible',
@@ -203,10 +203,13 @@ const Point = ({
       aria-disabled={playable ? undefined : true}
       tabIndex={playable ? undefined : -1}
       data-point={index}
+      // Which end of the point is its tip, which is the end a real point darkens
+      // towards — the bottom row is drawn upside down, so it cannot be a constant.
+      data-orientation={orientation}
       data-drop-zone={index}
       data-drag-source={selectable || selected ? '' : undefined}
       className={cn(
-        'flex h-board-depth w-board-point flex-col items-center gap-board-stack rounded-md',
+        'board-point flex h-board-depth w-board-point flex-col items-center gap-board-stack rounded-md',
         'border border-point-line px-px py-board-point-pad transition',
         orientation === 'bottom' && 'flex-col-reverse justify-start',
         index % 2 === 0 ? 'bg-point-even' : 'bg-point-odd',
@@ -255,7 +258,7 @@ const Tray = ({ label, owner, value, active, over, onClick }: TrayProps) => (
     // number counts and what is left to bear off.
     aria-label={`${label}, ${value} sur ${CHECKERS_PER_SIDE}`}
     className={cn(
-      'flex h-board-tray-depth w-board-tray flex-col items-center justify-center',
+      'board-tray flex h-board-tray-depth w-board-tray flex-col items-center justify-center',
       'rounded-md border border-tray-line bg-tray text-tray-fg',
       active && 'cursor-pointer ring-2 ring-move hover:brightness-125',
       over && 'ring-4 ring-move brightness-125',
@@ -316,7 +319,7 @@ const Bar = ({
     data-drop-zone="none"
     data-drag-source={selectable || selected ? '' : undefined}
     className={cn(
-      'flex w-board-bar flex-col items-center justify-center gap-board-bar-gap self-stretch',
+      'board-bar flex w-board-bar flex-col items-center justify-center gap-board-bar-gap self-stretch',
       'rounded-md border border-bar-line bg-bar py-board-bar-pad',
       (selectable || selected) && 'cursor-grab ring-2 ring-pick-strong',
     )}
@@ -357,7 +360,10 @@ const DragGhost = ({ drag }: { drag: CheckerDrag }) =>
   createPortal(
     <div
       aria-hidden
-      className={cn('pointer-events-none fixed top-0 left-0 z-40 rounded-full ring-1', checkerColor(drag.player))}
+      className={cn(
+        'board-checker pointer-events-none fixed top-0 left-0 z-40 rounded-full ring-1',
+        checkerColor(drag.player),
+      )}
       style={{
         width: `${drag.width}px`,
         height: `${drag.height}px`,
@@ -387,7 +393,7 @@ const standInFor = (player: Player, arrival: HTMLElement | null): HTMLElement =>
     return copy;
   }
   const drawn = document.createElement('div');
-  drawn.className = cn('rounded-full ring-1', checkerColor(player));
+  drawn.className = cn('board-checker rounded-full ring-1', checkerColor(player));
   return drawn;
 };
 

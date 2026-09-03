@@ -63,6 +63,12 @@ Before and after any such change, check **three** cases — they are CSS-only, n
   drawn face fills its `1em` box. Sizes still come from the caller as `text-*`, and the gap between two dice is in
   `em`, so a pair keeps fitting the width the slot reserves.
 
+- **The textures under the geometry are gradients, not images**, and their periods are `clamp()`ed multiples of
+  `--pt` so a thread stays a thread from a 1rem board to a 9rem one. They are overlays only: the flat colour
+  underneath is still the hex `contrast.test.ts` measures, and the alphas are low enough that a textured surface
+  averages to it. A checker's contact shadow is a `filter`, because its rim is a `box-shadow` and Tailwind composes
+  rings into that same property.
+
 ## Finishing
 
 `pnpm --filter @backgammon/web test`, then `pnpm dev` and check a portrait phone and a landscape one in devtools —

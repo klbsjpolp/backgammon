@@ -1098,6 +1098,62 @@ theme ids from `themes.ts` on purpose — it has to run before any module loads.
 Storage failures (Safari private browsing) degrade to "the theme switches but is
 not remembered" rather than throwing.
 
+### Texture, and the reason it is drawn and not fetched
+
+The board, the checkers and the dice used to be flat fills, and a backgammon board
+is the one game surface where that reads as unfinished: it is cloth stretched over
+wood with moulded discs standing on it, and every one of those is a material before
+it is a colour. So each surface now carries a pattern of light and shadow — the
+weave of the felt, a grain running the length of each point, the turned lip just
+inside a checker's rim, a bevel across the face of a die.
+
+**None of it is an image.** Not for the bundle's sake — a tiled noise PNG is a
+couple of kilobytes — but because the board's whole size is one CSS length. `--pt`
+runs from 1rem on a small phone to 9rem on a fullscreen 4K screen, and a bitmap
+picks exactly one of those to be sharp at. Gradients are resolution-free and their
+periods can be written in terms of `--pt` like every other length here, so a thread
+stays a thread across a factor of nine. They are clamped at both ends anyway: below
+about 2px a repeating gradient stops being a pattern and starts being moiré, and
+without a ceiling the weave grows into rope on the largest boards. It also keeps the
+service worker's precache exactly as it was, which matters more than the bytes — the
+board is drawn from CSS the browser already has.
+
+**The geometry is in `index.css` and the strength is in the theme layer**, which
+splits along the same seam everything else does: how a thread is shaped is the
+board's business, how hard it is drawn is the palette's. That is not tidiness. On
+the dark themes a highlight is white at four or five per cent and the shadow does
+almost nothing; on Parchment the direction inverts exactly the way the rings do —
+white on cream is very nearly nothing, so there a thread is drawn by its shadow, and
+the shadow is warm, because neutral black on that palette reads as grime rather than
+as the grain of a wooden board.
+
+**The texture is only ever an overlay, and that is the rule that keeps
+`contrast.test.ts` honest.** The gate reads hex values out of the stylesheet, so a
+weave that pulled the felt two per cent darker would re-tune every ring on the board
+and nothing anywhere would fail — the measurement would still be of a colour that no
+longer appears on screen. Two things prevent that. Every alpha is low enough that
+the mean of a textured surface stays within a point or two of the flat colour
+underneath it. And the parts that carry a measured ratio on their own are left
+alone: a checker's rim, which is what draws its edge on three of the four
+checker/point pairs this board has, and a die's rim, which is the only thing
+separating a die from the page behind it. The checker's groove stops short of the
+rim and the die's bevel is inset past it for exactly that reason.
+
+Two mechanical notes, both of which cost a rewrite to learn. A checker's contact
+shadow is a `filter: drop-shadow` and not a `box-shadow`, because the rim _is_ a
+box-shadow: Tailwind composes rings into that one property, and an unlayered rule
+setting it wins the cascade and takes the rim off every checker. And the shading on
+a point runs to its **tip**, which is a different end for each row — so the
+direction comes off a `data-orientation` attribute the component writes, the same
+answer `data-stack` gave to the same question. The custom property it feeds keeps a
+default, because an element that arrived without the attribute would make
+`linear-gradient()` invalid and an invalid layer takes the whole stack with it.
+
+Asking for more contrast (`prefers-contrast: more`) drops every texture and puts the
+board back on the flat colours the palette was measured at. Nothing in it carries
+information — it is light and shadow on surfaces that already say what they are — so
+there is nothing to lose there and a little edge definition to gain.
+
 ## Stack
 
 - Same primary libraries as skip-bo: React 19, Vite 8, Tailwind 4, Vitest 4, zod 4,

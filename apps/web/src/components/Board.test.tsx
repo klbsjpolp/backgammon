@@ -177,6 +177,25 @@ describe('Board', () => {
     expect(depthOn(5)).toBe('5');
     expect(depthOn(6)).toBe('9');
   });
+
+  it('marks which end of a point is its tip, so the shading knows which way to run', () => {
+    // A point darkens towards its tip and the bottom row is drawn upside down, so
+    // the direction cannot be a constant in the stylesheet. Same as `data-stack`:
+    // the component writes what it already knows rather than leaving CSS to infer
+    // it. Both views are checked because the rows are mirrored for black and the
+    // orientation is a property of the *row*, not of the index in it.
+    for (const you of ['white', 'black'] as const) {
+      const { unmount } = render(<Board controller={controllerFor(you)} />);
+      const orientationOf = (point: number) =>
+        screen.getByLabelText(new RegExp(`^flèche ${point},`)).dataset.orientation;
+
+      // Both players number from their own home, so the 13 point is on the top
+      // row and the ace point on the bottom one whichever colour is looking.
+      expect(orientationOf(13)).toBe('top');
+      expect(orientationOf(1)).toBe('bottom');
+      unmount();
+    }
+  });
 });
 
 describe('Board — what it says out loud', () => {

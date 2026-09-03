@@ -99,6 +99,25 @@
   --pick: #f9cd53;
   --pick-strong: #fde68a;
   --move: #38bdf8;
+
+  /*
+   * Texture — the strengths the board's materials are lit at, not colours. A
+   * highlight is the light of the room on a raised thread or a moulded rim and a
+   * shadow is the same light blocked; on a dark board neither has a hue of its
+   * own, so both are plain white and black at an alpha. `index.css` owns the
+   * patterns these are poured into.
+   */
+  --felt-warp: rgb(255 255 255 / 0.045);
+  --felt-weft: rgb(0 0 0 / 0.09);
+  --felt-vignette: rgb(0 0 0 / 0.25);
+  --wood-sheen: rgb(255 255 255 / 0.05);
+  --wood-grain: rgb(0 0 0 / 0.1);
+  --checker-sheen: rgb(255 255 255 / 0.22);
+  --checker-shade: rgb(0 0 0 / 0.22);
+  --checker-groove: rgb(0 0 0 / 0.13);
+  --checker-cast: rgb(0 0 0 / 0.35);
+  --die-sheen: rgb(255 255 255 / 0.28);
+  --die-shade: rgb(0 0 0 / 0.2);
 }
 
 /* --- Midnight: cool indigo, for playing with the lights off --------------- */
@@ -170,6 +189,23 @@
   --pick: #818cf8;
   --pick-strong: #c7d2fe;
   --move: #e5a91d;
+
+  /*
+   * Texture: as Classic, a step firmer. Every surface here is darker, so a black
+   * shadow has less room below it to be seen in and the numbers have to move up
+   * together to draw the same cloth.
+   */
+  --felt-warp: rgb(255 255 255 / 0.055);
+  --felt-weft: rgb(0 0 0 / 0.13);
+  --felt-vignette: rgb(0 0 0 / 0.3);
+  --wood-sheen: rgb(255 255 255 / 0.06);
+  --wood-grain: rgb(0 0 0 / 0.14);
+  --checker-sheen: rgb(255 255 255 / 0.2);
+  --checker-shade: rgb(0 0 0 / 0.26);
+  --checker-groove: rgb(0 0 0 / 0.16);
+  --checker-cast: rgb(0 0 0 / 0.4);
+  --die-sheen: rgb(255 255 255 / 0.26);
+  --die-shade: rgb(0 0 0 / 0.24);
 }
 
 /* --- Parchment: the one light theme — cream paper and a wooden board ------ */
@@ -265,6 +301,25 @@
   --pick: #983c00;
   --pick-strong: #743206;
   --move: #002864;
+
+  /*
+   * Texture: as Classic, with the direction inverted the way the rings are. White
+   * on cream is very nearly nothing, so here a thread is drawn by its shadow and
+   * the highlight only lifts the space between — and the shadow is warm, because
+   * neutral black on this palette reads as grime rather than as the grain of a
+   * wooden board.
+   */
+  --felt-warp: rgb(255 253 245 / 0.45);
+  --felt-weft: rgb(124 74 33 / 0.1);
+  --felt-vignette: rgb(124 74 33 / 0.16);
+  --wood-sheen: rgb(255 250 240 / 0.38);
+  --wood-grain: rgb(124 74 33 / 0.12);
+  --checker-sheen: rgb(255 255 255 / 0.3);
+  --checker-shade: rgb(63 45 28 / 0.2);
+  --checker-groove: rgb(63 45 28 / 0.14);
+  --checker-cast: rgb(93 62 30 / 0.3);
+  --die-sheen: rgb(255 255 255 / 0.35);
+  --die-shade: rgb(63 45 28 / 0.18);
 }
 
 /*

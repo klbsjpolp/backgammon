@@ -178,7 +178,10 @@ describe('checker flights', () => {
     // the stand-in is drawn from scratch and shrinks away on arrival.
     const drawn = flights[0].element;
     expect(drawn.parentElement).toBe(document.body);
+    // Colour *and* moulding: a checker that loses its texture on the way to the
+    // tray is a different object arriving than the one that left.
     expect(drawn.className).toContain('bg-checker-light');
+    expect(drawn.className).toContain('board-checker');
     expect(flights[0].keyframes[1].transform).toContain('scale(0.55)');
     expect(flights[0].keyframes[1].opacity).toBe('0');
     expect(hiddenPiles()).toEqual([]);

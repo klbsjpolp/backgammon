@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import type { GameState, NoPlay, Player } from '@backgammon/core';
 import { cn } from '@/lib/cn';
 import { pendingNoPlay } from '@/lib/noPlay';
@@ -69,6 +70,10 @@ interface Face {
  */
 const Die = ({ value, played, blocked, player }: Face) => {
   const { isFullscreen } = useFullscreenState();
+  // One gradient per die rather than one definition shared by all of them: a
+  // `url(#…)` resolves against the whole document, so a constant id would be a
+  // duplicate the moment a second die is on screen — which is every roll.
+  const bevel = `die-bevel-${useId()}`;
   // Same colours as that player's checker, and the same reason the checker needs
   // a rim: the dark theme's dark checker sits within a hair of the canvas's own
   // luminance (and the light theme's pale one of its canvas), so the die would
@@ -104,6 +109,22 @@ const Die = ({ value, played, blocked, player }: Face) => {
         isFullscreen ? 'size-board-die' : 'size-[1em]',
       )}
     >
+      <defs>
+        <linearGradient id={bevel} x1="0" y1="0" x2="1" y2="1">
+          {/*
+           * Four stops rather than two, because the hue has to stay put across
+           * each interpolation: SVG fades `stop-color` and `stop-opacity`
+           * separately, so a highlight running straight into a shadow would pass
+           * through half-opaque grey and lay a smear across the middle of the
+           * face. Each half instead fades to nothing in its own colour and the
+           * two meet where neither is drawn.
+           */}
+          <stop offset="0" className="die-sheen" />
+          <stop offset="0.45" className="die-sheen" stopOpacity="0" />
+          <stop offset="0.55" className="die-shade" stopOpacity="0" />
+          <stop offset="1" className="die-shade" />
+        </linearGradient>
+      </defs>
       {/*
        * The rim is dashed on a die that was never playable, and that is the only
        * mark: everything else stays exactly as a live die is drawn.
@@ -132,6 +153,14 @@ const Die = ({ value, played, blocked, player }: Face) => {
         strokeDasharray={blocked ? '14 10' : undefined}
         className={cn(face, line)}
       />
+      {/*
+       * The light on a moulded face, inset far enough to leave the rim alone: the
+       * rim is the only thing separating a die from the page behind it (the dark
+       * checker's face is within a hair of the dark themes' canvas), so it carries
+       * a measured ratio the texture must not touch. Under the pips for the same
+       * reason — a pip shaded towards its face is a pip that reads as a smudge.
+       */}
+      <rect className="die-bevel" x="8" y="8" width="84" height="84" rx="16" fill={`url(#${bevel})`} />
       {PIPS[value]?.map(([cx, cy], i) => (
         <circle key={i} cx={cx} cy={cy} r="10" className={pip} />
       ))}
