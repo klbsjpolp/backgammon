@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.0.2](https://github.com/klbsjpolp/backgammon/compare/v1.0.1...v1.0.2) (2026-09-06)
+
+### Bug Fixes
+
+* point at coderabbit's current docs and make the badge clickable ([0a067ec](https://github.com/klbsjpolp/backgammon/commit/0a067ec1430e0c43df642e1af49f444144cbdb94))
 ## [1.0.1](https://github.com/klbsjpolp/backgammon/compare/v1.0.0...v1.0.1) (2026-09-06)
 ## [1.0.0](https://github.com/klbsjpolp/backgammon/compare/v0.1.44...v1.0.0) (2026-09-03)
 
