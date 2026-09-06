@@ -1,6 +1,6 @@
 # Backgammon
 
-![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/klbsjpolp/backgammon?utm_source=oss&utm_medium=github&utm_campaign=klbsjpolp%2Fbackgammon&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
+[![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/klbsjpolp/backgammon?utm_source=oss&utm_medium=github&utm_campaign=klbsjpolp%2Fbackgammon&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)](https://github.com/klbsjpolp/backgammon/pulls)
 
 A backgammon game built on the same stack as [skip-bo](https://github.com/klbsjpolp/skip-bo),
 designed to reuse the shared multiplayer infrastructure in
