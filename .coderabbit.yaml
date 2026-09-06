@@ -1,5 +1,5 @@
 # https://docs.coderabbit.ai/getting-started/configure-coderabbit
-language: en-US
+language: fr-CA
 reviews:
   auto_review:
     enabled: true
