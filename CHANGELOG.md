@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.1.0](https://github.com/klbsjpolp/backgammon/compare/v1.0.2...v1.1.0) (2026-09-07)
+
+### Features
+
+* **web:** give abandon-the-game actions one home in the header ([c60c5fd](https://github.com/klbsjpolp/backgammon/commit/c60c5fd1facf33eef7ccf08ae2ba3399a11a6c1d))
+
+### Bug Fixes
+
+* **web:** close two real races CodeRabbit's review found in HeaderMenu ([f4e73f1](https://github.com/klbsjpolp/backgammon/commit/f4e73f1a83d24c9b28e2d356c0fab82408346617))
 ## [1.0.2](https://github.com/klbsjpolp/backgammon/compare/v1.0.1...v1.0.2) (2026-09-06)
 
 ### Bug Fixes
