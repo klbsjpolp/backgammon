@@ -308,6 +308,17 @@ describe('OnlinePanel — the header menu', () => {
     expect(slotNode.contains(screen.getByRole('button', { name: /quitter/i }))).toBe(true);
   });
 
+  it('portals the "waiting for the host" screen\'s "Quitter" into the header slot too', () => {
+    useOnlineGameMock.mockReturnValue({ ...baseGame(), status: 'playing', session: session(1) });
+    render(
+      <HeaderSlotContext.Provider value={{ node: slotNode, closeMenu: vi.fn() }}>
+        <OnlinePanel />
+      </HeaderSlotContext.Provider>,
+    );
+
+    expect(slotNode.contains(screen.getByRole('button', { name: /quitter/i }))).toBe(true);
+  });
+
   it('closes the menu once leaving the lobby is confirmed', () => {
     const game = { ...baseGame(), status: 'lobby' as const, session: session(0), room: room(['ready']) };
     useOnlineGameMock.mockReturnValue(game);

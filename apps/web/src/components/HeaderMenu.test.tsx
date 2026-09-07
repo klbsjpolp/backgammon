@@ -65,6 +65,25 @@ describe('HeaderMenu', () => {
     expect(document.activeElement).toBe(trigger());
   });
 
+  it('ignores any other key', () => {
+    render(<Harness hasAction={true} />);
+    openMenu();
+    fireEvent.keyDown(document, { key: 'Enter' });
+
+    expect(expanded()).toBe('true');
+  });
+
+  it('stays open on a mousedown inside the trigger or the panel itself', () => {
+    render(<Harness hasAction={true} />);
+    openMenu();
+
+    fireEvent.mouseDown(screen.getByRole('button', { name: 'Actions' }));
+    expect(expanded()).toBe('true');
+
+    fireEvent.mouseDown(screen.getByRole('button', { name: 'Nouvelle partie' }));
+    expect(expanded()).toBe('true');
+  });
+
   it('closes on an outside click, without stealing focus back', () => {
     render(
       <>
