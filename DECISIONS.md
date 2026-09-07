@@ -719,51 +719,70 @@ game. Every button carries a 44px minimum touch target, and the page reserves
 
 ## The abandon button rides in the header
 
-On a desktop screen the board was drawn at its 2.5rem cap with the page half empty
-below it, and a 44px row holding one button — **Nouvelle partie**, or **Quitter** online —
-sat under the board spending height the board was not allowed to use. Moving that row into
-the header costs the page nothing there: the switch cluster is already 40px tall for the
-mode buttons, so taking the button grew it by 4px and gave the board back the row, the rule
-above it and both grid gaps — 69px out, 4px back, **65px** measured rather than estimated,
-which is what `--avail-h` drops by (20.25rem → 16.25rem windowed, 18.75rem → 14.75rem in
-fullscreen).
+This used to be conditional: **Nouvelle partie** / **Quitter** rode in the header only on a
+screen wide enough to be worth it (`useRoomyScreen`, a `matchMedia` breakpoint kept in step
+with `max-sm`/`compact` by hand), and stayed inline under the controls everywhere else. That
+placement itself was never the complaint — what read as "always a little off" was that the
+one button changing _which of two places it lived in_ depending on screen width was one more
+thing about the page that would not sit still. A phone never saw it move; a window resized
+across 640px did, mid-game, sometimes with the button armed.
 
-It is a **portal**, not a copy hidden by a media query. The rule the dice already
-established holds here for the same reason — a second copy is a second "Nouvelle partie"
-for a screen reader to find, and the media query that hides one does not run in jsdom, so
-the tests would not see the duplicate they were meant to catch. The header lends out a DOM
-node and `Controls` renders into it; there is exactly one such button in the accessible
-tree at any width.
+It now rides in the header **always** — same DOM position at every width, in fullscreen, and
+in both game modes — behind a small disclosure popover (`HeaderMenu`) rather than a bare
+portal target. `useRoomyScreen` is deleted along with it: there was nothing left for a width
+breakpoint to decide once the header stopped being the _conditional_ home and became the
+_only_ one. What decides whether the trigger renders at all is not screen width but whether
+there is anything to abandon — `hasAction` in `HeaderMenu`, fed from `App` as `mode ===
+'local' || hasOnlineLeaveAction`. A local game always has one; online has none on the plain
+"host or join" screen, and one everywhere past it — lobby, mid-game, disconnected — which is
+also new: the lobby's own **Quitter** and the "waiting for the host" screen's used to be
+plain inline buttons with no relation to this mechanism at all, and now portal into the same
+menu the in-game one does. One location, learned once, for every shape "leave" ever took.
 
-It is **not**, however, the same React element across the move, and an earlier version of
-this entry claimed it was. The two branches are a portal and a fragment at the same child
-position, and React reconciles by type-at-position: crossing the breakpoint unmounts the
-button and mounts a new one, so a `ConfirmButton` left armed is disarmed by the resize.
-Changing the portal's target does the same thing, so there is no arrangement of portals
-that preserves it — only lifting the `armed` state out of the button would. That is not
-worth doing: disarming is the fail-safe direction (the guard can only be lost, never
-spuriously gained), and the button already disarms on `blur`, so anything the player
-touches next clears it anyway. What matters is that the accessible tree never holds two of
-these, and that survives the move.
+The portal itself is the same idea as before — `Controls` (and now `LocalPanel` and
+`OnlinePanel` directly) render into a DOM node the header lends out, so there is exactly one
+"Nouvelle partie" in the accessible tree rather than a copy hidden by a media query that
+would not run in jsdom. What is new is that the node has to **stay mounted while the menu is
+closed** (`hidden`, not conditional rendering): a popover that unmounts its panel on every
+close would hand back a `null` slot each time, and `Controls`/the panels would fall back to
+their inline branch and immediately back out again. The slot now also hands out a
+`closeMenu`, because a button reachable from a popover has a new failure mode the old
+conditional portal did not — confirming "Nouvelle partie" leaves the menu sitting open over
+a game that already restarted unless something closes it. `LocalPanel` and `OnlinePanel`
+call it themselves, from the same `onConfirm` that fires the action, rather than `Controls`
+trying to inject it into an element it did not build.
 
-That makes this the one placement on the page CSS cannot decide, which is why
-`useRoomyScreen` exists and why it is the only JS breakpoint here. The dice are moved
-between layouts by grid placement because their three homes are all cells of one grid; the
-header is a different container entirely, and nothing in CSS moves an element between
-containers. `display: contents` on the whole chain would, and would take the panel's
-layout and its accessible tree with it. The cost is a media query string that duplicates
-the `max-sm` and `compact` breakpoints and has to be kept in step with them by hand — noted
-where it is written, and the reason that hook does nothing else.
+That is not free. The header row that used to hold nothing but the switches and, at most,
+one conditional button now always carries an extra icon, and an earlier round of work on
+this same row measured the payoff of the opposite trade: taking a row-and-a-rule out from
+under the board grew the switch cluster by 4px and left the header "with nothing left in it
+but the title" — no truncation on a phone. A permanent trigger spends some of that back.
+Measured, the same way: at 360px wide the title went from 37.5px to a flat 0 the moment the
+trigger joined the row unconditionally — worse than the old inline fallback it replaced,
+which never appeared there at all before 640px. Shrinking the trigger to the same 24px
+box-plus-invisible-hit-area `ThemeSwitcher` already uses for its swatches, and tightening
+the switch cluster's own gap on `max-sm`, bought back to 13.5px — "B…", not nothing. At
+375px/390px the cost is smaller still (52.5→28.5, 67.5→43.5) because the row has more room
+to begin with. 320px was already at 0 before any of this, for the same reason the rest of
+this file draws its floor there — below 360px `--pt` is already pinned at its 1rem minimum,
+and nothing in this row was going to buy the title back either. **The title is still the
+part that gives**, as it always was on a phone; this just moved the line at which it gives
+everything, from below the file's stated floor up to 360px.
 
-jsdom implements no `matchMedia` at all, so the hook answers false without one. That is
-deliberate rather than incidental: the phone layout is the branch that needs no slot to
-exist, so every test that does not ask about placement sees the arrangement it always saw,
-and the one that does installs a `matchMedia` of its own.
+The other place this was paid for is height, and there it is a net gain rather than a cost:
+the inline fallback row — the button, its separating rule, both grid gaps — never appears in
+the running app any more, on _any_ width, because the header menu is now the only home. That
+freed 15px in portrait (measured the same way, via the real gap below the version line at a
+phone width, not `document.scrollHeight`, which a `min-h-full` page reports as exactly the
+viewport regardless of slack underneath) — smaller than it looked on paper, because the row
+being removed was already thin. `--avail-w` in portrait dropped from 19.875rem to 18.9375rem
+to hand that back to `--pt` rather than leave it as blank space under the board.
 
-Not done: hoisting the header itself into the panels so both rows could be siblings of one
-grid, which would have been the CSS-only answer. Online opens on a room picker with no
-`GameLayout` at all, so the header would have had to be rendered from two places, or from
-inside a panel that does not always draw a board — a worse trade than one media query.
+Not done: hoisting the header itself into the panels so the abandon action could be a sibling
+of the controls in one grid, which would have made this a CSS-only placement with no popover
+at all. Online opens on a room picker with no `GameLayout` on screen, so the header would
+still have to be rendered from two places, or from inside a panel that does not always draw
+a board — the same worse trade this file already rejected once, now for a smaller reason.
 
 ## Full screen
 

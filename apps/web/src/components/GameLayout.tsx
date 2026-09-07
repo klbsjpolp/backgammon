@@ -80,8 +80,11 @@ export const GameLayout = ({ status, board, controls, hint }: GameLayoutProps) =
       className={cn(
         'grid w-full justify-items-center gap-3',
         // The sidebar is the tallest thing on a landscape phone once the dice
-        // hold their line, and 320px of height is 4px short of it — which the
-        // rows give up more cheaply than the column gap beside the board does.
+        // hold their line, so it is the row gaps here that give first when
+        // height is tight, rather than the column gap beside the board. It no
+        // longer carries the abandon-the-game row either — that lives in the
+        // header menu at every width now — which is the margin this used to
+        // spend down to the pixel.
         'compact:grid-cols-[auto_minmax(11rem,15rem)] compact:items-start compact:gap-x-4 compact:gap-y-3',
       )}
     >
@@ -142,9 +145,13 @@ export const ControlRow = ({ className, children }: { className?: string; childr
  *               of the screen and directly above Roll. The sidebar has height
  *               going spare where the board has none.
  *
- * On a roomy screen the danger group leaves this grid altogether and is portaled
- * into the page header — see {@link useHeaderSlot}. It takes its separating rule
- * with it, which has nothing left to separate once the row below it is gone.
+ * Whenever there is a header menu to receive it — which is to say, in the real
+ * app, always — the danger group leaves this grid altogether and is portaled
+ * into it instead; see {@link useHeaderSlot} and `HeaderMenu`. It takes its
+ * separating rule with it, which has nothing left to separate once the row
+ * below it is gone. The inline fallback below only fires when `Controls` is
+ * rendered with no header menu above it in the tree, which happens in tests
+ * that mount a panel on its own, not in the app.
  */
 export const Controls = ({
   dice,
@@ -209,7 +216,7 @@ export const Controls = ({
         // rule to be told apart from the play controls — they are now the far
         // side of the board from them, which is more distance than the rule
         // ever bought.
-        createPortal(<div className="flex items-center gap-2">{danger}</div>, headerSlot)
+        createPortal(<div className="flex items-center gap-2">{danger}</div>, headerSlot.node)
       ) : (
         <>
           {/* Its own element rather than a border on the row below, which now starts

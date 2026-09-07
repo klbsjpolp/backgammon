@@ -68,6 +68,9 @@ describe('App', () => {
     render(<App />);
     await screen.findByTestId('update-banner');
 
+    // "Nouvelle partie" lives behind the header menu now — see `HeaderMenu`.
+    fireEvent.click(screen.getByRole('button', { name: 'Actions' }));
+
     // Two taps: the destructive button arms before it fires.
     const newGame = screen.getByRole('button', { name: /nouvelle partie/i });
     fireEvent.click(newGame);

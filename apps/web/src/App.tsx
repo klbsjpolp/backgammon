@@ -1,16 +1,16 @@
 import { useCallback, useState } from 'react';
 import { UpdateBanner, UpdateRequiredOverlay, UpdatedNotice, VersionLine } from '@/components/AppUpdates';
 import { FullscreenButton } from '@/components/FullscreenButton';
+import { HeaderMenu } from '@/components/HeaderMenu';
 import { LocalPanel } from '@/components/LocalPanel';
 import { OnlinePanel } from '@/components/OnlinePanel';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 import { FullscreenContext } from '@/fullscreen';
-import { HeaderSlotContext } from '@/headerSlot';
+import { HeaderSlotContext, type HeaderSlot } from '@/headerSlot';
 import { cn } from '@/lib/cn';
 import { ThemeProvider } from '@/theme/ThemeProvider';
 import { useAppUpdates } from '@/useAppUpdates';
 import { useFullscreen } from '@/useFullscreen';
-import { useRoomyScreen } from '@/useRoomyScreen';
 
 type Mode = 'local' | 'online';
 
@@ -18,17 +18,24 @@ export const App = () => {
   const [mode, setMode] = useState<Mode>('local');
   const [isOnlineBusy, setIsOnlineBusy] = useState(false);
   /*
-   * The header lends the panels a slot for their abandon-the-game controls, but
-   * only where the header row is a line of its own with room going spare — a
-   * phone's is already one nowrap line that must never become two, and it is the
-   * title that gives when it does.
-   *
-   * A callback ref into state rather than a `useRef`: the panel portals into this
-   * node, and a ref set during commit does not re-render the consumer that has to
-   * read it.
+   * Whether the online panel currently has something to abandon — a room to
+   * leave, a game in progress — as opposed to the plain "host or join" screen,
+   * which has nothing. Deliberately not the same signal as `isOnlineBusy` above:
+   * that one also covers `connecting`, which today offers no way to leave at all,
+   * and conflating the two would make the menu's visibility a side effect of the
+   * update-deferral logic rather than its own honest question. A local game
+   * always has something to abandon, so `mode === 'local'` covers that side.
    */
-  const isRoomy = useRoomyScreen();
-  const [headerSlot, setHeaderSlot] = useState<HTMLElement | null>(null);
+  const [hasOnlineLeaveAction, setHasOnlineLeaveAction] = useState(false);
+  const hasLeaveAction = mode === 'local' || hasOnlineLeaveAction;
+  /*
+   * The header hands the panels a slot for their abandon-the-game controls via
+   * `HeaderMenu`, always in the same place — see `headerSlot.ts`.
+   *
+   * State rather than a `useRef`: the panel portals into this node, and a ref set
+   * during commit does not re-render the consumer that has to read it.
+   */
+  const [headerSlot, setHeaderSlot] = useState<HeaderSlot | null>(null);
   /*
    * Read once, here, and handed down: fullscreen decides where two things are
    * *drawn* rather than how they look, and neither move is one CSS can make —
@@ -135,8 +142,11 @@ export const App = () => {
 
             {/* Never the item that gives: without `shrink-0` the row stays one line
               but the mode buttons wrap their own labels instead, which costs the
-              same height. */}
-            <div className="flex shrink-0 items-center gap-2">
+              same height. `max-sm:gap-1` because the header menu (see `HeaderMenu`)
+              is now a permanent fourth member of this row where a phone used to
+              carry three — the title is still what gives first, but this is real
+              width handed back to it before that happens. */}
+            <div className="flex shrink-0 items-center gap-2 max-sm:gap-1">
               <div className="inline-flex rounded-lg bg-surface p-1 text-sm">
                 {(['local', 'online'] as const).map((m) => (
                   <button
@@ -159,12 +169,13 @@ export const App = () => {
               <FullscreenButton />
 
               {/*
-               * Last in the row, so the switches beside it keep their position when
-               * a panel puts a button here, takes it away, or swaps its width for a
-               * confirmation. Rendered only when it will be used: an empty flex
-               * child still spends the row's `gap-2`.
+               * Last in the row, so the switches beside it keep their position
+               * whatever it currently holds. `HeaderMenu` itself renders nothing —
+               * not even its trigger — while `hasLeaveAction` is false, for the
+               * same reason an empty flex child used to be skipped: it would still
+               * spend the row's `gap-2`.
                */}
-              {isRoomy && <div ref={setHeaderSlot} className="flex items-center gap-2" />}
+              <HeaderMenu hasAction={hasLeaveAction} onSlotChange={setHeaderSlot} />
             </div>
 
             {/* Fullscreen's third column. `justify-self-end` also stops the `1fr`
@@ -189,13 +200,17 @@ export const App = () => {
             />
           )}
 
-          {/* Null until the slot above has mounted, and on a phone for good — either
-            way the panels keep their controls under the board until told otherwise. */}
-          <HeaderSlotContext.Provider value={isRoomy ? headerSlot : null}>
+          {/* Null until `HeaderMenu` has somewhere to portal into — the panels keep
+            their controls inline (in tests, mainly) until told otherwise. */}
+          <HeaderSlotContext.Provider value={headerSlot}>
             {mode === 'local' ? (
               <LocalPanel applyPendingUpdate={applyPendingUpdate} />
             ) : (
-              <OnlinePanel applyPendingUpdate={applyPendingUpdate} onBusyChange={setIsOnlineBusy} />
+              <OnlinePanel
+                applyPendingUpdate={applyPendingUpdate}
+                onBusyChange={setIsOnlineBusy}
+                onLeaveActionChange={setHasOnlineLeaveAction}
+              />
             )}
           </HeaderSlotContext.Provider>
 

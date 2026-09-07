@@ -9,24 +9,6 @@ vi.mock('@/lib/runtimeConfig', () => ({ fetchRuntimeConfig: vi.fn() }));
 
 const fetchRuntimeConfigMock = vi.mocked(fetchRuntimeConfig);
 
-/** A roomy screen, so the header offers its slot — see `useRoomyScreen`. */
-const setRoomy = () => {
-  Object.defineProperty(window, 'matchMedia', {
-    configurable: true,
-    writable: true,
-    value: (query: string) => ({
-      matches: true,
-      media: query,
-      onchange: null,
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-      addListener: vi.fn(),
-      removeListener: vi.fn(),
-      dispatchEvent: vi.fn(),
-    }),
-  });
-};
-
 /** Enough of the Fullscreen API for the toggle to work — jsdom has none. */
 const installFullscreenApi = () => {
   let element: Element | null = null;
@@ -57,12 +39,10 @@ beforeEach(() => {
   sessionStorage.clear();
   localStorage.clear();
   fetchRuntimeConfigMock.mockResolvedValue({ appVersion: 'v1.2.3' });
-  setRoomy();
   installFullscreenApi();
 });
 
 afterEach(() => {
-  Reflect.deleteProperty(window, 'matchMedia');
   Reflect.deleteProperty(document, 'fullscreenEnabled');
   Reflect.deleteProperty(document, 'fullscreenElement');
   document.body.removeAttribute('data-fullscreen');

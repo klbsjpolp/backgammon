@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { canDouble, opponent } from '@backgammon/core';
 import { Board, type BoardController } from '@/components/Board';
 import { Button, ConfirmButton } from '@/components/Button';
@@ -6,6 +7,7 @@ import { Dice } from '@/components/Dice';
 import { Controls, GameLayout, ShortcutHint } from '@/components/GameLayout';
 import { TurnControls } from '@/components/TurnControls';
 import { TurnAnnouncer, TurnStatus } from '@/components/TurnStatus';
+import { useHeaderSlot } from '@/headerSlot';
 import { cn } from '@/lib/cn';
 import { SIDE_PLURAL } from '@/lib/french';
 import { useOnlineGame } from '@/online/useOnlineGame';
@@ -30,12 +32,21 @@ interface OnlinePanelProps {
   applyPendingUpdate?: () => boolean;
   /** Reports whether a reload would cost the player their seat in a room. */
   onBusyChange?: (busy: boolean) => void;
+  /**
+   * Reports whether there is currently a "leave/abandon" action to offer, for
+   * `HeaderMenu`'s trigger — see `App`. Deliberately not the same question as
+   * `onBusyChange`: that one also covers `connecting`, which has no way to leave
+   * at all today, and a menu that opens on nothing would be worse than no menu.
+   */
+  onLeaveActionChange?: (hasAction: boolean) => void;
 }
 
-export const OnlinePanel = ({ applyPendingUpdate, onBusyChange }: OnlinePanelProps = {}) => {
+export const OnlinePanel = ({ applyPendingUpdate, onBusyChange, onLeaveActionChange }: OnlinePanelProps = {}) => {
   const g = useOnlineGame();
   const [joinCode, setJoinCode] = useState('');
   const isInRoom = g.status !== 'idle' && g.status !== 'error';
+  const hasLeaveAction = g.status !== 'idle' && g.status !== 'error' && g.status !== 'connecting';
+  const headerSlot = useHeaderSlot();
 
   useEffect(() => {
     onBusyChange?.(isInRoom);
@@ -43,6 +54,19 @@ export const OnlinePanel = ({ applyPendingUpdate, onBusyChange }: OnlinePanelPro
 
   // Leaving online mode entirely leaves nothing to protect.
   useEffect(() => () => onBusyChange?.(false), [onBusyChange]);
+
+  useEffect(() => {
+    onLeaveActionChange?.(hasLeaveAction);
+  }, [hasLeaveAction, onLeaveActionChange]);
+
+  // Leaving online mode entirely leaves nothing to abandon.
+  useEffect(() => () => onLeaveActionChange?.(false), [onLeaveActionChange]);
+
+  /** Closes the header menu behind whichever "Quitter" just fired. */
+  const handleLeave = () => {
+    g.leave();
+    headerSlot?.closeMenu();
+  };
 
   // --- Not connected: create or join ---------------------------------------
   if (g.status === 'idle' || g.status === 'error') {
@@ -89,6 +113,16 @@ export const OnlinePanel = ({ applyPendingUpdate, onBusyChange }: OnlinePanelPro
     const isHost = g.session != null && g.session.seatIndex === g.session.hostSeatIndex;
     const seats = g.room?.lobbySeats ?? [];
     const readyCount = seats.filter((s) => s.readyState === 'ready').length;
+    // Built once and either dropped inline or portaled into the header menu —
+    // never both, for the one-copy-in-the-tree reason `Controls` already follows.
+    const quitButton = (
+      <ConfirmButton
+        label="Quitter"
+        confirmLabel="Quitter le salon ?"
+        onConfirm={handleLeave}
+        className="bg-neutral text-neutral-fg hover:bg-neutral-hover"
+      />
+    );
     return (
       <div className="flex w-full max-w-sm flex-col items-stretch gap-4">
         <Banner>
@@ -123,13 +157,9 @@ export const OnlinePanel = ({ applyPendingUpdate, onBusyChange }: OnlinePanelPro
               Démarrer la partie
             </Button>
           )}
-          <ConfirmButton
-            label="Quitter"
-            confirmLabel="Quitter le salon ?"
-            onConfirm={g.leave}
-            className="bg-neutral text-neutral-fg hover:bg-neutral-hover"
-          />
+          {!headerSlot && quitButton}
         </div>
+        {headerSlot && createPortal(quitButton, headerSlot.node)}
       </div>
     );
   }
@@ -137,17 +167,21 @@ export const OnlinePanel = ({ applyPendingUpdate, onBusyChange }: OnlinePanelPro
   // --- In game (playing / gameOver / disconnected) -------------------------
   const state = g.state;
   if (!state) {
+    const quitButton = (
+      <ConfirmButton
+        label="Quitter"
+        confirmLabel="Quitter le salon ?"
+        onConfirm={handleLeave}
+        className="bg-neutral text-neutral-fg hover:bg-neutral-hover"
+      />
+    );
     return (
       <div className="flex w-full max-w-sm flex-col items-stretch gap-3">
         <Banner tone={g.status === 'disconnected' ? 'error' : 'info'}>
           {g.status === 'disconnected' ? (g.error ?? 'Déconnecté.') : "En attente du lancement par l'hôte…"}
         </Banner>
-        <ConfirmButton
-          label="Quitter"
-          confirmLabel="Quitter le salon ?"
-          onConfirm={g.leave}
-          className="bg-neutral text-neutral-fg hover:bg-neutral-hover"
-        />
+        {!headerSlot && quitButton}
+        {headerSlot && createPortal(quitButton, headerSlot.node)}
       </div>
     );
   }
@@ -206,19 +240,14 @@ export const OnlinePanel = ({ applyPendingUpdate, onBusyChange }: OnlinePanelPro
               />
             }
             danger={
-              /*
-               * "Quitter ?" rather than "Quitter la partie ?": this is the one
-               * `ConfirmButton` that sits in the narrow danger row beside the
-               * dice, and the button sizes to the wider of its two labels. The
-               * long form needed 173px against the 157 the local button takes,
-               * which — now that `CONTROL_BASE` forbids wrapping — was 1px of
-               * horizontal scroll at 344px instead of a wrapped line. The lobby
-               * one below keeps its full wording: it sits in a row that may wrap.
-               */
+              // "Quitter ?" rather than "Quitter la partie ?": kept short from when
+              // this sat in the narrow danger row beside the dice. It now lives in
+              // the header menu instead (see `headerSlot.ts`), which has room to
+              // spare, but there is no reason left to say more.
               <ConfirmButton
                 label="Quitter"
                 confirmLabel="Quitter ?"
-                onConfirm={g.leave}
+                onConfirm={handleLeave}
                 className="bg-neutral text-neutral-fg hover:bg-neutral-hover"
               />
             }

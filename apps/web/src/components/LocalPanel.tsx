@@ -4,6 +4,7 @@ import { Dice } from '@/components/Dice';
 import { Controls, GameLayout, ShortcutHint } from '@/components/GameLayout';
 import { TurnControls } from '@/components/TurnControls';
 import { TurnAnnouncer, TurnStatus } from '@/components/TurnStatus';
+import { useHeaderSlot } from '@/headerSlot';
 import { SIDE_PLURAL } from '@/lib/french';
 import { useLocalGame } from '@/useLocalGame';
 
@@ -19,10 +20,13 @@ interface LocalPanelProps {
 export const LocalPanel = ({ applyPendingUpdate }: LocalPanelProps = {}) => {
   const game = useLocalGame();
   const { state } = game;
+  const headerSlot = useHeaderSlot();
 
   const startNewGame = () => {
     if (applyPendingUpdate?.()) return;
     game.newGame();
+    // The menu otherwise lingers open over a game that already restarted.
+    headerSlot?.closeMenu();
   };
 
   return (
