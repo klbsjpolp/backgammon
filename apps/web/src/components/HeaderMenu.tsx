@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import type { HeaderSlot } from '@/headerSlot';
 import { cn } from '@/lib/cn';
 
@@ -60,9 +60,30 @@ export const HeaderMenu = ({ hasAction, onSlotChange }: HeaderMenuProps) => {
     if (!hasAction) setOpen(false);
   }
 
-  const closeMenu = useCallback(() => setOpen(false), []);
+  /*
+   * Focuses the trigger before doing anything else, not after: a caller like
+   * `OnlinePanel.handleLeave` fires `g.leave()` first and this second, and that
+   * schedules the very re-render that can drop `hasAction` and unmount this
+   * whole component — trigger included — before the focus-restoration effect
+   * below ever gets to run. React batches both calls, so the trigger is still
+   * mounted for the rest of this tick; focusing it here, synchronously, is the
+   * one point that is guaranteed not to lose the race.
+   */
+  const closeMenu = useCallback(() => {
+    triggerRef.current?.focus();
+    setOpen(false);
+  }, []);
 
-  useEffect(() => {
+  /*
+   * `useLayoutEffect`, not `useEffect`: `node` itself is only known once the
+   * panel's ref callback runs during commit, so the very first render always
+   * publishes `null` regardless of `hasAction`. A passive effect would report
+   * the real node after the browser has already painted that first, wrong
+   * frame — `Controls`/`OnlinePanel` inline instead of portalled — and only
+   * flip a moment later. A layout effect runs before that paint, so the panels
+   * commit to the portalled version in the same frame they portal into.
+   */
+  useLayoutEffect(() => {
     onSlotChange(node ? { node, closeMenu } : null);
     // `onSlotChange` is `setHeaderSlot` from `App`, stable across renders; adding
     // it would re-run this for no reason every time `App` re-renders.
