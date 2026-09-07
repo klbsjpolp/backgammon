@@ -1,7 +1,8 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { createInitialState, applyRoll, type GameState } from '@backgammon/core';
-import type { OnlineGame } from '@/online/useOnlineGame';
+import { HeaderSlotContext } from '@/headerSlot';
+import type { OnlineGame, OnlineStatus } from '@/online/useOnlineGame';
 import { useOnlineGame } from '@/online/useOnlineGame';
 import { OnlinePanel } from './OnlinePanel';
 
@@ -250,5 +251,94 @@ describe('OnlinePanel', () => {
       fireEvent.click(leave());
       expect(game.leave).toHaveBeenCalled();
     });
+  });
+});
+
+describe('OnlinePanel — whether there is a leave action to report', () => {
+  const cases: [OnlineStatus, boolean][] = [
+    ['idle', false],
+    ['error', false],
+    ['connecting', false],
+    ['lobby', true],
+    ['playing', true],
+    ['gameOver', true],
+    ['disconnected', true],
+  ];
+
+  it.each(cases)('reports %s as %s', (status, hasAction) => {
+    const onLeaveActionChange = vi.fn();
+    const extra = status !== 'idle' && status !== 'error' ? playing() : {};
+    const game = { ...baseGame(), ...extra, status };
+    useOnlineGameMock.mockReturnValue(game);
+    render(<OnlinePanel onLeaveActionChange={onLeaveActionChange} />);
+
+    expect(onLeaveActionChange).toHaveBeenCalledWith(hasAction);
+  });
+
+  it('reports false once the panel unmounts', () => {
+    const onLeaveActionChange = vi.fn();
+    useOnlineGameMock.mockReturnValue({ ...baseGame(), status: 'lobby', session: session(0), room: room([]) });
+    const { unmount } = render(<OnlinePanel onLeaveActionChange={onLeaveActionChange} />);
+
+    onLeaveActionChange.mockClear();
+    unmount();
+    expect(onLeaveActionChange).toHaveBeenCalledWith(false);
+  });
+});
+
+describe('OnlinePanel — the header menu', () => {
+  const slotNode = document.createElement('div');
+
+  beforeEach(() => {
+    document.body.appendChild(slotNode);
+  });
+
+  afterEach(() => {
+    slotNode.remove();
+  });
+
+  it('portals the lobby\'s "Quitter" into the header slot', () => {
+    useOnlineGameMock.mockReturnValue({ ...baseGame(), status: 'lobby', session: session(0), room: room(['ready']) });
+    render(
+      <HeaderSlotContext.Provider value={{ node: slotNode, closeMenu: vi.fn() }}>
+        <OnlinePanel />
+      </HeaderSlotContext.Provider>,
+    );
+
+    expect(slotNode.contains(screen.getByRole('button', { name: /quitter/i }))).toBe(true);
+  });
+
+  it('closes the menu once leaving the lobby is confirmed', () => {
+    const game = { ...baseGame(), status: 'lobby' as const, session: session(0), room: room(['ready']) };
+    useOnlineGameMock.mockReturnValue(game);
+    const closeMenu = vi.fn();
+    render(
+      <HeaderSlotContext.Provider value={{ node: slotNode, closeMenu }}>
+        <OnlinePanel />
+      </HeaderSlotContext.Provider>,
+    );
+
+    const quit = () => screen.getByRole('button', { name: /quitter/i });
+    fireEvent.click(quit());
+    fireEvent.click(quit());
+    expect(game.leave).toHaveBeenCalled();
+    expect(closeMenu).toHaveBeenCalled();
+  });
+
+  it('closes the menu once leaving an in-progress game is confirmed', () => {
+    const game = { ...baseGame(), ...playing() };
+    useOnlineGameMock.mockReturnValue(game);
+    const closeMenu = vi.fn();
+    render(
+      <HeaderSlotContext.Provider value={{ node: slotNode, closeMenu }}>
+        <OnlinePanel />
+      </HeaderSlotContext.Provider>,
+    );
+
+    const quit = () => screen.getByRole('button', { name: /quitter/i });
+    fireEvent.click(quit());
+    fireEvent.click(quit());
+    expect(game.leave).toHaveBeenCalled();
+    expect(closeMenu).toHaveBeenCalled();
   });
 });

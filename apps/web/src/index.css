@@ -415,8 +415,15 @@ body[data-drag-active] {
        and the page came out 997px tall in an 844px viewport, which puts the
        controls under the board past the fold. Anything that moves this number
        wants re-measuring against `document.scrollHeight` on a phone-sized
-       viewport, not adjusting by eye. */
-    --avail-w: calc(100svh - 19.875rem - env(safe-area-inset-bottom));
+       viewport, not adjusting by eye.
+
+       Trimmed by another 0.9375rem (15px, measured the same way — the actual
+       gap below the version line, at 375/360/390px wide, went from 9px to 24px)
+       once "Nouvelle partie" stopped ever rendering inline here: portrait was
+       never `isRoomy`, so this row used to carry that button and its separating
+       rule on every phone. It now lives in the header menu at every width — see
+       `HeaderMenu` — and portrait has one fewer row to pay for. */
+    --avail-w: calc(100svh - 18.9375rem - env(safe-area-inset-bottom));
     /* The page padding, and nothing else: with the dice up in the header row the
        turned board has the full width of the screen to be deep in. A narrow phone
        is the one that notices — this is what limits it, where a tall one is

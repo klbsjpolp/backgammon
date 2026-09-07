@@ -1,6 +1,7 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { createInitialState, type GameState } from '@backgammon/core';
+import { HeaderSlotContext } from '@/headerSlot';
 import type { LocalGame } from '@/useLocalGame';
 import { useLocalGame } from '@/useLocalGame';
 import { LocalPanel } from './LocalPanel';
@@ -195,5 +196,48 @@ describe('LocalPanel — a roll nobody could play', () => {
   it('says nothing when the last roll was playable', () => {
     renderPanel();
     expect(screen.queryByText(/n'a pas pu jouer/i, { ignore: '.sr-only' })).toBeNull();
+  });
+});
+
+describe('LocalPanel — the header menu', () => {
+  const slotNode = document.createElement('div');
+
+  beforeEach(() => {
+    document.body.appendChild(slotNode);
+  });
+
+  afterEach(() => {
+    slotNode.remove();
+  });
+
+  it('portals "Nouvelle partie" into the header slot when one is offered', () => {
+    const game = { ...baseGame() };
+    useLocalGameMock.mockReturnValue(game);
+    render(
+      <HeaderSlotContext.Provider value={{ node: slotNode, closeMenu: vi.fn() }}>
+        <LocalPanel />
+      </HeaderSlotContext.Provider>,
+    );
+
+    expect(slotNode.contains(screen.getByRole('button', { name: /nouvelle partie/i }))).toBe(true);
+  });
+
+  it('closes the menu once the new game actually starts', () => {
+    const game = { ...baseGame() };
+    useLocalGameMock.mockReturnValue(game);
+    const closeMenu = vi.fn();
+    render(
+      <HeaderSlotContext.Provider value={{ node: slotNode, closeMenu }}>
+        <LocalPanel />
+      </HeaderSlotContext.Provider>,
+    );
+
+    const newGame = () => screen.getByRole('button', { name: /nouvelle partie/i });
+    fireEvent.click(newGame()); // arms it
+    expect(closeMenu).not.toHaveBeenCalled();
+
+    fireEvent.click(newGame()); // confirms it
+    expect(game.newGame).toHaveBeenCalled();
+    expect(closeMenu).toHaveBeenCalled();
   });
 });
