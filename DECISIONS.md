@@ -612,7 +612,9 @@ to play on a phone:
   were tightened, and the version footer is dropped in landscape. What is left is what
   `--avail-h` / `--avail-w` reserve, down from 22rem to 18.5rem in portrait and from
   7.5rem to 3.5rem in landscape, and the board now has the full width of the screen
-  (portrait) or of everything but the sidebar (landscape) to be drawn in.
+  (portrait) or of everything but the sidebar (landscape) to be drawn in. Both numbers are
+  a snapshot of that round, not the current ones — portrait in particular moves twice more
+  further down in this section.
 
   Anything riding in such a row still costs the board height, so the dice are drawn as
   **pips with the ones already played faded**, rather than spelled out beside a
@@ -698,7 +700,9 @@ to play on a phone:
   what "check a portrait phone and a landscape one" in the layout skill is asking for —
   it is a one-line reading in devtools, and it is the only reason any of these numbers
   can be trusted. Restoring the 19.875rem puts every portrait phone from 360px up back to
-  fitting its viewport to the pixel.
+  fitting its viewport to the pixel — itself since trimmed again, to 18.9375rem, once the
+  abandon button stopped needing a row under the controls at all; see "The abandon button
+  rides in the header" below for that number.
 
 Between them the checkers came out ~85% larger in landscape and ~40% in portrait on a
 modern phone, with the page still fitting the viewport exactly (no scroll). Where the

@@ -20,6 +20,33 @@ const Harness = ({ hasAction }: { hasAction: boolean }) => {
   );
 };
 
+/**
+ * Stands in for `OnlinePanel.handleLeave`: the confirmed action changes state
+ * that removes `hasAction` in the very same batch as `closeMenu()` fires, the
+ * way `g.leave()` and `headerSlot.closeMenu()` do together.
+ */
+const RaceHarness = () => {
+  const [hasAction, setHasAction] = useState(true);
+  const [slot, setSlot] = useState<HeaderSlot | null>(null);
+  return (
+    <>
+      <HeaderMenu hasAction={hasAction} onSlotChange={setSlot} />
+      {slot &&
+        createPortal(
+          <button
+            onClick={() => {
+              setHasAction(false);
+              slot.closeMenu();
+            }}
+          >
+            Quitter
+          </button>,
+          slot.node,
+        )}
+    </>
+  );
+};
+
 const trigger = () => screen.queryByRole('button', { name: 'Actions' });
 const openMenu = () => fireEvent.click(screen.getByRole('button', { name: 'Actions' }));
 const expanded = () => trigger()?.getAttribute('aria-expanded');
@@ -113,6 +140,21 @@ describe('HeaderMenu', () => {
     // not pre-opened from the state the first one left behind.
     rerender(<Harness hasAction={true} />);
     expect(expanded()).toBe('false');
+  });
+
+  it('focuses the trigger before the confirmed action can remove it from under it', () => {
+    render(<RaceHarness />);
+    fireEvent.click(screen.getByRole('button', { name: 'Actions' }));
+    const triggerEl = screen.getByRole('button', { name: 'Actions' });
+    const focusSpy = vi.spyOn(triggerEl, 'focus');
+
+    // `hasAction` and the menu both go in the same click as a real "Quitter"
+    // would — the trigger unmounts a moment later, but `closeMenu` still has
+    // to have reached for it before that happens.
+    fireEvent.click(screen.getByRole('button', { name: 'Quitter' }));
+
+    expect(focusSpy).toHaveBeenCalled();
+    expect(trigger()).toBeNull();
   });
 
   it('reports a null slot once the action is gone', () => {
