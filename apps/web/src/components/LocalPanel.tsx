@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Board } from '@/components/Board';
 import { ConfirmButton } from '@/components/Button';
 import { Dice } from '@/components/Dice';
@@ -15,12 +16,24 @@ interface LocalPanelProps {
    * over.
    */
   applyPendingUpdate?: () => boolean;
+  /**
+   * Reports whether "Nouvelle partie" currently belongs in the header menu, for
+   * `HeaderMenu`'s trigger — see `App`. False once the game is over, which is
+   * when the button moves out of the menu and stands next to the result
+   * instead, so a menu with nothing left in it does not linger on screen.
+   */
+  onHeaderActionChange?: (hasAction: boolean) => void;
 }
 
-export const LocalPanel = ({ applyPendingUpdate }: LocalPanelProps = {}) => {
+export const LocalPanel = ({ applyPendingUpdate, onHeaderActionChange }: LocalPanelProps = {}) => {
   const game = useLocalGame();
   const { state } = game;
   const headerSlot = useHeaderSlot();
+  const isOver = state.phase === 'gameOver';
+
+  useEffect(() => {
+    onHeaderActionChange?.(!isOver);
+  }, [isOver, onHeaderActionChange]);
 
   const startNewGame = () => {
     if (applyPendingUpdate?.()) return;
@@ -28,6 +41,22 @@ export const LocalPanel = ({ applyPendingUpdate }: LocalPanelProps = {}) => {
     // The menu otherwise lingers open over a game that already restarted.
     headerSlot?.closeMenu();
   };
+
+  // The second tap guards a game in progress. Once the game is over there is
+  // nothing left to throw away — the confirmation is then pure friction
+  // between the result and the next game, so `confirm` drops it. It stays the
+  // same element either way: swapping in a plain button resized it at the
+  // moment the game ended, which is when the player's hand is already moving
+  // towards it.
+  const newGameButton = (
+    <ConfirmButton
+      label="Nouvelle partie"
+      confirmLabel="Recommencer ?"
+      confirm={!isOver}
+      onConfirm={startNewGame}
+      className="bg-positive text-positive-fg hover:bg-positive-hover"
+    />
+  );
 
   return (
     <>
@@ -45,8 +74,17 @@ export const LocalPanel = ({ applyPendingUpdate }: LocalPanelProps = {}) => {
             <ShortcutHint />
           </>
         }
-
-        status={<TurnStatus state={state} you={game.you} opponentLabel="IA" />}
+        status={
+          <div className="flex w-full flex-col items-center gap-2">
+            <TurnStatus state={state} you={game.you} opponentLabel="IA" />
+            {/* The result is the one message with nothing after it — no next roll,
+                no next double — so the action that follows it goes right below
+                rather than behind the header menu's tap. Built once above and
+                dropped in exactly one place: here, or in `danger` below, never
+                both — see `Controls`. */}
+            {isOver && newGameButton}
+          </div>
+        }
         board={<Board controller={game} />}
         controls={
           <Controls
@@ -65,21 +103,7 @@ export const LocalPanel = ({ applyPendingUpdate }: LocalPanelProps = {}) => {
                 onClearSelection={game.clearSelection}
               />
             }
-            danger={
-              // The second tap guards a game in progress. Once the game is over
-              // there is nothing left to throw away — the confirmation is then
-              // pure friction between the result and the next game, so `confirm`
-              // drops it. It stays the same element either way: swapping in a
-              // plain button resized it at the moment the game ended, which is
-              // when the player's hand is already moving towards it.
-              <ConfirmButton
-                label="Nouvelle partie"
-                confirmLabel="Recommencer ?"
-                confirm={state.phase !== 'gameOver'}
-                onConfirm={startNewGame}
-                className="bg-positive text-positive-fg hover:bg-positive-hover"
-              />
-            }
+            danger={!isOver && newGameButton}
           />
         }
       />

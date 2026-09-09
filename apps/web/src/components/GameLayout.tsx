@@ -152,6 +152,13 @@ export const ControlRow = ({ className, children }: { className?: string; childr
  * below it is gone. The inline fallback below only fires when `Controls` is
  * rendered with no header menu above it in the tree, which happens in tests
  * that mount a panel on its own, not in the app.
+ *
+ * `danger` can be empty — `LocalPanel` drops it once the game is over, because
+ * that is when "Nouvelle partie" moves out of the menu and stands next to the
+ * result instead (see `LocalPanel`). Neither branch below draws anything for
+ * an empty group: a portalled empty box would still open as an empty menu, and
+ * an inline empty row would still draw its separating rule for nothing to
+ * separate.
  */
 export const Controls = ({
   dice,
@@ -211,23 +218,24 @@ export const Controls = ({
         {primary}
       </ControlRow>
 
-      {headerSlot ? (
-        // The header row is already a group of chrome, so the buttons need no
-        // rule to be told apart from the play controls — they are now the far
-        // side of the board from them, which is more distance than the rule
-        // ever bought.
-        createPortal(<div className="flex items-center gap-2">{danger}</div>, headerSlot.node)
-      ) : (
-        <>
-          {/* Its own element rather than a border on the row below, which now starts
-            in the second column and would draw a rule only as wide as its button. */}
-          <div className="col-start-1 col-end-4 row-start-2 h-px w-full max-w-xs justify-self-center bg-line compact:row-start-3 compact:max-w-none" />
+      {danger &&
+        (headerSlot ? (
+          // The header row is already a group of chrome, so the buttons need no
+          // rule to be told apart from the play controls — they are now the far
+          // side of the board from them, which is more distance than the rule
+          // ever bought.
+          createPortal(<div className="flex items-center gap-2">{danger}</div>, headerSlot.node)
+        ) : (
+          <>
+            {/* Its own element rather than a border on the row below, which now starts
+              in the second column and would draw a rule only as wide as its button. */}
+            <div className="col-start-1 col-end-4 row-start-2 h-px w-full max-w-xs justify-self-center bg-line compact:row-start-3 compact:max-w-none" />
 
-          <ControlRow className="col-start-2 col-end-3 row-start-3 w-full compact:col-start-1 compact:col-end-4 compact:row-start-4 compact:grid-cols-1">
-            {danger}
-          </ControlRow>
-        </>
-      )}
+            <ControlRow className="col-start-2 col-end-3 row-start-3 w-full compact:col-start-1 compact:col-end-4 compact:row-start-4 compact:grid-cols-1">
+              {danger}
+            </ControlRow>
+          </>
+        ))}
     </div>
   );
 };
