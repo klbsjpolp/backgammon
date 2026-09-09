@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useLayoutEffect } from 'react';
 import { Board } from '@/components/Board';
 import { ConfirmButton } from '@/components/Button';
 import { Dice } from '@/components/Dice';
@@ -31,7 +31,14 @@ export const LocalPanel = ({ applyPendingUpdate, onHeaderActionChange }: LocalPa
   const headerSlot = useHeaderSlot();
   const isOver = state.phase === 'gameOver';
 
-  useEffect(() => {
+  /*
+   * `useLayoutEffect`, not `useEffect`: `Controls` already stops portaling the
+   * button into the header the same render `isOver` flips, so a passive effect
+   * would report the header's new, empty state to `App` one paint late — the
+   * "..." trigger open on nothing for a frame. Same reasoning as `HeaderMenu`'s
+   * own layout effect.
+   */
+  useLayoutEffect(() => {
     onHeaderActionChange?.(!isOver);
   }, [isOver, onHeaderActionChange]);
 
