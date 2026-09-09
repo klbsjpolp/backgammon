@@ -23,11 +23,16 @@ export const App = () => {
    * which has nothing. Deliberately not the same signal as `isOnlineBusy` above:
    * that one also covers `connecting`, which today offers no way to leave at all,
    * and conflating the two would make the menu's visibility a side effect of the
-   * update-deferral logic rather than its own honest question. A local game
-   * always has something to abandon, so `mode === 'local'` covers that side.
+   * update-deferral logic rather than its own honest question.
    */
   const [hasOnlineLeaveAction, setHasOnlineLeaveAction] = useState(false);
-  const hasLeaveAction = mode === 'local' || hasOnlineLeaveAction;
+  /*
+   * A local game has something in the header menu for as long as it is in
+   * progress; once it is over, "Nouvelle partie" moves out to stand next to the
+   * result instead (see `LocalPanel`), and the menu has nothing left to open on.
+   */
+  const [hasLocalHeaderAction, setHasLocalHeaderAction] = useState(true);
+  const hasLeaveAction = mode === 'local' ? hasLocalHeaderAction : hasOnlineLeaveAction;
   /*
    * The header hands the panels a slot for their abandon-the-game controls via
    * `HeaderMenu`, always in the same place — see `headerSlot.ts`.
@@ -204,7 +209,7 @@ export const App = () => {
             their controls inline (in tests, mainly) until told otherwise. */}
           <HeaderSlotContext.Provider value={headerSlot}>
             {mode === 'local' ? (
-              <LocalPanel applyPendingUpdate={applyPendingUpdate} />
+              <LocalPanel applyPendingUpdate={applyPendingUpdate} onHeaderActionChange={setHasLocalHeaderAction} />
             ) : (
               <OnlinePanel
                 applyPendingUpdate={applyPendingUpdate}

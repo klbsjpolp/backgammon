@@ -736,11 +736,10 @@ in both game modes — behind a small disclosure popover (`HeaderMenu`) rather t
 portal target. `useRoomyScreen` is deleted along with it: there was nothing left for a width
 breakpoint to decide once the header stopped being the _conditional_ home and became the
 _only_ one. What decides whether the trigger renders at all is not screen width but whether
-there is anything to abandon — `hasAction` in `HeaderMenu`, fed from `App` as `mode ===
-'local' || hasOnlineLeaveAction`. A local game always has one; online has none on the plain
-"host or join" screen, and one everywhere past it — lobby, mid-game, disconnected — which is
-also new: the lobby's own **Quitter** and the "waiting for the host" screen's used to be
-plain inline buttons with no relation to this mechanism at all, and now portal into the same
+there is anything to abandon — `hasAction` in `HeaderMenu`, fed from `App`. Online has none on
+the plain "host or join" screen, and one everywhere past it — lobby, mid-game, disconnected —
+which is also new: the lobby's own **Quitter** and the "waiting for the host" screen's used to
+be plain inline buttons with no relation to this mechanism at all, and now portal into the same
 menu the in-game one does. One location, learned once, for every shape "leave" ever took.
 
 The portal itself is the same idea as before — `Controls` (and now `LocalPanel` and
@@ -787,6 +786,22 @@ of the controls in one grid, which would have made this a CSS-only placement wit
 at all. Online opens on a room picker with no `GameLayout` on screen, so the header would
 still have to be rendered from two places, or from inside a panel that does not always draw
 a board — the same worse trade this file already rejected once, now for a smaller reason.
+
+**Local's own `hasAction` stopped being a flat `true` once the game can end.** "A local game
+always has something to abandon" was true right up until the point a game finishes: the result
+line is the one screen with nothing after it — no next roll, no next double — and a player who
+just won had to open a menu to find the one action left. Leaving it in the header on principle
+(one location, learned once) would have solved the wrong problem: the button was reachable,
+just not where the message that made it relevant was looking. So `LocalPanel` reports its own
+`hasAction` now (`onHeaderActionChange`, the same shape as `OnlinePanel`'s
+`onLeaveActionChange`), false for exactly the `gameOver` phase, and `Controls`' `danger` prop
+drops to nothing at the same moment — both branches of its render already knew how to draw
+nothing for that (see `Controls`), so this needed no new case there. "Nouvelle partie" itself
+is unchanged, built once in `LocalPanel` and handed to exactly one of two spots — the header's
+portal or a plain child of the result — never both, the same one-copy shape `OnlinePanel`'s
+lobby `quitButton` already used for its own inline-or-portal choice. The menu that would have
+opened on nothing now does not open at all, and the button a won game needs stands right next
+to the sentence that just said so.
 
 ## Full screen
 

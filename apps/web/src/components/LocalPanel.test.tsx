@@ -240,4 +240,35 @@ describe('LocalPanel — the header menu', () => {
     expect(game.newGame).toHaveBeenCalled();
     expect(closeMenu).toHaveBeenCalled();
   });
+
+  it('reports that the header menu has something to offer while the game is on', () => {
+    const onHeaderActionChange = vi.fn();
+    useLocalGameMock.mockReturnValue(baseGame());
+    render(<LocalPanel onHeaderActionChange={onHeaderActionChange} />);
+    expect(onHeaderActionChange).toHaveBeenCalledWith(true);
+  });
+
+  it('moves "Nouvelle partie" out of the header menu and next to the result once the game is over', () => {
+    const onHeaderActionChange = vi.fn();
+    const over: GameState = {
+      ...createInitialState('white'),
+      phase: 'gameOver',
+      result: { winner: 'white', kind: 'single', points: 1, cubeValue: 1 },
+    };
+    const game = { ...baseGame(), state: over };
+    useLocalGameMock.mockReturnValue(game);
+    render(
+      <HeaderSlotContext.Provider value={{ node: slotNode, closeMenu: vi.fn() }}>
+        <LocalPanel onHeaderActionChange={onHeaderActionChange} />
+      </HeaderSlotContext.Provider>,
+    );
+
+    // Nothing left for the menu to open on...
+    expect(slotNode.contains(screen.queryByRole('button', { name: /nouvelle partie/i }))).toBe(false);
+    expect(onHeaderActionChange).toHaveBeenCalledWith(false);
+    // ...because the one copy in the tree now stands beside the result instead.
+    const result = screen.getByText(/vous gagnez/i, { ignore: '.sr-only' });
+    const newGame = screen.getByRole('button', { name: /nouvelle partie/i });
+    expect(newGame.parentElement?.contains(result)).toBe(true);
+  });
 });
