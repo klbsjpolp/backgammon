@@ -19,7 +19,7 @@ Dependencies flow one way: `core` ← `runtime` ← `web`. The web app is the on
 
 ## Commands
 
-pnpm workspace, Node >= 22.12. `pnpm install` first — CI installs from the lockfile, so commit it when deps change.
+pnpm workspace, Node 22.12+, 24 or 26+ (Vitest 5 skips the odd releases). `pnpm install` first — CI installs from the lockfile, so commit it when deps change.
 
 ```bash
 pnpm dev          # web app on http://localhost:5173

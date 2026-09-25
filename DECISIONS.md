@@ -1194,7 +1194,7 @@ there is nothing to lose there and a little edge definition to gain.
 
 ## Stack
 
-- Same primary libraries as skip-bo: React 19, Vite 8, Tailwind 4, Vitest 4, zod 4,
+- Same primary libraries as skip-bo: React 19, Vite 8, Tailwind 4, Vitest 5, zod 4,
   immer 11, TypeScript 6, pnpm.
 - **XState was intentionally omitted** (skip-bo uses it). Backgammon's turn FSM
   (rolling → moving → doubleOffered → gameOver) is already owned by `@backgammon/core`
@@ -1214,8 +1214,10 @@ there is nothing to lose there and a little edge definition to gain.
   Dependabot can move one member of such a group alone, and pnpm only warns: the
   root once held `@typescript-eslint/eslint-plugin` and `parser` at 8.69.0 while
   `typescript-eslint` pulled in its own 8.70.0, so two copies were installed and
-  the ones the root named were not the ones the config loaded. Another repo on the
-  same setup found out when coverage read 0% under vitest 5 with the v4 provider.
+  the ones the root named were not the ones the config loaded. vitest 5 then
+  arrived as two Dependabot PRs, one for `vite` and `vitest` and one for the
+  coverage provider, neither of which can pass on its own; another repo on the
+  same setup merged half and found out when coverage read 0%.
   Both groups now live in the `catalog:` in `pnpm-workspace.yaml`. A caret there
   would not hold them together: with the lockfile keeping one member back, a fresh
   resolve takes the newest release for the others and recreates the split. The
