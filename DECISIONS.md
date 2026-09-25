@@ -1208,6 +1208,20 @@ there is nothing to lose there and a little edge definition to gain.
   offered to you, though neither is a local concern. What is genuinely different
   is the wiring, and that is what the props are. The panels are the two hooks
   and the pieces they hand to `GameLayout`, nothing else.
+- **Packages that ship in lockstep are declared once, pinned exactly.** vitest
+  names `@vitest/coverage-v8` as a peer at its own exact version, and
+  `typescript-eslint` depends on `@typescript-eslint/*` at its own exact version.
+  Dependabot can move one member of such a group alone, and pnpm only warns: the
+  root once held `@typescript-eslint/eslint-plugin` and `parser` at 8.69.0 while
+  `typescript-eslint` pulled in its own 8.70.0, so two copies were installed and
+  the ones the root named were not the ones the config loaded. Another repo on the
+  same setup found out when coverage read 0% under vitest 5 with the v4 provider.
+  Both groups now live in the `catalog:` in `pnpm-workspace.yaml`. A caret there
+  would not hold them together: with the lockfile keeping one member back, a fresh
+  resolve takes the newest release for the others and recreates the split. The
+  cost is that a patch release is never picked up without a bump; that is what
+  Dependabot is for. CI runs `pnpm peers check` straight after install, since an
+  install does not fail on peers by itself.
 
 ## Online / realtime-infra integration
 

@@ -26,6 +26,12 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
+      # An install only warns about unmet peers, so a Dependabot bump that moves
+      # vitest without @vitest/coverage-v8 installs cleanly and fails later as a
+      # coverage run that makes no sense. Fail here, where the cause is named.
+      - name: Check peer dependencies
+        run: pnpm peers check
+
       - name: Run lint
         run: pnpm lint
 
