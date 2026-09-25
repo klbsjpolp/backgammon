@@ -5,7 +5,7 @@
   "license": "GPL-3.0-only",
   "type": "module",
   "engines": {
-    "node": ">=22.12.0"
+    "node": "^22.12.0 || ^24.0.0 || >=26.0.0"
   },
   "scripts": {
     "build": "pnpm --filter @backgammon/core build && pnpm --filter @backgammon/runtime build && pnpm --filter @backgammon/web build",
