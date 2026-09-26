@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef } from 'react';
+import { useCallback, useLayoutEffect, useRef } from 'react';
 import type { PointerEvent as ReactPointerEvent, RefObject } from 'react';
 import { createPortal } from 'react-dom';
 import {
@@ -75,6 +75,15 @@ const describeOccupancy = (count: number): string => {
  * Both colours carry a rim: on a light theme a pale checker on a pale point is
  * otherwise only an edgeless smudge.
  */
+/**
+ * A square answers the finger as it comes down, not when it lifts: on a touch
+ * screen there is no hover, and a point that waits for the `click` looks, for the
+ * whole length of the press, like a point that did not notice it. Instant on the
+ * way in and eased on the way out, because the press is the cause and the fade
+ * is only the aftermath.
+ */
+const PRESSED = 'active:brightness-150 active:duration-0';
+
 const checkerColor = (player: Player): string =>
   player === 'white'
     ? 'bg-checker-light text-checker-light-fg ring-checker-light-line'
@@ -213,9 +222,9 @@ const Point = ({
         'border border-point-line px-px py-board-point-pad transition',
         orientation === 'bottom' && 'flex-col-reverse justify-start',
         index % 2 === 0 ? 'bg-point-even' : 'bg-point-odd',
-        selectable && 'cursor-grab ring-2 ring-pick hover:brightness-125',
-        selected && 'ring-2 ring-pick-strong brightness-125',
-        target && 'cursor-pointer ring-2 ring-move hover:brightness-125',
+        selectable && ['cursor-grab ring-2 ring-pick hover:brightness-125', PRESSED],
+        selected && ['ring-2 ring-pick-strong brightness-125', PRESSED],
+        target && ['cursor-pointer ring-2 ring-move hover:brightness-125', PRESSED],
         over && 'ring-4 ring-move brightness-125',
       )}
     >
@@ -260,7 +269,7 @@ const Tray = ({ label, owner, value, active, over, onClick }: TrayProps) => (
     className={cn(
       'board-tray flex h-board-tray-depth w-board-tray flex-col items-center justify-center',
       'rounded-md border border-tray-line bg-tray text-tray-fg',
-      active && 'cursor-pointer ring-2 ring-move hover:brightness-125',
+      active && ['cursor-pointer ring-2 ring-move hover:brightness-125', PRESSED],
       over && 'ring-4 ring-move brightness-125',
     )}
   >
@@ -321,7 +330,7 @@ const Bar = ({
     className={cn(
       'board-bar flex w-board-bar flex-col items-center justify-center gap-board-bar-gap self-stretch',
       'rounded-md border border-bar-line bg-bar py-board-bar-pad',
-      (selectable || selected) && 'cursor-grab ring-2 ring-pick-strong',
+      (selectable || selected) && ['cursor-grab ring-2 ring-pick-strong', PRESSED],
     )}
   >
     <Checkers count={theirs} pile={theirsPile} />
@@ -361,17 +370,18 @@ const DragGhost = ({ drag }: { drag: CheckerDrag }) =>
     <div
       aria-hidden
       className={cn(
-        'board-checker pointer-events-none fixed top-0 left-0 z-40 rounded-full ring-1',
+        'board-checker checker-ghost pointer-events-none fixed top-0 left-0 z-40 rounded-full ring-1',
         checkerColor(drag.player),
       )}
       style={{
         width: `${drag.width}px`,
         height: `${drag.height}px`,
-        // Centred on the pointer, and a shade larger than the checker it left
-        // behind: the lift is what says the checker is in your hand rather than
-        // lying on the board. A static transform, so it costs reduced motion
-        // nothing.
-        transform: `translate3d(${drag.pointer.x}px, ${drag.pointer.y}px, 0) translate(-50%, -50%) scale(1.15)`,
+        // Held where it was picked up, not centred on the pointer: centring it
+        // jumped the checker by the grip on the first frame of every drag. The
+        // lift itself — the scale and the shadow — is `.checker-ghost`'s, and it
+        // rides on `scale`, which applies before this and so does not scale the
+        // offset along with the checker.
+        translate: `calc(${drag.pointer.x - drag.grip.x}px - 50%) calc(${drag.pointer.y - drag.grip.y}px - 50%)`,
       }}
     />,
     document.body,
@@ -385,6 +395,8 @@ const DragGhost = ({ drag }: { drag: CheckerDrag }) =>
 const standInFor = (player: Player, arrival: HTMLElement | null): HTMLElement => {
   if (arrival) {
     const copy = arrival.cloneNode(true) as HTMLElement;
+    // The checker going home after a drag is still marked lifted when it is copied.
+    copy.classList.remove('invisible');
     // Every length on the board is a multiple of `--pt`, which lives on the board
     // and not on the page the stand-in flies across. Width and height are set from
     // the measured rect; the count a deep stack carries would otherwise come out at
@@ -486,6 +498,47 @@ const useCheckerFlights = (
 };
 
 /**
+ * A checker put down over nothing goes back the way it came.
+ *
+ * The board does not change, so {@link useCheckerFlights} has nothing to fly —
+ * and without this the ghost vanished from under the finger and the checker
+ * reappeared on its point, which reads as the drag having been refused rather
+ * than as the checker being set back where it was. The checker stays selected
+ * either way; this is only the paint.
+ *
+ * A return still in the air is settled by anything that could move the checker
+ * it is heading for: a new press (which may pick it straight back up, or play it
+ * by tapping a destination) and any new board.
+ */
+const useReturnFlight = (rootRef: RefObject<HTMLDivElement | null>, board: BoardState, you: Player) => {
+  const returning = useRef<StopFlight | null>(null);
+
+  const settle = useCallback(() => {
+    returning.current?.();
+    returning.current = null;
+  }, []);
+
+  const putBack = useCallback(
+    ({ pile, rect }: DragRelease) => {
+      settle();
+      const root = rootRef.current;
+      const home = root && arrivalOn(root, pile);
+      if (!home) return;
+      returning.current = flyChecker(standInFor(you, home), {
+        from: rect,
+        to: centreOf(home.getBoundingClientRect()),
+        arrival: home,
+      });
+    },
+    [rootRef, settle, you],
+  );
+
+  useLayoutEffect(() => settle, [board, settle]);
+
+  return { putBack, settle };
+};
+
+/**
  * Clicks and double clicks on their way to the controller.
  *
  * A double click on a point with only one move to play plays it — the two clicks
@@ -525,6 +578,7 @@ export const Board = ({ controller }: { controller: BoardController }) => {
   const them = opponent(you);
   const { top, bottom } = rowsFor(you);
   const rootRef = useRef<HTMLDivElement | null>(null);
+  const returnFlight = useReturnFlight(rootRef, board, you);
   const { drag, releaseRef, grab } = useCheckerDrag({
     rootRef,
     you,
@@ -532,6 +586,7 @@ export const Board = ({ controller }: { controller: BoardController }) => {
     targetsFrom,
     selectFrom,
     moveChecker,
+    putBack: returnFlight.putBack,
   });
   useCheckerFlights(rootRef, board, releaseRef);
   const { click, doubleClick } = useBoardClicks(controller, board);
@@ -550,7 +605,10 @@ export const Board = ({ controller }: { controller: BoardController }) => {
       lifted={drag?.from === index}
       onClick={() => click(index)}
       onDoubleClick={() => doubleClick(index)}
-      onPointerDown={(event) => grab(index, event)}
+      onPointerDown={(event) => {
+        returnFlight.settle();
+        grab(index, event);
+      }}
     />
   );
 
@@ -581,7 +639,10 @@ export const Board = ({ controller }: { controller: BoardController }) => {
             lifted={drag?.from === BAR}
             onClick={() => click(BAR)}
             onDoubleClick={() => doubleClick(BAR)}
-            onPointerDown={(event) => grab(BAR, event)}
+            onPointerDown={(event) => {
+              returnFlight.settle();
+              grab(BAR, event);
+            }}
           />
 
           <div className="flex flex-col justify-between gap-board-gutter">
