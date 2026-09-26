@@ -201,6 +201,9 @@ export const Controls = ({
           'col-start-1 col-end-2 row-start-1 flex min-h-[1em] min-w-33 justify-end text-3xl',
           'max-sm:row-start-3 max-sm:justify-start',
           'compact:col-end-4 compact:row-start-1 compact:justify-start',
+          // The band draws its dice at `size-board-die` rather than `1em`, so the
+          // reservation has to follow them there — see `--spacing-board-dice`.
+          'fullscreen:min-h-board-die fullscreen:min-w-board-dice',
         )}
       >
         {dice}

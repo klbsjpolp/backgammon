@@ -721,6 +721,15 @@ left to throw away, and the guard was then only friction between the result and 
 game. Every button carries a 44px minimum touch target, and the page reserves
 `env(safe-area-inset-bottom)`.
 
+It did not, for most of its history, and it never reserved the top at all. The page
+padded the bottom inset in its base class and then set `py-*` in every variant —
+phone, landscape, fullscreen — which is emitted later and replaced it outright, while
+the height budgets went on subtracting an inset nobody padded. A browser tab has no
+insets to lose, so it went unseen until the app was installed to an iPad home screen:
+there the status bar is drawn over a `viewport-fit=cover` page, the header sat
+underneath it, and scrolling to reveal it only bounced back. Each variant now pads
+both insets itself, and every budget subtracts both.
+
 ## The abandon button rides in the header
 
 This used to be conditional: **Nouvelle partie** / **Quitter** rode in the header only on a
@@ -1019,6 +1028,14 @@ game at seven resolutions, from 1920×1080 down to a 320px phone, the page now h
 exactly **one** geometry — board, controls and document height identical in every
 state — and cumulative layout shift is under 0.001 everywhere, all of it inside the
 board.
+
+Fullscreen was not among the seven, and it shifted. The band draws a die at
+`0.5 × --pt` where every other layout draws it at the cell's `1em`, but the cell kept
+the `1em` reservation: on anything past ~60px of `--pt` a double outgrew it, the
+band's wrapping row re-flowed around the wider cell, and on a 1366px iPad Roll jumped
+72px left and 26px down on every roll. The reservation now follows the die it holds —
+`--spacing-board-dice` is four band dice and their gaps — and fullscreen is measured
+with the rest.
 
 Two things the measurement turned up along the way. The portrait height budget was
 **5px short before any of this** — the page had always overflowed its own viewport by
