@@ -25,7 +25,10 @@ export const Button = ({ className, ...props }: ButtonProps) => (
     className={cn(
       CONTROL_BASE,
       'rounded-md bg-accent px-4 py-2 text-accent-fg',
-      'hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-40',
+      'hover:bg-accent-hover',
+      // Its own surface rather than an opacity: see `--disabled` in themes.css. The
+      // variant outranks a caller's colours, so every slot greys out the same way.
+      'disabled:cursor-not-allowed disabled:bg-disabled disabled:text-disabled-fg disabled:ring-0',
       // Pressed as the finger lands, not when it lifts — a phone has no hover, so
       // this is the only sign the tap arrived until the action it causes shows up.
       // Not in `CONTROL_BASE`: a checkbox label shrinking under the finger is a

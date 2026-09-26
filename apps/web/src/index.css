@@ -318,6 +318,42 @@ body {
 }
 
 /*
+ * The throw. A roll is the one moment the whole game waits on, and the dice used
+ * to be simply there — on the AI's turn with nothing the player did to cause
+ * them, so the new faces could go unnoticed until the checkers started moving.
+ * They tumble in instead and settle with a little overshoot, the one place on
+ * the page that gets any: they were thrown, and something thrown carries speed
+ * into where it stops. Nothing waits on it — the roll is on the board, and the
+ * voice has already said it, before the dice have landed.
+ *
+ * `backwards`, so a die still waiting out its stagger is not drawn at rest first.
+ */
+.die-roll {
+  animation: die-roll 320ms cubic-bezier(0.34, 1.4, 0.64, 1) backwards;
+}
+
+@keyframes die-roll {
+  from {
+    opacity: 0;
+    rotate: -150deg;
+    scale: 0.4;
+  }
+}
+
+/* Asked for stillness, the dice still arrive — they fade in where they land. */
+@media (prefers-reduced-motion: reduce) {
+  .die-roll {
+    animation: die-appear 150ms ease-out backwards;
+  }
+}
+
+@keyframes die-appear {
+  from {
+    opacity: 0;
+  }
+}
+
+/*
  * Asked for more contrast, the board drops every texture and goes back to the
  * flat colours the palette was measured at. Nothing above carries information —
  * it is all light and shadow on surfaces that already say what they are — so

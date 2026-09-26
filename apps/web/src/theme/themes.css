@@ -50,6 +50,14 @@
   --neutral: #57534e;
   --neutral-hover: #78716c;
   --neutral-fg: #fafaf9;
+  /*
+   * A control that cannot be used right now, drawn as its own flat surface
+   * rather than as its colour at 40% — which on this felt turned the amber roll
+   * button a muddy brown that read as a different button, not an unavailable
+   * one. The label keeps 3:1: it is still the word the button will say.
+   */
+  --disabled: #0e3a2d;
+  --disabled-fg: #7aa596;
 
   --info-soft: #08283a;
   --info-soft-fg: #bae6fd;
@@ -147,6 +155,8 @@
   --neutral: #3b4463;
   --neutral-hover: #4c577c;
   --neutral-fg: #e6e9f5;
+  --disabled: #1c2340;
+  --disabled-fg: #7e86a8;
 
   --info-soft: #0b2f3c;
   --info-soft-fg: #a5f3fc;
@@ -235,6 +245,8 @@
   --neutral: #8a7355;
   --neutral-hover: #6f5c43;
   --neutral-fg: #fdf9f0;
+  --disabled: #e2d3b3;
+  --disabled-fg: #7a6244;
 
   --info-soft: #d6e6f2;
   --info-soft-fg: #0b3a56;
@@ -352,6 +364,8 @@
   --color-neutral: var(--neutral);
   --color-neutral-hover: var(--neutral-hover);
   --color-neutral-fg: var(--neutral-fg);
+  --color-disabled: var(--disabled);
+  --color-disabled-fg: var(--disabled-fg);
 
   --color-info-soft: var(--info-soft);
   --color-info-soft-fg: var(--info-soft-fg);

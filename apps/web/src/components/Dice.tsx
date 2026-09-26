@@ -58,6 +58,13 @@ interface Face {
 }
 
 /**
+ * How far apart the dice of one roll land. Two dice thrown together do not hit
+ * the table on the same frame, and a pair that arrived in perfect unison read as
+ * a pair that was placed.
+ */
+const LANDING_STAGGER_MS = 45;
+
+/**
  * One die, drawn rather than typed. The Unicode pip glyphs (⚀..⚅) look like the
  * obvious answer and are not: the drawn face is a fraction of the font size and
  * the rest is the glyph's own padding, so a die that has to fit a header row
@@ -68,7 +75,7 @@ interface Face {
  *
  * Sized in `em` so the size stays the caller's, set with `text-*` as before.
  */
-const Die = ({ value, played, blocked, player }: Face) => {
+const Die = ({ value, played, blocked, player, order }: Face & { order: number }) => {
   const { isFullscreen } = useFullscreenState();
   // One gradient per die rather than one definition shared by all of them: a
   // `url(#…)` resolves against the whole document, so a constant id would be a
@@ -91,8 +98,12 @@ const Die = ({ value, played, blocked, player }: Face) => {
       data-face={value}
       data-played={played}
       data-blocked={blocked ?? false}
+      // The throw is played on mount, and a die only mounts when a roll lands:
+      // the cell renders nothing between rolls, so a new throw is always new dice
+      // while spending one only re-renders the face it already has.
+      style={{ animationDelay: `${order * LANDING_STAGGER_MS}ms` }}
       className={cn(
-        'shrink-0 transition-opacity',
+        'die-roll shrink-0 transition-opacity',
         played && 'opacity-30',
         // Fullscreen has room for a die that reads across a desk, and there the
         // size comes from the board's own unit — see `--spacing-board-die`,
@@ -231,7 +242,7 @@ export const Dice = ({ state, className }: { state: GameState; className?: strin
       className={cn('flex items-center gap-[0.12em] leading-none', className)}
     >
       {faces.map((face, i) => (
-        <Die key={i} value={face.value} played={face.played} blocked={face.blocked} player={face.player} />
+        <Die key={i} order={i} value={face.value} played={face.played} blocked={face.blocked} player={face.player} />
       ))}
       {blocked && (
         // Without this the group is a name with nothing under it: every die is

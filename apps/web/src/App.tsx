@@ -123,7 +123,9 @@ export const App = () => {
            * measured — the row is nowrap and the title is the part that gives. It
            * needs `min-w-0` to be allowed to shrink at all (a flex item will not go
            * below its content otherwise), and then it ellipsises. Losing the tail of
-           * a heading the browser tab already shows beats losing the board.
+           * a heading the browser tab already shows beats losing the board. On a
+           * portrait phone it gave until three letters were left, and there it is
+           * not drawn at all.
            *
            * Fullscreen makes the same row a three-column grid — title, switches,
            * version — because it is then the only thing outside the board, and the
@@ -134,13 +136,17 @@ export const App = () => {
           <div
             className={cn(
               'flex w-full flex-col items-center gap-3',
-              'max-sm:flex-row max-sm:justify-between max-sm:gap-2',
+              'max-sm:flex-row max-sm:justify-center max-sm:gap-2',
               'compact:flex-row compact:justify-between compact:gap-2',
               'fullscreen:grid fullscreen:grid-cols-[1fr_auto_1fr] fullscreen:items-center fullscreen:gap-3',
             )}
           >
-            <header className="flex min-w-0 items-center fullscreen:justify-self-start">
-              <h1 className="min-w-0 truncate text-3xl font-bold tracking-tight text-heading max-sm:text-base compact:text-base fullscreen:text-xl">
+            {/* Out of sight on a phone rather than out of the page: the tab and the
+              home-screen icon already say where you are, and at 375px the row
+              had room for "Bac…", which says nothing. A reader still lands on
+              the heading. */}
+            <header className="flex min-w-0 items-center max-sm:sr-only fullscreen:justify-self-start">
+              <h1 className="min-w-0 truncate text-3xl font-bold tracking-tight text-heading compact:text-base fullscreen:text-xl">
                 Backgammon
               </h1>
             </header>
@@ -149,8 +155,8 @@ export const App = () => {
               but the mode buttons wrap their own labels instead, which costs the
               same height. `max-sm:gap-1` because the header menu (see `HeaderMenu`)
               is now a permanent fourth member of this row where a phone used to
-              carry three — the title is still what gives first, but this is real
-              width handed back to it before that happens. */}
+              carry three — width handed back to the title wherever it is still
+              drawn in this row, before it has to ellipsise. */}
             <div className="flex shrink-0 items-center gap-2 max-sm:gap-1">
               <div className="inline-flex rounded-lg bg-surface p-1 text-sm">
                 {(['local', 'online'] as const).map((m) => (
