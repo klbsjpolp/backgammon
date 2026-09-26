@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.3.2](https://github.com/klbsjpolp/backgammon/compare/v1.3.1...v1.3.2) (2026-09-26)
+
+### Bug Fixes
+
+* **web:** light a point's wood without its checkers ([818a1e8](https://github.com/klbsjpolp/backgammon/commit/818a1e8b68e093d1b0bd6e5340552fd31f805b55))
+
 ## [1.3.1](https://github.com/klbsjpolp/backgammon/compare/v1.3.0...v1.3.1) (2026-09-26)
 
 ### Bug Fixes
