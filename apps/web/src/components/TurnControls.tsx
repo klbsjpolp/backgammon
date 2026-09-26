@@ -116,7 +116,15 @@ export const TurnControls = ({
         Annuler
       </Slot>
     ) : (
-      <Slot onClick={onDouble} disabled={!canDouble} className="bg-info text-info-fg hover:bg-info-hover">
+      // Tinted, not filled. Rolling is what a turn is made of and doubling is a
+      // stake raised a few times a match, which cannot be taken back once offered
+      // — at the same weight as Roll, a slot away from it, the rare irreversible
+      // action looked like the everyday one.
+      <Slot
+        onClick={onDouble}
+        disabled={!canDouble}
+        className="bg-info-soft text-info-soft-fg ring-1 ring-info ring-inset hover:brightness-125"
+      >
         Doubler
       </Slot>
     )}

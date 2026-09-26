@@ -182,6 +182,16 @@ describe.each(THEMES.map((theme) => theme.id))('%s', (id) => {
     );
   });
 
+  // WCAG exempts a disabled control from contrast because nobody can act on it,
+  // but a player reads ahead: a greyed "Lancer" is still where the roll will be
+  // and what it will say, and a label that has faded to a smudge says neither.
+  it('a disabled control keeps its label legible', () => {
+    const label = contrast(vars['disabled-fg'], vars.disabled);
+    expect(`disabled-fg on disabled: ${label.toFixed(2)}`).toBe(
+      `disabled-fg on disabled: ${Math.max(label, MIN_NON_TEXT_CONTRAST).toFixed(2)}`,
+    );
+  });
+
   // Either the body or the rim has to draw the checker's edge. In the dark themes
   // the pale body does it on its own; on a light board only the rim can.
   it.each(['light', 'dark'])('the %s checker has an edge on both point colours', (side) => {
