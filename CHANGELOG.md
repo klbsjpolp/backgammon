@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.3.3](https://github.com/klbsjpolp/backgammon/compare/v1.3.2...v1.3.3) (2026-09-26)
+
+### Bug Fixes
+
+* **web:** pad the status bar on an installed ipad, and hold the band's dice still ([#79](https://github.com/klbsjpolp/backgammon/issues/79)) ([2c44961](https://github.com/klbsjpolp/backgammon/commit/2c44961a35844168e17d18f92580b00e54ba523e))
+
 ## [1.3.2](https://github.com/klbsjpolp/backgammon/compare/v1.3.1...v1.3.2) (2026-09-26)
 
 ### Bug Fixes
