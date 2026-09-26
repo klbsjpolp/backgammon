@@ -79,10 +79,15 @@ const describeOccupancy = (count: number): string => {
  * A square answers the finger as it comes down, not when it lifts: on a touch
  * screen there is no hover, and a point that waits for the `click` looks, for the
  * whole length of the press, like a point that did not notice it. Instant on the
- * way in and eased on the way out, because the press is the cause and the fade
- * is only the aftermath.
+ * way in, because the press is the cause.
+ *
+ * It goes no brighter than hover. At 150% a mouse click was a second, harsher
+ * step on top of the hover's 125%, flashing in and easing out on every press, so
+ * sweeping across the board and clicking (or double-clicking) strobed. At the
+ * hover level a pointer sees nothing new, and a finger, which never hovered,
+ * still gets the whole step.
  */
-const PRESSED = 'active:brightness-150 active:duration-0';
+const PRESSED = 'active:brightness-125 active:duration-0';
 
 const checkerColor = (player: Player): string =>
   player === 'white'
