@@ -488,6 +488,19 @@ describe('the flight a drag leaves behind', () => {
     expect(flyers).toHaveLength(1);
   });
 
+  it('sends nothing home from a press the system took before it travelled', () => {
+    // The checker never left its point, so a flight back to it would be a checker
+    // leaping out of the stack and landing where it already was.
+    const controller = controllerFor();
+    render(<Board controller={controller} />);
+    const start = centreOfZone(5);
+    fireEvent(pointAt(5), pointerEvent('pointerdown', { clientX: start.x, clientY: start.y, pointerType: 'touch' }));
+    fireEvent(window, pointerEvent('pointercancel', { clientX: start.x, clientY: start.y, pointerType: 'touch' }));
+
+    expect(flyers).toHaveLength(0);
+    expect(controller.selectFrom).not.toHaveBeenCalled();
+  });
+
   it('lands a return still in the air the moment the board moves', () => {
     // Its destination is the checker a move is about to take off that point, and
     // the move flies from the board's own record — two of them in the air at once
