@@ -123,7 +123,7 @@ export const TurnControls = ({
       <Slot
         onClick={onDouble}
         disabled={!canDouble}
-        className="bg-info-soft text-info-soft-fg ring-1 ring-info ring-inset hover:brightness-125"
+        className="bg-info-soft text-info-soft-fg ring-1 ring-info ring-inset enabled:hover:brightness-125"
       >
         Doubler
       </Slot>
