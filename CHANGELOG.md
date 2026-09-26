@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.3.1](https://github.com/klbsjpolp/backgammon/compare/v1.3.0...v1.3.1) (2026-09-26)
+
+### Bug Fixes
+
+* **web:** press a point no brighter than hovering it ([d2012d8](https://github.com/klbsjpolp/backgammon/commit/d2012d896317cdf4bb070c3cda08887a819e86a3))
+
 ## [1.3.0](https://github.com/klbsjpolp/backgammon/compare/v1.2.7...v1.3.0) (2026-09-26)
 
 ### Features
