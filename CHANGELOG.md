@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.3.0](https://github.com/klbsjpolp/backgammon/compare/v1.2.7...v1.3.0) (2026-09-26)
+
+### Features
+
+* **web:** answer a press as it lands and carry a dropped checker home ([f7317c7](https://github.com/klbsjpolp/backgammon/commit/f7317c72ec5e775277999e7f9c421f3f7d060c8e))
+* **web:** throw the dice, grey out what cannot be pressed, demote the double ([c2afe8f](https://github.com/klbsjpolp/backgammon/commit/c2afe8feae622ccda1d864ae7940eb817dbc717f))
+
+### Bug Fixes
+
+* **web:** stop a disabled double button brightening under the pointer ([bb90f07](https://github.com/klbsjpolp/backgammon/commit/bb90f07d4f32c2412bfebc130785fac7a06952bd))
+
 ## [1.2.7](https://github.com/klbsjpolp/backgammon/compare/v1.2.6...v1.2.7) (2026-09-25)
 
 ## [1.2.6](https://github.com/klbsjpolp/backgammon/compare/v1.2.5...v1.2.6) (2026-09-23)
