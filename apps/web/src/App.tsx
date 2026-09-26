@@ -92,21 +92,30 @@ export const App = () => {
       <FullscreenContext.Provider value={fullscreen}>
         <div
           className={cn(
-            'mx-auto flex min-h-full w-full max-w-3xl flex-col items-center gap-4 px-4 py-4 text-fg',
-            // Keep the bottom row of controls clear of the home indicator / gesture bar.
-            'pb-[calc(1rem+env(safe-area-inset-bottom))]',
+            'mx-auto flex min-h-full w-full max-w-3xl flex-col items-center gap-4 px-4 text-fg',
+            // The page is `viewport-fit=cover`, so the status bar (top) and the home
+            // indicator (bottom) are drawn over it on a home-screen install. Every
+            // variant below repeats the insets rather than using `py-*`: a
+            // `max-sm:py-2` is emitted after the base `pb-[…]` and replaced it
+            // outright, so the header slid under an iPad's status bar and the
+            // bottom inset the height budgets in `index.css` subtract was never
+            // actually padded. Those budgets subtract both insets for this reason.
+            'pt-[calc(1rem+env(safe-area-inset-top))] pb-[calc(1rem+env(safe-area-inset-bottom))]',
             // The page is `viewport-fit=cover`, so in landscape the notch eats into
             // 100vw. It never used to matter — nothing came near the edge — but the
             // board now claims the width it is given, and would claim that too.
             'pl-[calc(1rem+env(safe-area-inset-left))] pr-[calc(1rem+env(safe-area-inset-right))]',
             // Every gap here is height the board does not get: on a phone the page
             // is scaled around the board, not the other way round.
-            'max-sm:gap-2 max-sm:py-2',
-            'compact:max-w-none compact:gap-1 compact:py-1',
+            'max-sm:gap-2',
+            'max-sm:pt-[calc(0.5rem+env(safe-area-inset-top))] max-sm:pb-[calc(0.5rem+env(safe-area-inset-bottom))]',
+            'compact:max-w-none compact:gap-1',
+            'compact:pt-[calc(0.25rem+env(safe-area-inset-top))] compact:pb-[calc(0.25rem+env(safe-area-inset-bottom))]',
             // Fullscreen leaves exactly one row outside the board — see the header
             // below, which takes the title and the version line onto the switches'
             // line — so the page's own gap is spent once rather than three times.
-            'fullscreen:max-w-none fullscreen:gap-2 fullscreen:py-2',
+            'fullscreen:max-w-none fullscreen:gap-2',
+            'fullscreen:pt-[calc(0.5rem+env(safe-area-inset-top))] fullscreen:pb-[calc(0.5rem+env(safe-area-inset-bottom))]',
           )}
         >
           {/*

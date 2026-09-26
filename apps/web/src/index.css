@@ -58,8 +58,11 @@ body {
    * header (44px of buttons, the rule that separated them and both grid gaps,
    * against the 4px the header grew by taking them) — measured, not estimated,
    * the way every other number in this block was.
+   *
+   * Less the safe-area insets the page pads for (see App), which are zero in a
+   * browser tab and a status bar and a home indicator on a home-screen install.
    */
-  --avail-h: calc(100svh - 16.25rem);
+  --avail-h: calc(100svh - 16.25rem - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   --pt: clamp(1rem, min(calc(var(--avail-w) / 17), calc(var(--avail-h) / 8.6)), 2.5rem);
 
   position: relative;
@@ -111,6 +114,15 @@ body {
    * take a line of their own — see `Controls`.
    */
   --spacing-board-die: min(calc(var(--pt) * 0.5), 4rem);
+  /*
+   * The dice cell's reservation in that band: a double, four dice and the three
+   * 0.12em gaps `Dice` puts between them. The cell's usual `min-w-33` is four
+   * dice at the 1.875rem a phone sets, and a band die outgrows that as soon as
+   * --pt passes 60px — on a 1366px iPad a double took 187px of a 132px cell, the
+   * band's row re-wrapped around it, and Roll jumped 72px left and 26px down on
+   * every double and back on the next roll.
+   */
+  --spacing-board-dice: calc(min(calc(var(--pt) * 0.5), 4rem) * 4 + 0.36em);
 
   /* Floored, or the point numbers stop being legible on a small phone. */
   --text-board-label: max(0.5rem, calc(var(--pt) * 0.22));
@@ -488,9 +500,9 @@ body[data-drag-active] {
        limits the board and the sidebar keeps its 15rem. */
     --avail-w: calc(100vw - 14.25rem - env(safe-area-inset-left) - env(safe-area-inset-right));
     /* One header row and the gaps around it — everything else was moved out of
-       the column the board sits in. The inset is the home indicator, which the
-       page pads for and the board therefore cannot draw on. */
-    --avail-h: calc(100svh - 3.5rem - env(safe-area-inset-bottom));
+       the column the board sits in. The insets are the status bar and the home
+       indicator, which the page pads for and the board therefore cannot draw on. */
+    --avail-h: calc(100svh - 3.5rem - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   }
 }
 
@@ -525,7 +537,7 @@ body[data-drag-active] {
        never `isRoomy`, so this row used to carry that button and its separating
        rule on every phone. It now lives in the header menu at every width — see
        `HeaderMenu` — and portrait has one fewer row to pay for. */
-    --avail-w: calc(100svh - 18.9375rem - env(safe-area-inset-bottom));
+    --avail-w: calc(100svh - 18.9375rem - env(safe-area-inset-top) - env(safe-area-inset-bottom));
     /* The page padding, and nothing else: with the dice up in the header row the
        turned board has the full width of the screen to be deep in. A narrow phone
        is the one that notices — this is what limits it, where a tall one is
@@ -567,7 +579,7 @@ body[data-drag-active] {
  * rows of page chrome under it did.
  */
 body[data-fullscreen] .board-fit {
-  --avail-h: calc(100svh - 5rem);
+  --avail-h: calc(100svh - 5rem - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   --pt: clamp(1rem, min(calc(var(--avail-w) / 17), calc(var(--avail-h) / 10.7)), 9rem);
 }
 
