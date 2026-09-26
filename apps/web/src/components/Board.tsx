@@ -86,8 +86,13 @@ const describeOccupancy = (count: number): string => {
  * sweeping across the board and clicking (or double-clicking) strobed. At the
  * hover level a pointer sees nothing new, and a finger, which never hovered,
  * still gets the whole step.
+ *
+ * `--lift` rather than a `brightness-*` utility: the filter has to reach the
+ * wood without its checkers, and index.css says why.
  */
-const PRESSED = 'active:brightness-125 active:duration-0';
+const LIFT = '[--lift:1.25]';
+const HOVER_LIFT = 'hover:[--lift:1.25]';
+const PRESSED = 'active:[--lift:1.25] active:before:duration-0';
 
 const checkerColor = (player: Player): string =>
   player === 'white'
@@ -227,10 +232,10 @@ const Point = ({
         'border border-point-line px-px py-board-point-pad transition',
         orientation === 'bottom' && 'flex-col-reverse justify-start',
         index % 2 === 0 ? 'bg-point-even' : 'bg-point-odd',
-        selectable && ['cursor-grab ring-2 ring-pick hover:brightness-125', PRESSED],
-        selected && ['ring-2 ring-pick-strong brightness-125', PRESSED],
-        target && ['cursor-pointer ring-2 ring-move hover:brightness-125', PRESSED],
-        over && 'ring-4 ring-move brightness-125',
+        selectable && ['cursor-grab ring-2 ring-pick', HOVER_LIFT, PRESSED],
+        selected && ['ring-2 ring-pick-strong', LIFT, PRESSED],
+        target && ['cursor-pointer ring-2 ring-move', HOVER_LIFT, PRESSED],
+        over && ['ring-4 ring-move', LIFT],
       )}
     >
       <span aria-hidden className="board-label text-board-label leading-none text-point-label">
@@ -274,8 +279,8 @@ const Tray = ({ label, owner, value, active, over, onClick }: TrayProps) => (
     className={cn(
       'board-tray flex h-board-tray-depth w-board-tray flex-col items-center justify-center',
       'rounded-md border border-tray-line bg-tray text-tray-fg',
-      active && ['cursor-pointer ring-2 ring-move hover:brightness-125', PRESSED],
-      over && 'ring-4 ring-move brightness-125',
+      active && ['cursor-pointer ring-2 ring-move', HOVER_LIFT, PRESSED],
+      over && ['ring-4 ring-move', LIFT],
     )}
   >
     {/* One block so the count and its caption turn back upright together. */}

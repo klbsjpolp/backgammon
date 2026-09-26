@@ -276,6 +276,40 @@ body {
 }
 
 /*
+ * Lighting up a square of the board lights the wood, not what stands on it. A
+ * `brightness()` on the button took its checkers with it, and a white checker is
+ * already near the top of the range: at 125% it clipped to flat white a third of
+ * the way into the fade, losing its sheen and groove, then sat still while the
+ * felt went on brightening — two effects out of step on one square. The filter is
+ * on a copy of the square's own background instead, painted under its contents,
+ * and `--lift` is how bright it is: the markup sets the level, this rule owns the
+ * fade.
+ *
+ * `isolation` keeps the copy's negative `z-index` inside the square rather than
+ * under the board's frame.
+ */
+.board-point,
+.board-bar,
+.board-tray {
+  position: relative;
+  isolation: isolate;
+}
+
+.board-point::before,
+.board-bar::before,
+.board-tray::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: inherit;
+  filter: brightness(var(--lift, 1));
+  pointer-events: none;
+  transition: filter 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/*
  * A checker, moulded rather than printed: light from the upper left, the shadow
  * it leaves opposite, and the turned groove a real one carries a little inside
  * its rim. The groove stops short of that rim on purpose — on three of the four
