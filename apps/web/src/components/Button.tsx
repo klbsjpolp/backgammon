@@ -26,6 +26,11 @@ export const Button = ({ className, ...props }: ButtonProps) => (
       CONTROL_BASE,
       'rounded-md bg-accent px-4 py-2 text-accent-fg',
       'hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-40',
+      // Pressed as the finger lands, not when it lifts — a phone has no hover, so
+      // this is the only sign the tap arrived until the action it causes shows up.
+      // Not in `CONTROL_BASE`: a checkbox label shrinking under the finger is a
+      // row of text flinching, not a key going down.
+      'enabled:active:scale-[0.97] enabled:active:duration-75',
       className,
     )}
     {...props}

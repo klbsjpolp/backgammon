@@ -460,6 +460,77 @@ describe('the flight a drag leaves behind', () => {
     expect(flyers[1].style.left).toBe(CHECKER_LEFT);
   });
 
+  it('carries a checker let go over nothing back to its point', () => {
+    // Rather than blinking out of the hand and reappearing at home, which reads
+    // as the board having refused the drag instead of the checker being set back.
+    render(<PlayableBoard />);
+    const at = dragFrom(pointAt(5), 11);
+    fireEvent(window, pointerEvent('pointerup', { clientX: at.x, clientY: at.y }));
+    fireEvent.click(document.body);
+
+    expect(flyers).toHaveLength(1);
+    expect(flyers[0].style.left).toBe(`${at.x - CHECKER_SIZE / 2}px`);
+    // The copy is of the checker that was lifted, and must not keep its hiding.
+    expect(flyers[0].classList.contains('invisible')).toBe(false);
+    // And the checker it is heading for waits, hidden, until it lands.
+    const hidden = [...pointAt(5).querySelectorAll<HTMLElement>('.board-checker')].filter(
+      (checker) => checker.style.visibility === 'hidden',
+    );
+    expect(hidden).toHaveLength(1);
+  });
+
+  it('carries it back when Escape takes it out of the hand', () => {
+    render(<PlayableBoard />);
+    dragFrom(pointAt(5), 2);
+    fireEvent.keyDown(window, { key: 'Escape' });
+    fireEvent.click(document.body);
+
+    expect(flyers).toHaveLength(1);
+  });
+
+  it('lands a return still in the air the moment the board moves', () => {
+    // Its destination is the checker a move is about to take off that point, and
+    // the move flies from the board's own record — two of them in the air at once
+    // is one checker drawn twice.
+    render(<PlayableBoard />);
+    const at = dragFrom(pointAt(5), 11);
+    fireEvent(window, pointerEvent('pointerup', { clientX: at.x, clientY: at.y }));
+    fireEvent.click(document.body);
+    fireEvent.click(pointAt(2));
+
+    expect(flyers).toHaveLength(2);
+    expect(flyers[0].isConnected).toBe(false);
+  });
+
+  it('lets go of the checker from where it was gripped, not from its centre', () => {
+    render(<PlayableBoard />);
+    const centre = centreOfZone(5);
+    const grip = { x: 4, y: 3 };
+    fireEvent(pointAt(5), pointerEvent('pointerdown', { clientX: centre.x + grip.x, clientY: centre.y + grip.y }));
+    fireEvent(window, pointerEvent('pointermove', { clientX: centre.x + 30, clientY: centre.y }));
+    const aimed = centreOfZone(2);
+    const at = { x: aimed.x + OFF_CENTRE, y: aimed.y + OFF_CENTRE };
+    fireEvent(window, pointerEvent('pointerup', { clientX: at.x, clientY: at.y }));
+    fireEvent.click(document.body);
+
+    expect(flyers[0].style.left).toBe(`${at.x - grip.x - CHECKER_SIZE / 2}px`);
+    expect(flyers[0].style.top).toBe(`${at.y - grip.y - CHECKER_SIZE / 2}px`);
+  });
+
+  it('holds a grip from the far end of the point to the checker it picked up', () => {
+    // A press anywhere on the point picks up the checker on its free end, which
+    // may be a whole stack away; the ghost stays within its own radius of the finger.
+    render(<PlayableBoard />);
+    const centre = centreOfZone(5);
+    fireEvent(pointAt(5), pointerEvent('pointerdown', { clientX: centre.x, clientY: centre.y + 18 }));
+    fireEvent(window, pointerEvent('pointermove', { clientX: centre.x + 30, clientY: centre.y }));
+    const at = centreOfZone(11);
+    fireEvent(window, pointerEvent('pointerup', { clientX: at.x, clientY: at.y }));
+    fireEvent.click(document.body);
+
+    expect(flyers[0].style.top).toBe(`${at.y - CHECKER_SIZE / 2 - CHECKER_SIZE / 2}px`);
+  });
+
   it('flies a clicked move from the checker the board recorded', () => {
     render(<PlayableBoard />);
     fireEvent.click(pointAt(2));

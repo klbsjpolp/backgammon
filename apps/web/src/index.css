@@ -377,6 +377,38 @@ body[data-drag-active] {
   -webkit-user-select: none;
 }
 
+/*
+ * The checker in the hand: a shade larger than the one it left, and casting a
+ * longer shadow, because it is off the felt now. It rises into that rather than
+ * appearing in it — swapped in at full size, it read as a bigger copy of the
+ * checker rather than the checker picked up.
+ *
+ * `scale`, not a `transform`: the ghost's position is its `translate`, which the
+ * browser applies after `scale`, so the lift grows the checker about its own
+ * centre and leaves the offset to the pointer alone. And the same drop-shadow
+ * `.board-checker` wears, only deeper, for the reason that one gives — the rim
+ * is the box-shadow.
+ */
+.checker-ghost {
+  scale: 1.15;
+  filter: drop-shadow(0 6px 5px var(--checker-cast));
+  animation: checker-lift 140ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+@keyframes checker-lift {
+  from {
+    scale: 1;
+    filter: drop-shadow(0 1px 1px var(--checker-cast));
+  }
+}
+
+/* The lift still happens; it just does not travel to get there. */
+@media (prefers-reduced-motion: reduce) {
+  .checker-ghost {
+    animation: none;
+  }
+}
+
 /* Landscape phone: the board sits beside the controls, with little height to spare. */
 @media (orientation: landscape) and (max-height: 640px) {
   .board-fit {

@@ -26,6 +26,12 @@ export interface CheckerDrag {
   width: number;
   height: number;
   pointer: DragPoint;
+  /**
+   * Where on the checker it was picked up, as an offset from its centre. The ghost
+   * keeps it, so the checker stays where it was under the finger instead of
+   * jumping to centre itself on the pointer the moment the drag starts.
+   */
+  grip: DragPoint;
   /** The destination under the pointer, or `null` while it is over nothing. */
   over: number | null;
 }
@@ -44,6 +50,11 @@ export interface UseCheckerDragOptions {
   targetsFrom: (from: number) => number[];
   selectFrom: (from: number | null) => void;
   moveChecker: (from: number, to: number) => void;
+  /**
+   * The checker was put down somewhere it cannot go, and is going back to its
+   * point. It is still held — only the hand is empty.
+   */
+  putBack: (release: DragRelease) => void;
 }
 
 export interface CheckerDragging {
@@ -61,13 +72,27 @@ export interface CheckerDragging {
  */
 let gestureInFlight = false;
 
-/** The ghost rides centred under the pointer, so that is where it was let go of. */
-const releasedAt = (pointer: DragPoint, width: number, height: number): Rect => ({
-  left: pointer.x - width / 2,
-  top: pointer.y - height / 2,
+/** The ghost rides at its grip under the pointer, so that is where it was let go of. */
+const releasedAt = (pointer: DragPoint, grip: DragPoint, width: number, height: number): Rect => ({
+  left: pointer.x - grip.x - width / 2,
+  top: pointer.y - grip.y - height / 2,
   width,
   height,
 });
+
+/**
+ * The offset of a press from the checker's centre, held to the checker's own
+ * radius. A point is far longer than the checker on its free end, and a press at
+ * the other end of it would otherwise carry the ghost a whole stack away from the
+ * finger that is supposed to be holding it.
+ */
+const gripOf = (press: DragPoint, checker: Rect): DragPoint => {
+  const x = press.x - (checker.left + checker.width / 2);
+  const y = press.y - (checker.top + checker.height / 2);
+  const reach = Math.min(checker.width, checker.height) / 2;
+  const scale = Math.min(1, reach / (Math.hypot(x, y) || 1));
+  return { x: x * scale, y: y * scale };
+};
 
 /**
  * A drag ends on `pointerup`, and the browser then fires a `click` on whatever is
@@ -109,7 +134,8 @@ export const useCheckerDrag = (options: UseCheckerDragOptions): CheckerDragging 
     const pile = from === BAR ? barPile(you) : pointPile(from);
     const checker = root && outerCheckerOf(root, pile);
     if (!root || !checker) return;
-    const { width, height } = checker.getBoundingClientRect();
+    const checkerRect = checker.getBoundingClientRect();
+    const { width, height } = checkerRect;
 
     // Stop the browser starting its own text-selection drag out of the point.
     if (event.pointerType === 'mouse') event.preventDefault();
@@ -119,6 +145,7 @@ export const useCheckerDrag = (options: UseCheckerDragOptions): CheckerDragging 
     const threshold = dragThresholdFor(event.pointerType || 'mouse');
     const source = event.currentTarget;
     const start: DragPoint = { x: event.clientX, y: event.clientY };
+    const grip = gripOf(start, checkerRect);
     let pointer = start;
     let started = false;
     let targets: number[] = [];
@@ -161,7 +188,7 @@ export const useCheckerDrag = (options: UseCheckerDragOptions): CheckerDragging 
         targets = targetsFrom(from);
         latest.current.selectFrom(from);
       }
-      setDrag({ from, player: latest.current.you, width, height, pointer, over: over(pointer) });
+      setDrag({ from, player: latest.current.you, width, height, pointer, grip, over: over(pointer) });
     };
 
     const cleanup = () => {
@@ -188,12 +215,17 @@ export const useCheckerDrag = (options: UseCheckerDragOptions): CheckerDragging 
       swallowNextClick();
 
       const landed = over(at);
+      const release: DragRelease = { pile, rect: releasedAt(at, grip, width, height) };
       // Over nothing: the checker stays held, so the destination is one tap away
-      // instead of the whole gesture being thrown out.
-      if (landed === null) return;
+      // instead of the whole gesture being thrown out. It goes back the way it
+      // came rather than blinking out of the hand and onto its point.
+      if (landed === null) {
+        latest.current.putBack(release);
+        return;
+      }
       // The checker is already where the player put it down; flying it back to
       // its point first to fly it here again is the one thing a drag must not do.
-      releaseRef.current = { pile, rect: releasedAt(at, width, height) };
+      releaseRef.current = release;
       latest.current.moveChecker(from, landed);
     }
 
@@ -206,7 +238,9 @@ export const useCheckerDrag = (options: UseCheckerDragOptions): CheckerDragging 
     function onAbort() {
       cleanup();
       setDrag(null);
-      if (started) swallowNextClick();
+      if (!started) return;
+      swallowNextClick();
+      latest.current.putBack({ pile, rect: releasedAt(pointer, grip, width, height) });
     }
 
     function onCancel(cancelled: PointerEvent) {
