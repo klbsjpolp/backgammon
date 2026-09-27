@@ -721,14 +721,29 @@ left to throw away, and the guard was then only friction between the result and 
 game. Every button carries a 44px minimum touch target, and the page reserves
 `env(safe-area-inset-bottom)`.
 
-It did not, for most of its history, and it never reserved the top at all. The page
-padded the bottom inset in its base class and then set `py-*` in every variant —
-phone, landscape, fullscreen — which is emitted later and replaced it outright, while
-the height budgets went on subtracting an inset nobody padded. A browser tab has no
-insets to lose, so it went unseen until the app was installed to an iPad home screen:
-there the status bar is drawn over a `viewport-fit=cover` page, the header sat
-underneath it, and scrolling to reveal it only bounced back. Each variant now pads
-both insets itself, and every budget subtracts both.
+It did not, for most of its history. The page padded the bottom inset in its base
+class and then set `py-*` in every variant — phone, landscape, fullscreen — which is
+emitted later and replaced it outright, while the height budgets went on subtracting
+an inset nobody padded. Each variant now pads both insets itself, and every budget
+subtracts both.
+
+That was found chasing a report that looked like the same bug and was not: on an
+iPad home-screen install the header seemed half under the status bar, and pulling
+the page down to reveal it only bounced back. Padding the top inset changed nothing,
+because the inset reads 0 there — the default status bar style already starts the
+web view below the bar. What the player saw is iOS 26's Liquid Glass edge effect,
+which blurs and reflects roughly the first 38pt of the page under the bar. Nothing
+turns it off, and the fixes going round for it (dropping `black-translucent`, which
+this page never set) do not touch it. The evidence for what does was the player's
+own home screen: of their installed games, the only one without the effect was
+Jaipur, whose top 40pt are flat LCARS colour blocks — the blur is there too, it just
+has nothing to smear. So an installed app keeps 2.5rem of flat canvas at the top
+(`--top-clear`, under `display-mode: standalone`), which Safari never pays for, and
+a landscape phone is exempt because iOS hides the status bar there.
+
+Spending those 40px showed that the roomy layout's height budget had been 84px
+short all along — 16.25rem against a measured 21.5rem. The `--pt` cap had been
+hiding it on any window tall enough to matter.
 
 ## The abandon button rides in the header
 
