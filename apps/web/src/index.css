@@ -16,6 +16,41 @@
  */
 @custom-variant fullscreen (body[data-fullscreen] &);
 
+/*
+ * The top of the page the layout keeps clear, which is more than the status bar.
+ *
+ * Installed to the home screen, iOS and iPadOS 26 draw a Liquid Glass edge
+ * effect under the status bar: a blur that runs roughly 38pt down from the
+ * safe-area boundary and reflects whatever sits there, so the header looked
+ * half-hidden under the bar and pulling the page down to reveal it only bounced
+ * back. Nothing turns it off — no meta tag or CSS property, and
+ * `env(safe-area-inset-top)` does not grow to cover it (it reads 0 here, since
+ * the default status bar style already insets the web view). The one thing that
+ * works is to put nothing with detail in that band: Jaipur, whose top 40pt are
+ * flat LCARS blocks, shows no trace of it while every app with text up there
+ * does. So an installed app pays 2.5rem of flat canvas at the top — Safari
+ * draws no such effect and pays nothing.
+ *
+ * A landscape phone is exempt: iOS hides the status bar there, and it is the
+ * layout with the least height to give.
+ */
+:root {
+  --top-clear: 0px;
+  --inset-top: calc(env(safe-area-inset-top) + var(--top-clear));
+}
+
+@media (display-mode: standalone) {
+  :root {
+    --top-clear: 2.5rem;
+  }
+}
+
+@media (display-mode: standalone) and (orientation: landscape) and (max-height: 640px) {
+  :root {
+    --top-clear: 0px;
+  }
+}
+
 html,
 body,
 #root {
@@ -59,10 +94,19 @@ body {
    * against the 4px the header grew by taking them) — measured, not estimated,
    * the way every other number in this block was.
    *
-   * Less the safe-area insets the page pads for (see App), which are zero in a
-   * browser tab and a status bar and a home indicator on a home-screen install.
+   * That arithmetic came to 16.25rem and was 84px short of what the chrome
+   * occupies: 344px (21.5rem), read off the page at every width from 660 to
+   * 1920 — title and switches on two lines, both gaps, the two-line status, the
+   * controls, the hint and the version line. It never showed, because a window
+   * tall enough to be roomy usually has --pt pinned at its 2.5rem cap long before
+   * the budget binds, which hid the difference; a roomy window between 641 and
+   * ~685px tall scrolled by it. The home-screen clearance below spends 40px of
+   * that same slack, and there it would have scrolled on an iPad.
+   *
+   * Less the top clearance and the bottom inset the page pads for (see App and
+   * `--inset-top`), both zero in a browser tab.
    */
-  --avail-h: calc(100svh - 16.25rem - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  --avail-h: calc(100svh - 21.5rem - var(--inset-top) - env(safe-area-inset-bottom));
   --pt: clamp(1rem, min(calc(var(--avail-w) / 17), calc(var(--avail-h) / 8.6)), 2.5rem);
 
   position: relative;
@@ -502,7 +546,7 @@ body[data-drag-active] {
     /* One header row and the gaps around it — everything else was moved out of
        the column the board sits in. The insets are the status bar and the home
        indicator, which the page pads for and the board therefore cannot draw on. */
-    --avail-h: calc(100svh - 3.5rem - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    --avail-h: calc(100svh - 3.5rem - var(--inset-top) - env(safe-area-inset-bottom));
   }
 }
 
@@ -537,7 +581,7 @@ body[data-drag-active] {
        never `isRoomy`, so this row used to carry that button and its separating
        rule on every phone. It now lives in the header menu at every width — see
        `HeaderMenu` — and portrait has one fewer row to pay for. */
-    --avail-w: calc(100svh - 18.9375rem - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    --avail-w: calc(100svh - 18.9375rem - var(--inset-top) - env(safe-area-inset-bottom));
     /* The page padding, and nothing else: with the dice up in the header row the
        turned board has the full width of the screen to be deep in. A narrow phone
        is the one that notices — this is what limits it, where a tall one is
@@ -579,7 +623,7 @@ body[data-drag-active] {
  * rows of page chrome under it did.
  */
 body[data-fullscreen] .board-fit {
-  --avail-h: calc(100svh - 5rem - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  --avail-h: calc(100svh - 5rem - var(--inset-top) - env(safe-area-inset-bottom));
   --pt: clamp(1rem, min(calc(var(--avail-w) / 17), calc(var(--avail-h) / 10.7)), 9rem);
 }
 
