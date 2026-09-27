@@ -162,3 +162,9 @@ one; the bar here is high. `pnpm commit` walks through a conforming message inte
 **Record decisions in `DECISIONS.md`** when you make one worth defending — a trade-off, a constraint discovered the
 hard way, a thing deliberately not done. Prose in the same voice as the rest of that file, not bullets of what you
 typed.
+
+## Pull requests
+
+CodeRabbit does not review this repository on its own (it has fewer than 10 stars). After opening a PR, **tick the
+"🔍 Trigger review" box** in the comment CodeRabbit posts on it — edit that comment, turning its `- [ ]` into `- [x]`,
+and leave the rest of the body untouched — then address the review it posts.
