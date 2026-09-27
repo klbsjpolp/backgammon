@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.3.4](https://github.com/klbsjpolp/backgammon/compare/v1.3.3...v1.3.4) (2026-09-27)
+
+### Bug Fixes
+
+* **web:** keep the top of an installed app clear of ios 26's glass edge ([#80](https://github.com/klbsjpolp/backgammon/issues/80)) ([6382f6c](https://github.com/klbsjpolp/backgammon/commit/6382f6c985b87004afdc8e34d10c925c0e9a0dda))
+
 ## [1.3.3](https://github.com/klbsjpolp/backgammon/compare/v1.3.2...v1.3.3) (2026-09-26)
 
 ### Bug Fixes
