@@ -19,7 +19,7 @@ overrides:
 # once here, pinned exactly (a caret lets a fresh resolve move one member past
 # the others). CI fails on any unmet peer with `pnpm peers check`.
 catalog:
-  vitest: 5.0.1
+  vitest: 5.0.2
   '@vitest/coverage-v8': 5.0.1
   typescript-eslint: 8.70.1
   '@typescript-eslint/eslint-plugin': 8.70.0
