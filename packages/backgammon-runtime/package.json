@@ -16,11 +16,11 @@
   },
   "dependencies": {
     "@backgammon/core": "workspace:*",
-    "zod": "^4.5.4"
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@vitest/coverage-v8": "catalog:",
-    "vite": "^8.3.0",
+    "vite": "^8.3.1",
     "vitest": "catalog:"
   }
 }
