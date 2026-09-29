@@ -23,10 +23,10 @@
     "test:coverage": "pnpm --filter @backgammon/core test:coverage && pnpm --filter @backgammon/runtime test:coverage && pnpm --filter @backgammon/web test:coverage"
   },
   "devDependencies": {
-    "@commitlint/cli": "^21.2.2",
-    "@commitlint/config-conventional": "^21.2.2",
+    "@commitlint/cli": "^21.2.3",
+    "@commitlint/config-conventional": "^21.2.3",
     "@eslint/js": "^10.0.1",
-    "@types/node": "^26.4.1",
+    "@types/node": "^26.6.3",
     "@typescript-eslint/eslint-plugin": "catalog:",
     "@typescript-eslint/parser": "catalog:",
     "commit-and-tag-version": "^13.2.1",
@@ -34,10 +34,10 @@
     "cz-conventional-changelog": "^3.3.0",
     "eslint": "^10.11.0",
     "eslint-plugin-react-hooks": "^7.1.1",
-    "eslint-plugin-react-refresh": "^0.5.6",
+    "eslint-plugin-react-refresh": "^0.5.7",
     "globals": "^17.12.0",
     "husky": "^9.1.7",
-    "prettier": "^3.9.6",
+    "prettier": "^3.9.9",
     "typescript": "^6.0.3",
     "typescript-eslint": "catalog:"
   },
