@@ -20,7 +20,7 @@ overrides:
 # the others). CI fails on any unmet peer with `pnpm peers check`.
 catalog:
   vitest: 5.0.2
-  '@vitest/coverage-v8': 5.0.2
+  '@vitest/coverage-v8': 5.0.3
   typescript-eslint: 8.70.1
-  '@typescript-eslint/eslint-plugin': 8.70.1
-  '@typescript-eslint/parser': 8.70.1
+  '@typescript-eslint/eslint-plugin': 8.71.0
+  '@typescript-eslint/parser': 8.71.0
