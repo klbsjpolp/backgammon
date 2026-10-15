@@ -79,8 +79,8 @@ export const GameLayout = ({ status, board, controls, hint }: GameLayoutProps) =
     <div
       className={cn(
         'grid w-full justify-items-center gap-3',
-        // The sidebar is the tallest thing on a landscape phone once the dice
-        // hold their line, so it is the row gaps here that give first when
+        // The sidebar can be the tallest thing on a landscape phone once
+        // take/drop show up, so it is the row gaps here that give first when
         // height is tight, rather than the column gap beside the board. It no
         // longer carries the abandon-the-game row either — that lives in the
         // header menu at every width now — which is the margin this used to
@@ -125,25 +125,16 @@ export const ControlRow = ({ className, children }: { className?: string; childr
 );
 
 /**
- * The buttons, the rule off, and the dice beside them.
+ * The buttons and the rule off.
  *
  * The group of actions that abandon the game in progress is pushed away from the
  * primary buttons on purpose — combined with the two-tap {@link ConfirmButton}, a
  * stray tap near the edge of the screen no longer throws the match away.
  *
- * Three columns, and the outer two are `1fr`: a group in the middle one stays
- * centred on the page whatever the dice take on the left. Which cell the dice
- * land in is the whole reason this is a grid rather than two stacked rows —
- * every layout wants them somewhere else, and one element moved by CSS beats a
- * copy per breakpoint that a screen reader would find twice.
- *
- *   roomy     — row 1, column 1, right-aligned: immediately left of Roll.
- *   portrait  — the bottom row, hard left, under Roll. That row holds one
- *               button and nothing else, so it is the only one with the ~132px
- *               that four dice need on a double; the primary row above has 33.
- *   landscape — a line of its own at the top of the sidebar, which is the right
- *               of the screen and directly above Roll. The sidebar has height
- *               going spare where the board has none.
+ * Three columns, and the outer two are `1fr`, so the group in the middle stays
+ * centred on the page. The dice used to be a cell of this grid, moved per layout;
+ * they are drawn on the board now (see `Board`), which is the one thing that is
+ * in the same place in every layout and where the eye already is.
  *
  * Whenever there is a header menu to receive it — which is to say, in the real
  * app, always — the danger group leaves this grid altogether and is portaled
@@ -160,55 +151,13 @@ export const ControlRow = ({ className, children }: { className?: string; childr
  * an inline empty row would still draw its separating rule for nothing to
  * separate.
  */
-export const Controls = ({
-  dice,
-  primary,
-  danger,
-}: {
-  dice: React.ReactNode;
-  primary: React.ReactNode;
-  danger: React.ReactNode;
-}) => {
+export const Controls = ({ primary, danger }: { primary: React.ReactNode; danger: React.ReactNode }) => {
   const headerSlot = useHeaderSlot();
 
   return (
     // In the board's band the three columns have nothing to centre against —
-    // the band's own half is the frame — so the grid collapses to one row and
-    // the dice simply lead it, immediately left of Roll as on a roomy page.
-    //
-    // It may wrap there, unlike anywhere else: the three buttons cost a fixed
-    // width and the band's half is 6.6 × --pt, so below roughly 1700px of
-    // fullscreen the two do not both fit and the dice take a line of their own
-    // rather than hanging off the edge of the board. The band has the height
-    // for it, and which way it goes depends only on the viewport — the dice
-    // cell holds its reservation whether or not a roll is on screen, so this
-    // cannot flip mid-game.
+    // the band's own half is the frame — so the grid collapses to one row.
     <div className="grid w-full grid-cols-[1fr_auto_1fr] items-center gap-3 fullscreen:flex fullscreen:flex-wrap fullscreen:justify-center">
-      {/*
-       * Reserved at the width of a double — four dice — so that rolling one does
-       * not slide the buttons sideways mid-turn.
-       *
-       * And at the height of one die, because `<Dice>` renders nothing at all
-       * until a roll lands. Where the cell shares a row with the buttons that is
-       * free — a control row is 44px and a die is 30px — but in landscape the
-       * dice have a line of their own at the top of the sidebar, and there an
-       * empty cell collapsed: rolling pushed everything under it 30px down the
-       * screen and the next player's turn pulled it back up. The sidebar is the
-       * one column with height going spare, so it pays the 30px permanently.
-       */}
-      <div
-        className={cn(
-          'col-start-1 col-end-2 row-start-1 flex min-h-[1em] min-w-33 justify-end text-3xl',
-          'max-sm:row-start-3 max-sm:justify-start',
-          'compact:col-end-4 compact:row-start-1 compact:justify-start',
-          // The band draws its dice at `size-board-die` rather than `1em`, so the
-          // reservation has to follow them there — see `--spacing-board-dice`.
-          'fullscreen:min-h-board-die fullscreen:min-w-board-dice',
-        )}
-      >
-        {dice}
-      </div>
-
       {/*
        * `max-sm:flex-nowrap` is what makes the portrait height budget true by
        * construction rather than by measurement: this row is 44px on every
@@ -217,7 +166,7 @@ export const Controls = ({
        * the page then scrolled by exactly that on every screen of the game.
        * The controls that give when it is tight are named in `TurnControls`.
        */}
-      <ControlRow className="col-start-2 col-end-3 row-start-1 w-full max-sm:col-start-1 max-sm:col-end-4 max-sm:flex-nowrap compact:col-start-1 compact:col-end-4 compact:row-start-2 fullscreen:w-auto fullscreen:flex-nowrap">
+      <ControlRow className="col-start-2 col-end-3 row-start-1 w-full max-sm:col-start-1 max-sm:col-end-4 max-sm:flex-nowrap compact:col-start-1 compact:col-end-4 compact:row-start-1 fullscreen:w-auto fullscreen:flex-nowrap">
         {primary}
       </ControlRow>
 
@@ -232,9 +181,9 @@ export const Controls = ({
           <>
             {/* Its own element rather than a border on the row below, which now starts
               in the second column and would draw a rule only as wide as its button. */}
-            <div className="col-start-1 col-end-4 row-start-2 h-px w-full max-w-xs justify-self-center bg-line compact:row-start-3 compact:max-w-none" />
+            <div className="col-start-1 col-end-4 row-start-2 h-px w-full max-w-xs justify-self-center bg-line compact:row-start-2 compact:max-w-none" />
 
-            <ControlRow className="col-start-2 col-end-3 row-start-3 w-full compact:col-start-1 compact:col-end-4 compact:row-start-4 compact:grid-cols-1">
+            <ControlRow className="col-start-2 col-end-3 row-start-3 w-full compact:col-start-1 compact:col-end-4 compact:row-start-3 compact:grid-cols-1">
               {danger}
             </ControlRow>
           </>

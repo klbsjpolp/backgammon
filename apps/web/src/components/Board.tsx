@@ -17,6 +17,8 @@ import { barPile, describeMotions, offPile, pointPile, type CheckerMotion, type 
 import { outerChecker } from '@/lib/checkerStack';
 import { centreOf, flyChecker, FLIGHT_MS, HIT_DELAY_MS, HIT_FLIGHT_MS, type StopFlight } from '@/lib/checkerFlight';
 import { useBoardBand } from '@/boardBand';
+import { Dice } from '@/components/Dice';
+import { pendingNoPlay } from '@/lib/noPlay';
 import { useCheckerDrag, type CheckerDrag, type DragRelease } from '@/useCheckerDrag';
 
 /** Minimal surface the board needs; satisfied by both the local and online games. */
@@ -581,6 +583,27 @@ const useBoardClicks = (controller: BoardController, board: BoardState) => {
   return { click, doubleClick };
 };
 
+/**
+ * The dice, on the felt of one half of the board. A player throws into the table
+ * on their right: from this side of the board that is the right half for you and
+ * the left half for the player across from you, so which half the dice land in
+ * says whose roll it is before any text does.
+ *
+ * Laid over the points rather than given room of its own, because the board has
+ * none to give — two point depths and a gutter are its whole height. It takes no
+ * pointer events, so a checker under a die is still a checker you can pick up.
+ *
+ * Fullscreen draws the status and the buttons across that same middle (see
+ * `FullscreenBand`), so there the dice sit just above them instead: half the
+ * status block's 3.5rem, a hair of air, and half a die. That is in rem and not
+ * in --pt because the status is text, and text does not grow with the board.
+ */
+const BoardDice = ({ state }: { state: GameState }) => (
+  <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center fullscreen:-translate-y-[calc(2.125rem+var(--pt)*0.39)]">
+    <Dice state={state} className="board-dice gap-[0.18em] drop-shadow-md" />
+  </div>
+);
+
 export const Board = ({ controller }: { controller: BoardController }) => {
   const { state, you, selectableFroms, selectedFrom, targets, targetsFrom, selectFrom, moveChecker } = controller;
   const band = useBoardBand();
@@ -600,6 +623,10 @@ export const Board = ({ controller }: { controller: BoardController }) => {
   });
   useCheckerFlights(rootRef, board, releaseRef);
   const { click, doubleClick } = useBoardClicks(controller, board);
+  // The roll that could not be played belongs to whoever threw it, which by the
+  // time it is drawn is no longer `state.turn`.
+  const roller = pendingNoPlay(state)?.player ?? state.turn;
+  const diceHalf = roller === you ? 'right' : 'left';
 
   const renderPoint = (index: number, orientation: 'top' | 'bottom') => (
     <Point
@@ -634,9 +661,10 @@ export const Board = ({ controller }: { controller: BoardController }) => {
             'bg-felt p-board-pad shadow-2xl sm:border-4',
           )}
         >
-          <div className="flex flex-col justify-between gap-board-gutter">
+          <div className="relative flex flex-col justify-between gap-board-gutter">
             <div className="flex gap-board-gutter">{top.slice(0, 6).map((i) => renderPoint(i, 'top'))}</div>
             <div className="flex gap-board-gutter">{bottom.slice(0, 6).map((i) => renderPoint(i, 'bottom'))}</div>
+            {diceHalf === 'left' && <BoardDice state={state} />}
           </div>
 
           <Bar
@@ -655,9 +683,10 @@ export const Board = ({ controller }: { controller: BoardController }) => {
             }}
           />
 
-          <div className="flex flex-col justify-between gap-board-gutter">
+          <div className="relative flex flex-col justify-between gap-board-gutter">
             <div className="flex gap-board-gutter">{top.slice(6).map((i) => renderPoint(i, 'top'))}</div>
             <div className="flex gap-board-gutter">{bottom.slice(6).map((i) => renderPoint(i, 'bottom'))}</div>
+            {diceHalf === 'right' && <BoardDice state={state} />}
           </div>
 
           {/* The near tray is always this client's, so either color can bear off. */}

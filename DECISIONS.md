@@ -662,6 +662,26 @@ to play on a phone:
   the header, with nothing left in it but the title, stops truncating "Backgammon" on a
   phone.
 
+- **…and then the dice moved onto the board.** Every placement above was right for its layout,
+  and together they were the problem: four layouts put the roll in four places, none of them on
+  the board, so a player looked for it on every screen and looked away from the checkers to
+  read it on every move. The size had the same root — `1em` of the controls' text, 30px on a
+  board that had grown to fill a desktop, half a point in fullscreen.
+
+  So the dice are now drawn where they land at a real table: over the middle of the roller's
+  half, the right half for you and the left for the player across from you, which says whose
+  roll it is before the status line does. They are sized by `--pt` like a checker. Nothing is
+  reserved for them — the board has no strip to give, two point depths and a gutter being its
+  whole height — so they lie over the point tips, which are narrow and need a stack five deep
+  to reach, and take no pointer events, so the checker under a die is still the one you pick
+  up. The contrast gate measures them against the felt and both point colours now, not the
+  page. Fullscreen draws status and buttons across that same middle, so there they lift by
+  half the status block and half a die, in rem for the status and `--pt` for the die.
+
+  What this gave back: the dice cell in `Controls`, its double-wide reservation and the ~22px
+  that pushed the portrait button off-centre, and the 30px line they held in the landscape
+  sidebar. `--avail-h` has not been re-measured for the room freed in portrait.
+
 - **A reservation the markup cannot break.** All of the above is a count of what the
   chrome measures, which is only true while the chrome cannot decide to measure more. It
   could: the primary control row is `flex-wrap`, and its three controls need 342px against

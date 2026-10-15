@@ -51,17 +51,15 @@ Before and after any such change, check **three** cases — they are CSS-only, n
   The CSS version read better and was wrong on WebKit: landing a checker did not re-evaluate it, so a point that grew
   to five kept the flat spacing and spilled past its border until something forced a full recalc. The attribute is
   invalidated by the same DOM write that changes the count, so the two cannot disagree. Do not "simplify" this back.
-- **The dice are a cell of the `Controls` grid, placed per layout** — beside Roll on a roomy screen, bottom row hard
-  left in portrait, a line of its own at the top of the sidebar in landscape. They are drawn as pips with the played
-  ones faded, the same information as a "remaining: 6, 5" line in a third of the width. Do not try to fit them into
-  the primary button row on a phone: it has 33px spare at 390px and a double needs 132. Do not solve the placement
-  with one copy per breakpoint either — a hidden copy is a second `aria-label="dice"` in the tree, and the media
-  query that hides it does not run in jsdom. The cell is reserved at the width of a **double** so a roll landing
-  never slides the buttons sideways.
+- **The dice are drawn on the board**, laid over the middle of the roller's half — the right half for you, the
+  left for the player across the table — at `size-board-die` (0.78 × `--pt`). They used to be a cell of the
+  `Controls` grid placed per layout, which put them somewhere different on every screen and outside the board the
+  eye is on. The overlay takes no pointer events, so a checker under a die can still be picked up. Fullscreen
+  draws the status and buttons across that same middle, so there the overlay lifts by half the status block plus
+  half a die. They cost no height anywhere; do not give them a row of chrome back.
 - **A die is an SVG, not the ⚀..⚅ character.** A glyph's ink is a fraction of its em box, its outline weight is the
   font's choice and so is whether the platform draws it as text or emoji, so a bigger font size bought a smudge. The
-  drawn face fills its `1em` box. Sizes still come from the caller as `text-*`, and the gap between two dice is in
-  `em`, so a pair keeps fitting the width the slot reserves.
+  drawn face fills the box it is given.
 
 - **The textures under the geometry are gradients, not images**, and their periods are `clamp()`ed multiples of
   `--pt` so a thread stays a thread from a 1rem board to a 9rem one. They are overlays only: the flat colour

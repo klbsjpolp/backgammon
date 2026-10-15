@@ -1,7 +1,6 @@
 import { useLayoutEffect } from 'react';
 import { Board } from '@/components/Board';
 import { ConfirmButton } from '@/components/Button';
-import { Dice } from '@/components/Dice';
 import { Controls, GameLayout, ShortcutHint } from '@/components/GameLayout';
 import { TurnControls } from '@/components/TurnControls';
 import { TurnAnnouncer, TurnStatus } from '@/components/TurnStatus';
@@ -95,7 +94,6 @@ export const LocalPanel = ({ applyPendingUpdate, onHeaderActionChange }: LocalPa
         board={<Board controller={game} />}
         controls={
           <Controls
-            dice={<Dice state={state} />}
             primary={
               <TurnControls
                 canRoll={game.canRoll}

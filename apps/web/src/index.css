@@ -146,27 +146,12 @@ body {
   --spacing-board-bar-pad: calc(var(--pt) * 0.1);
 
   /*
-   * A die in the fullscreen band, which is the one place the dice are not sized
-   * by the caller's `1em`: there the board is the only thing on the page, and a
-   * die scaled with it reads from across a desk.
-   *
-   * A proportion of --pt rather than a flat size, because the three controls
-   * beside the dice cost the same pixels whatever the board's size — a flat
-   * `size-15` fitted a 1920px screen and hung 139px off the left edge of a
-   * 1280px one. The cap keeps a 4K board from drawing dice the size of the
-   * points. Where even this does not fit, the band's row wraps and the dice
-   * take a line of their own — see `Controls`.
+   * A die, drawn on the board in the roller's half. Close to a checker's size so
+   * it reads as an object on the table rather than a label; the point tips under
+   * it are narrow, and a stack has to be five deep to reach the middle, so it
+   * covers felt almost always.
    */
-  --spacing-board-die: min(calc(var(--pt) * 0.5), 4rem);
-  /*
-   * The dice cell's reservation in that band: a double, four dice and the three
-   * 0.12em gaps `Dice` puts between them. The cell's usual `min-w-33` is four
-   * dice at the 1.875rem a phone sets, and a band die outgrows that as soon as
-   * --pt passes 60px — on a 1366px iPad a double took 187px of a 132px cell, the
-   * band's row re-wrapped around it, and Roll jumped 72px left and 26px down on
-   * every double and back on the next roll.
-   */
-  --spacing-board-dice: calc(min(calc(var(--pt) * 0.5), 4rem) * 4 + 0.36em);
+  --spacing-board-die: calc(var(--pt) * 0.78);
 
   /* Floored, or the point numbers stop being legible on a small phone. */
   --text-board-label: max(0.5rem, calc(var(--pt) * 0.22));

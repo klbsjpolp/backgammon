@@ -52,6 +52,29 @@ describe('Board', () => {
     expect(renderedPoints().at(-1)).toBe(23);
   });
 
+  it('throws the dice into the half of the board on the roller’s right', () => {
+    // Your right is the right half; the player across the table has theirs on
+    // the left from where you sit. Which half says whose roll it is.
+    const halfOf = () => {
+      const dice = screen.getByLabelText('dés');
+      const half = dice.closest('.board-frame > *');
+      return Array.from(half?.parentElement?.children ?? []).indexOf(half as Element);
+    };
+    const yours = render(<Board controller={controllerFor('white')} />);
+    const yourHalf = halfOf();
+    yours.unmount();
+
+    render(<Board controller={controllerFor('white', { state: bearingOffState('black') })} />);
+    const theirHalf = halfOf();
+    // Frame children: left half, bar, right half, trays.
+    expect([yourHalf, theirHalf]).toEqual([2, 0]);
+  });
+
+  it('keeps the dice out of the way of a checker under them', () => {
+    render(<Board controller={controllerFor('white')} />);
+    expect(screen.getByLabelText('dés').closest('.pointer-events-none')).not.toBeNull();
+  });
+
   it('lets white bear off by clicking its own tray', () => {
     const clickPoint = vi.fn();
     render(<Board controller={controllerFor('white', { clickPoint })} />);

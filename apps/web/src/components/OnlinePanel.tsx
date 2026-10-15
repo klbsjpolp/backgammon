@@ -3,7 +3,6 @@ import { createPortal } from 'react-dom';
 import { canDouble, opponent } from '@backgammon/core';
 import { Board, type BoardController } from '@/components/Board';
 import { Button, ConfirmButton } from '@/components/Button';
-import { Dice } from '@/components/Dice';
 import { Controls, GameLayout, ShortcutHint } from '@/components/GameLayout';
 import { TurnControls } from '@/components/TurnControls';
 import { TurnAnnouncer, TurnStatus } from '@/components/TurnStatus';
@@ -224,7 +223,6 @@ export const OnlinePanel = ({ applyPendingUpdate, onBusyChange, onLeaveActionCha
         board={<Board controller={controller} />}
         controls={
           <Controls
-            dice={<Dice state={state} />}
             primary={
               <TurnControls
                 canRoll={g.canRoll}

@@ -2,7 +2,6 @@ import { useId } from 'react';
 import type { GameState, NoPlay, Player } from '@backgammon/core';
 import { cn } from '@/lib/cn';
 import { pendingNoPlay } from '@/lib/noPlay';
-import { useFullscreenState } from '@/fullscreen.ts';
 
 /**
  * Pip centres on a 100 × 100 face, in the arrangement a real die uses: the odd
@@ -76,7 +75,6 @@ const LANDING_STAGGER_MS = 45;
  * Sized in `em` so the size stays the caller's, set with `text-*` as before.
  */
 const Die = ({ value, played, blocked, player, order }: Face & { order: number }) => {
-  const { isFullscreen } = useFullscreenState();
   // One gradient per die rather than one definition shared by all of them: a
   // `url(#…)` resolves against the whole document, so a constant id would be a
   // duplicate the moment a second die is on screen — which is every roll.
@@ -105,19 +103,10 @@ const Die = ({ value, played, blocked, player, order }: Face & { order: number }
       className={cn(
         'die-roll shrink-0 transition-opacity',
         played && 'opacity-30',
-        // Fullscreen has room for a die that reads across a desk, and there the
-        // size comes from the board's own unit — see `--spacing-board-die`,
-        // which is the width the band's controls half has left once the three
-        // buttons beside the dice have taken theirs. A flat size cannot work in
-        // both places: those buttons cost the same pixels whatever the board's
-        // size, so the room for dice is what is left over, not a proportion.
-        //
-        // Everywhere else the size stays the caller's `1em`, because `Controls`
-        // reserves the dice cell at the width of four of them (`min-w-33`,
-        // measured at the 1.875rem a phone sets). A flat `size-10` made a double
-        // 171px wide against that 132px reservation, and the fourth die spent
-        // the difference underneath the new-game button on a 360px screen.
-        isFullscreen ? 'size-board-die' : 'size-[1em]',
+        // Drawn on the board, so sized by the board's unit like a checker —
+        // see `--spacing-board-die`. A die sized by the text beside it stayed
+        // 30px on a board that had grown to fill the screen.
+        'size-board-die',
       )}
     >
       <defs>
@@ -216,10 +205,8 @@ const blockedFaces = ({ player, roll }: NoPlay): Face[] =>
  * width, which is what lets the dice ride in a row the page already pays for
  * instead of costing the board a strip of the little room a phone has.
  *
- * Size and colour are the caller's — see `Controls`, which owns the cell they are
- * drawn in and moves it per layout. The gap is in `em` for the same reason: it
- * has to stay a hair between two dice at every size, and four dice plus their
- * gaps are what that cell reserves room for.
+ * Drawn on the board, in the roller's half — see `BoardDice` in `Board`, which
+ * picks the half. The gap is in `em` so it stays a hair between two dice.
  */
 export const Dice = ({ state, className }: { state: GameState; className?: string }) => {
   // The cell holds one roll, so this is a choice and not a stack: the roll on
