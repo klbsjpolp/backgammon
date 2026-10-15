@@ -55,8 +55,8 @@ Before and after any such change, check **three** cases — they are CSS-only, n
   left for the player across the table — at `size-board-die` (0.78 × `--pt`). They used to be a cell of the
   `Controls` grid placed per layout, which put them somewhere different on every screen and outside the board the
   eye is on. The overlay takes no pointer events, so a checker under a die can still be picked up. Fullscreen
-  draws the status and buttons across that same middle, so there the overlay lifts by half the status block plus
-  half a die. They cost no height anywhere; do not give them a row of chrome back.
+  draws the status and buttons across that same middle, each one half wide (`w-board-half`), so there the dice
+  and the panel under them are stacked as one unit centred in the band (`--spacing-board-die-lift`). They cost no height anywhere; do not give them a row of chrome back.
 - **A die is an SVG, not the ⚀..⚅ character.** A glyph's ink is a fraction of its em box, its outline weight is the
   font's choice and so is whether the platform draws it as text or emoji, so a bigger font size bought a smudge. The
   drawn face fills the box it is given.

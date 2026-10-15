@@ -152,6 +152,15 @@ body {
    * covers felt almost always.
    */
   --spacing-board-die: calc(var(--pt) * 0.78);
+  /*
+   * Fullscreen stacks the dice over the panel in the band (see `FullscreenBand`):
+   * the dice rise by half the panel (the status block is 3.5rem, and it is text,
+   * so it does not grow with the board) and half the 0.15 × --pt gap; the band
+   * drops by half a die and half that gap, 0.465 × --pt, which it writes out.
+   */
+  --spacing-board-die-lift: calc(1.75rem + var(--pt) * 0.075);
+  /* Six points and the five gutters between them — one half of the board. */
+  --spacing-board-half: calc(var(--pt) * 6.6);
 
   /* Floored, or the point numbers stop being legible on a small phone. */
   --text-board-label: max(0.5rem, calc(var(--pt) * 0.22));
@@ -565,8 +574,12 @@ body[data-drag-active] {
        once "Nouvelle partie" stopped ever rendering inline here: portrait was
        never `isRoomy`, so this row used to carry that button and its separating
        rule on every phone. It now lives in the header menu at every width — see
-       `HeaderMenu` — and portrait has one fewer row to pay for. */
-    --avail-w: calc(100svh - 18.9375rem - var(--inset-top) - env(safe-area-inset-bottom));
+       `HeaderMenu` — and portrait has one fewer row to pay for.
+
+       And by another 2.4375rem (39px) when the dice left their row under the
+       buttons for the board itself: the gap below the version line had grown
+       from 24px back to 63px at every phone width from 360 to 430. */
+    --avail-w: calc(100svh - 16.5rem - var(--inset-top) - env(safe-area-inset-bottom));
     /* The page padding, and nothing else: with the dice up in the header row the
        turned board has the full width of the screen to be deep in. A narrow phone
        is the one that notices — this is what limits it, where a tall one is

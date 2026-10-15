@@ -40,19 +40,32 @@ export const ShortcutHint = () => (
  * points in it, but the band's box is a rectangle and the row edges are close.
  */
 const FullscreenBand = ({ status, controls }: Pick<GameLayoutProps, 'status' | 'controls'>) => (
-  <div className="pointer-events-none absolute inset-x-0 top-1/2 flex -translate-y-1/2 items-center gap-board-gutter px-board-pad">
+  <div
+    className={cn(
+      'pointer-events-none absolute inset-x-0 top-1/2 flex items-center gap-board-gutter px-board-pad',
+      // Lowered by half a die and half the gap above it: the dice are drawn by
+      // `Board` over the roller's half, and they and the panel under them are
+      // one unit centred in the band — see `--spacing-board-die-lift`, which
+      // raises the dice by the other half of the same sum.
+      'translate-y-[calc(-50%+var(--pt)*0.465)]',
+    )}
+  >
     {/*
-     * The three widths are the frame's own, in the frame's own unit: six points
-     * and the five gutters between them, then the bar, then everything left.
-     * The middle one is empty on purpose — the bar centres its checkers, so a
-     * player entering from the bar has them exactly here, and a panel laid over
-     * the bar would hide both them and the target they have to be dropped on.
+     * Three widths that are the frame's own, in the frame's own unit: six points
+     * and the five gutters between them, the bar, then six points again. The
+     * middle one is empty on purpose — the bar centres its checkers, so a player
+     * entering from the bar has them exactly here, and a panel laid over the bar
+     * would hide both them and the target they have to be dropped on.
+     *
+     * The status takes one half and stops there, rather than running on over the
+     * trays: the dice land centred on a half, and a panel under them that was
+     * wider than the half put the two on different axes.
      */}
-    <div className="pointer-events-auto flex w-[calc(var(--pt)*6.6)] items-center justify-center">{controls}</div>
+    <div className="pointer-events-auto flex w-board-half items-center justify-center">{controls}</div>
     <div className="w-board-bar" />
     {/* `min-w-0`, or a long result — "Noir gagne un backgammon" — pushes the
-        controls out of their half instead of wrapping inside its own. */}
-    <div className="pointer-events-auto min-w-0 flex-1">{status}</div>
+        panel out of its half instead of wrapping inside its own. */}
+    <div className="pointer-events-auto w-board-half min-w-0">{status}</div>
   </div>
 );
 

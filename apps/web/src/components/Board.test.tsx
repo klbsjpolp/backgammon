@@ -70,6 +70,32 @@ describe('Board', () => {
     expect([yourHalf, theirHalf]).toEqual([2, 0]);
   });
 
+  it('leaves the last throw on the table, spent, until the next one lands', () => {
+    // Black has just played its last checker: the turn is white's to roll and
+    // `roll` is cleared. Without the kept throw, what black played was gone.
+    const theirs: GameState = { ...bearingOffState('black'), roll: [4, 2], remaining: [2] };
+    const { rerender } = render(<Board controller={controllerFor('white', { state: theirs })} />);
+    rerender(
+      <Board
+        controller={controllerFor('white', {
+          state: { ...theirs, turn: 'white', phase: 'rolling', roll: null, remaining: [] },
+        })}
+      />,
+    );
+
+    const spent = screen.getByLabelText('dés du dernier lancer');
+    expect(spent.textContent).toContain('4-2');
+    expect(spent.querySelectorAll('svg[data-played="true"]')).toHaveLength(2);
+    // Still in the half of the player who threw it.
+    expect(spent.closest('.board-frame > *')).toBe(spent.closest('.board-frame')?.children[0]);
+  });
+
+  it('forgets the last throw once a new game is set up', () => {
+    const { rerender } = render(<Board controller={controllerFor('white')} />);
+    rerender(<Board controller={controllerFor('white', { state: createInitialState('white') })} />);
+    expect(screen.queryByRole('group', { name: /dés/ })).toBeNull();
+  });
+
   it('keeps the dice out of the way of a checker under them', () => {
     render(<Board controller={controllerFor('white')} />);
     expect(screen.getByLabelText('dés').closest('.pointer-events-none')).not.toBeNull();
