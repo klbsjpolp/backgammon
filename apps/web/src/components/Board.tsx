@@ -590,9 +590,10 @@ const useBoardClicks = (controller: BoardController, board: BoardState) => {
  * the left half for the player across from you, so which half the dice land in
  * says whose roll it is before any text does.
  *
- * Laid over the points rather than given room of its own, because the board has
- * none to give — two point depths and a gutter are its whole height. It takes no
- * pointer events, so a checker under a die is still a checker you can pick up.
+ * Centred on the band between the point rows, which opens wherever the screen
+ * has height the board would not otherwise use (`--board-band` in `index.css`).
+ * Where it has none the dice lie over the points instead, so the overlay takes
+ * no pointer events: a checker under a die is still a checker you can pick up.
  *
  * Fullscreen draws the status and the buttons across that same middle (see
  * `FullscreenBand`), so there the dice and the panel under them are stacked as
@@ -686,7 +687,7 @@ export const Board = ({ controller }: { controller: BoardController }) => {
             'bg-felt p-board-pad shadow-2xl sm:border-4',
           )}
         >
-          <div className="relative flex flex-col justify-between gap-board-gutter">
+          <div className="relative flex min-h-board-rows flex-col justify-between gap-board-gutter">
             <div className="flex gap-board-gutter">{top.slice(0, 6).map((i) => renderPoint(i, 'top'))}</div>
             <div className="flex gap-board-gutter">{bottom.slice(0, 6).map((i) => renderPoint(i, 'bottom'))}</div>
             {diceHalf === 'left' && <BoardDice state={state} previous={previous} />}
@@ -708,7 +709,7 @@ export const Board = ({ controller }: { controller: BoardController }) => {
             }}
           />
 
-          <div className="relative flex flex-col justify-between gap-board-gutter">
+          <div className="relative flex min-h-board-rows flex-col justify-between gap-board-gutter">
             <div className="flex gap-board-gutter">{top.slice(6).map((i) => renderPoint(i, 'top'))}</div>
             <div className="flex gap-board-gutter">{bottom.slice(6).map((i) => renderPoint(i, 'bottom'))}</div>
             {diceHalf === 'right' && <BoardDice state={state} previous={previous} />}

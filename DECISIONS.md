@@ -699,6 +699,26 @@ to play on a phone:
   the wire would have had to be tolerated as absent by every older host. A spent die is
   drawn at 40% rather than 30%; on felt, 30% of a dark die all but vanished.
 
+- **…and a strip of felt for them to land on, where the screen has one.** "The board has no
+  strip to give" was true of the formula and not of the page. `--pt` is the smaller of two
+  fits, so only one of them binds and the other leaves room over: a portrait phone is limited
+  by its length and left ~65px of width unused at 390px, a landscape phone by the sidebar and
+  left ~24px of height, a windowed desktop by the 2.5rem cap and left as much as the window
+  had. Meanwhile the dice sat on the checkers of any point stacked four deep.
+
+  So `--board-band` opens the rows apart by exactly that leftover, `--avail-h − 8.6 × --pt`,
+  capped at 1.1 × --pt — a die and a little air either side; beyond that it is empty felt
+  pushing the controls down. It is laid out as a least height on the two halves
+  (`min-h-board-rows`) rather than on the frame, so the frame's border, whose width changes at
+  `sm`, stays out of the sum; in portrait the turned wrapper reserves the band as width.
+
+  It is funded from slack only, never from `--pt`. Raising the divisor to guarantee a band
+  would shrink every checker on every screen to clear the dice off a few, which is the trade
+  this file has refused each time it came up. The cost is that the band is not always whole:
+  at 844×390 it is 23px under a 28px die, and on a screen where both fits bind at once there
+  is none and the dice lie over the points as before. Fullscreen keeps its own, larger band
+  for the panel and is unaffected.
+
 - **A reservation the markup cannot break.** All of the above is a count of what the
   chrome measures, which is only true while the chrome cannot decide to measure more. It
   could: the primary control row is `flex-wrap`, and its three controls need 342px against
