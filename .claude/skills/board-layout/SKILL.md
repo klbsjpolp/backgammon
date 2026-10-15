@@ -57,6 +57,10 @@ Before and after any such change, check **three** cases — they are CSS-only, n
   eye is on. The overlay takes no pointer events, so a checker under a die can still be picked up. Fullscreen
   draws the status and buttons across that same middle, each one half wide (`w-board-half`), so there the dice
   and the panel under them are stacked as one unit centred in the band (`--spacing-board-die-lift`). They cost no height anywhere; do not give them a row of chrome back.
+- **Outside fullscreen the rows open apart by whatever the binding fit left over** (`--board-band`, capped at
+  1.1 × `--pt`), so the dice land on felt where the screen allows it. It is paid from slack only — never raise the
+  8.6 divisor to buy it, which would shrink every checker to clear the dice off a few. In portrait the wrapper's
+  reserved width includes it.
 - **A die is an SVG, not the ⚀..⚅ character.** A glyph's ink is a fraction of its em box, its outline weight is the
   font's choice and so is whether the platform draws it as text or emoji, so a bigger font size bought a smudge. The
   drawn face fills the box it is given.

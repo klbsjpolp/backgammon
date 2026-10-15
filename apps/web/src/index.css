@@ -108,6 +108,21 @@ body {
    */
   --avail-h: calc(100svh - 21.5rem - var(--inset-top) - env(safe-area-inset-bottom));
   --pt: clamp(1rem, min(calc(var(--avail-w) / 17), calc(var(--avail-h) / 8.6)), 2.5rem);
+  /*
+   * The strip of felt between the two point rows, opened out of whatever height
+   * the board was not going to use anyway. Only one of the two divisors above
+   * binds, so on most screens the other leaves room over: a portrait phone is
+   * limited by its length and leaves width, a landscape one by the sidebar and
+   * leaves height. The dice are drawn across that middle, and with the rows
+   * pressed together they sat on the checkers of any point stacked four deep.
+   *
+   * Taken from slack only, never from `--pt`: a band bought by shrinking every
+   * checker would trade the thing the page exists to show for the space around
+   * it. Where nothing is left over it closes to nothing and the dice overlay the
+   * points as they always did. The cap is a die and a little air either side —
+   * past that it is empty felt pushing the controls down.
+   */
+  --board-band: clamp(0px, calc(var(--avail-h) - var(--pt) * 8.6), calc(var(--pt) * 1.1));
 
   position: relative;
   display: flex;
@@ -128,6 +143,8 @@ body {
 @theme inline {
   --spacing-board-point: var(--pt);
   --spacing-board-depth: calc(var(--pt) * 3.85);
+  /* Both point rows, the gutter between them and the band — a half's least height. */
+  --spacing-board-rows: calc(var(--pt) * 7.82 + var(--board-band));
   /*
    * A checker all but fills its point — the wide margin it used to leave was the
    * single biggest waste of the little room a phone has. The second term keeps it
@@ -587,7 +604,7 @@ body[data-drag-active] {
     --avail-h: calc(100vw - 2rem - env(safe-area-inset-left) - env(safe-area-inset-right));
     /* A rotation does not change the space an element takes in layout, so the
        wrapper has to reserve the turned footprint itself. */
-    width: calc(var(--pt) * 8.6);
+    width: calc(var(--pt) * 8.6 + var(--board-band));
     height: calc(var(--pt) * 17);
   }
 
