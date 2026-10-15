@@ -165,21 +165,21 @@ describe.each(THEMES.map((theme) => theme.id))('%s', (id) => {
 
   // The dice are drawn in the rolling player's own checker colour (rim included),
   // so both have somewhere to be legible: the pips against the face they sit on,
-  // and the face — or, where the face alone cannot, its rim — against the page it
-  // floats on rather than the felt a checker sits on.
-  it.each(['light', 'dark'])('the %s die reads against its face and the page', (side) => {
+  // and the face — or, where the face alone cannot, its rim — against what is
+  // under it. That is the board now, the felt and both point colours, not the
+  // page the dice used to float on beside the buttons.
+  it.each(['light', 'dark'])('the %s die reads against its face and the board', (side) => {
     const pip = contrast(vars[`checker-${side}-fg`], vars[`checker-${side}`]);
     expect(`checker-${side}-fg on checker-${side}: ${pip.toFixed(2)}`).toBe(
       `checker-${side}-fg on checker-${side}: ${Math.max(pip, MIN_NON_TEXT_CONTRAST).toFixed(2)}`,
     );
 
-    const edge = Math.max(
-      contrast(vars[`checker-${side}`], vars.canvas),
-      contrast(vars[`checker-${side}-line`], vars.canvas),
-    );
-    expect(`checker-${side} on canvas: ${edge.toFixed(2)}`).toBe(
-      `checker-${side} on canvas: ${Math.max(edge, MIN_NON_TEXT_CONTRAST).toFixed(2)}`,
-    );
+    for (const [name, under] of [['felt', vars.felt], ...points] as const) {
+      const edge = Math.max(contrast(vars[`checker-${side}`], under), contrast(vars[`checker-${side}-line`], under));
+      expect(`checker-${side} on ${name}: ${edge.toFixed(2)}`).toBe(
+        `checker-${side} on ${name}: ${Math.max(edge, MIN_NON_TEXT_CONTRAST).toFixed(2)}`,
+      );
+    }
   });
 
   // WCAG exempts a disabled control from contrast because nobody can act on it,

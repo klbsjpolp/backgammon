@@ -203,20 +203,18 @@ describe('Dice — the size the caller asked for', () => {
    */
   const die = (container: HTMLElement) => container.querySelector('svg[data-face]');
 
-  it('takes its size from the caller everywhere but fullscreen', () => {
-    const { container } = render(<Dice state={moving([6, 5], [6, 5])} />);
-    expect(die(container)?.getAttribute('class')).toContain('size-[1em]');
-  });
-
-  it('takes it from the board in fullscreen, where the caller has no say', () => {
-    const { container } = render(
-      <FullscreenContext.Provider value={{ isFullscreen: true, isSupported: true, toggle: () => {} }}>
-        <Dice state={moving([6, 5], [6, 5])} />
-      </FullscreenContext.Provider>,
-    );
-    const cls = die(container)?.getAttribute('class');
-    expect(cls).toContain('size-board-die');
-    expect(cls).not.toContain('size-[1em]');
+  it('takes its size from the board in every layout, fullscreen or not', () => {
+    // On the board a die is an object on the table, sized like a checker — a die
+    // sized by the text beside it stayed 30px on a board that filled the screen.
+    for (const isFullscreen of [false, true]) {
+      const { container, unmount } = render(
+        <FullscreenContext.Provider value={{ isFullscreen, isSupported: true, toggle: () => {} }}>
+          <Dice state={moving([6, 5], [6, 5])} />
+        </FullscreenContext.Provider>,
+      );
+      expect(die(container)?.getAttribute('class')).toContain('size-board-die');
+      unmount();
+    }
   });
 });
 
