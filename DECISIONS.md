@@ -679,8 +679,25 @@ to play on a phone:
   half the status block and half a die, in rem for the status and `--pt` for the die.
 
   What this gave back: the dice cell in `Controls`, its double-wide reservation and the ~22px
-  that pushed the portrait button off-centre, and the 30px line they held in the landscape
-  sidebar. `--avail-h` has not been re-measured for the room freed in portrait.
+  that pushed the portrait button off-centre, the 30px line they held in the landscape
+  sidebar, and 39px of portrait height — measured as the gap under the version line going
+  from 24px to 63px at every width from 360 to 430 — which the reservation now hands to the
+  board, about 7% more point at 390px.
+
+  Fullscreen took a second pass. Lifting the dice clear of the band left them floating: a
+  little above the status, and centred on six points while the status under them ran on
+  over the trays. The band is now laid out on the board's own axes — the buttons on the left
+  half, the status on the right half and stopping there — and the dice and the panel under
+  them are stacked as one unit centred in the band, the dice rising and the band dropping by
+  the two halves of the same sum. Below a --pt of about 48px the band's 3.5rem floor is what
+  binds and the unit no longer fits inside it, so the dice reach the point tips there.
+
+  The throw is also **kept** once its turn is over, spent, until the next one lands. `endTurn`
+  clears `roll`, so the opponent's dice used to leave the board with their last checker and
+  you rolled without having seen what they played. It is remembered by the board from the
+  states it is handed rather than added to `GameState`: it is only a display, and a field on
+  the wire would have had to be tolerated as absent by every older host. A spent die is
+  drawn at 40% rather than 30%; on felt, 30% of a dark die all but vanished.
 
 - **A reservation the markup cannot break.** All of the above is a count of what the
   chrome measures, which is only true while the chrome cannot decide to measure more. It

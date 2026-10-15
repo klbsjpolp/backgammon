@@ -1,9 +1,10 @@
-import { useCallback, useLayoutEffect, useRef } from 'react';
+import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent, RefObject } from 'react';
 import { createPortal } from 'react-dom';
 import {
   BAR,
   CHECKERS_PER_SIDE,
+  createInitialState,
   OFF,
   POINT_COUNT,
   opponent,
@@ -17,7 +18,7 @@ import { barPile, describeMotions, offPile, pointPile, type CheckerMotion, type 
 import { outerChecker } from '@/lib/checkerStack';
 import { centreOf, flyChecker, FLIGHT_MS, HIT_DELAY_MS, HIT_FLIGHT_MS, type StopFlight } from '@/lib/checkerFlight';
 import { useBoardBand } from '@/boardBand';
-import { Dice } from '@/components/Dice';
+import { Dice, type Throw } from '@/components/Dice';
 import { pendingNoPlay } from '@/lib/noPlay';
 import { useCheckerDrag, type CheckerDrag, type DragRelease } from '@/useCheckerDrag';
 
@@ -594,15 +595,37 @@ const useBoardClicks = (controller: BoardController, board: BoardState) => {
  * pointer events, so a checker under a die is still a checker you can pick up.
  *
  * Fullscreen draws the status and the buttons across that same middle (see
- * `FullscreenBand`), so there the dice sit just above them instead: half the
- * status block's 3.5rem, a hair of air, and half a die. That is in rem and not
- * in --pt because the status is text, and text does not grow with the board.
+ * `FullscreenBand`), so there the dice and the panel under them are stacked as
+ * one unit centred in the band: the dice lift by half the panel and half the gap,
+ * the band drops by half a die and half the gap. Both on the half's centre line.
  */
-const BoardDice = ({ state }: { state: GameState }) => (
-  <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center fullscreen:-translate-y-[calc(2.125rem+var(--pt)*0.39)]">
-    <Dice state={state} className="board-dice gap-[0.18em] drop-shadow-md" />
+const BoardDice = ({ state, previous }: { state: GameState; previous: Throw | null }) => (
+  <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center fullscreen:-translate-y-board-die-lift">
+    <Dice state={state} previous={previous} className="board-dice gap-[0.18em] drop-shadow-md" />
   </div>
 );
+
+/** No checker has moved yet, so whatever was last thrown belongs to the game before. */
+const isOpening = (board: BoardState): boolean => {
+  const opening = createInitialState('white').board;
+  return board.off.white + board.off.black === 0 && board.points.every((n, i) => n === opening.points[i]);
+};
+
+/**
+ * The last roll thrown, by whom, kept past the end of its turn. `GameState` has
+ * no record of it once `endTurn` clears `roll`, and adding one would be a wire
+ * field for what is only a display — so it is remembered here, from the states
+ * the board has been handed. Compared by value: a guest parses a fresh array on
+ * every frame, and the same throw must not read as a new one.
+ */
+const useLastThrow = (state: GameState): Throw | null => {
+  const [last, setLast] = useState<Throw | null>(null);
+  const { roll, turn } = state;
+  if (roll && (last?.player !== turn || last.roll[0] !== roll[0] || last.roll[1] !== roll[1])) {
+    setLast({ player: turn, roll });
+  }
+  return last && !isOpening(state.board) ? last : null;
+};
 
 export const Board = ({ controller }: { controller: BoardController }) => {
   const { state, you, selectableFroms, selectedFrom, targets, targetsFrom, selectFrom, moveChecker } = controller;
@@ -625,7 +648,9 @@ export const Board = ({ controller }: { controller: BoardController }) => {
   const { click, doubleClick } = useBoardClicks(controller, board);
   // The roll that could not be played belongs to whoever threw it, which by the
   // time it is drawn is no longer `state.turn`.
-  const roller = pendingNoPlay(state)?.player ?? state.turn;
+  const previous = useLastThrow(state);
+  const live = state.roll && state.phase !== 'rolling';
+  const roller = pendingNoPlay(state)?.player ?? (live ? state.turn : (previous?.player ?? state.turn));
   const diceHalf = roller === you ? 'right' : 'left';
 
   const renderPoint = (index: number, orientation: 'top' | 'bottom') => (
@@ -664,7 +689,7 @@ export const Board = ({ controller }: { controller: BoardController }) => {
           <div className="relative flex flex-col justify-between gap-board-gutter">
             <div className="flex gap-board-gutter">{top.slice(0, 6).map((i) => renderPoint(i, 'top'))}</div>
             <div className="flex gap-board-gutter">{bottom.slice(0, 6).map((i) => renderPoint(i, 'bottom'))}</div>
-            {diceHalf === 'left' && <BoardDice state={state} />}
+            {diceHalf === 'left' && <BoardDice state={state} previous={previous} />}
           </div>
 
           <Bar
@@ -686,7 +711,7 @@ export const Board = ({ controller }: { controller: BoardController }) => {
           <div className="relative flex flex-col justify-between gap-board-gutter">
             <div className="flex gap-board-gutter">{top.slice(6).map((i) => renderPoint(i, 'top'))}</div>
             <div className="flex gap-board-gutter">{bottom.slice(6).map((i) => renderPoint(i, 'bottom'))}</div>
-            {diceHalf === 'right' && <BoardDice state={state} />}
+            {diceHalf === 'right' && <BoardDice state={state} previous={previous} />}
           </div>
 
           {/* The near tray is always this client's, so either color can bear off. */}

@@ -102,7 +102,7 @@ const Die = ({ value, played, blocked, player, order }: Face & { order: number }
       style={{ animationDelay: `${order * LANDING_STAGGER_MS}ms` }}
       className={cn(
         'die-roll shrink-0 transition-opacity',
-        played && 'opacity-30',
+        played && 'opacity-40',
         // Drawn on the board, so sized by the board's unit like a checker —
         // see `--spacing-board-die`. A die sized by the text beside it stayed
         // 30px on a board that had grown to fill the screen.
@@ -208,7 +208,26 @@ const blockedFaces = ({ player, roll }: NoPlay): Face[] =>
  * Drawn on the board, in the roller's half — see `BoardDice` in `Board`, which
  * picks the half. The gap is in `em` so it stays a hair between two dice.
  */
-export const Dice = ({ state, className }: { state: GameState; className?: string }) => {
+/** A roll and who threw it — the last one on the table, once its turn is over. */
+export interface Throw {
+  player: Player;
+  roll: readonly [number, number];
+}
+
+export const Dice = ({
+  state,
+  previous = null,
+  className,
+}: {
+  state: GameState;
+  /**
+   * The last roll thrown, drawn spent until the next one lands. `endTurn` clears
+   * `roll`, so without it the opponent's dice left the board the moment their
+   * last checker landed, and you rolled without having seen what they played.
+   */
+  previous?: Throw | null;
+  className?: string;
+}) => {
   // The cell holds one roll, so this is a choice and not a stack: the roll on
   // play whenever there is one, and otherwise — for the beat between a roll
   // nobody could play and the answer to it — the roll that failed. `endTurn`
@@ -217,7 +236,14 @@ export const Dice = ({ state, className }: { state: GameState; className?: strin
   // screen, which is the complaint this answers.
   const blocked = pendingNoPlay(state);
   const live = !blocked && state.roll && state.phase !== 'rolling' ? state.roll : null;
-  const faces = blocked ? blockedFaces(blocked) : live ? facesFor(live, state.remaining, state.turn) : null;
+  const spent = !blocked && !live ? previous : null;
+  const faces: Face[] | null = blocked
+    ? blockedFaces(blocked)
+    : live
+      ? facesFor(live, state.remaining, state.turn)
+      : spent
+        ? facesOf(spent.roll).map((value) => ({ value, played: true, player: spent.player }))
+        : null;
   if (!faces) return null;
 
   return (
@@ -225,7 +251,7 @@ export const Dice = ({ state, className }: { state: GameState; className?: strin
       role="group"
       // Named for what it is, since the dashed rim that says so is drawn and
       // not written.
-      aria-label={blocked ? "dés qui n'ont pas pu être joués" : 'dés'}
+      aria-label={blocked ? "dés qui n'ont pas pu être joués" : spent ? 'dés du dernier lancer' : 'dés'}
       className={cn('flex items-center gap-[0.12em] leading-none', className)}
     >
       {faces.map((face, i) => (
@@ -241,6 +267,13 @@ export const Dice = ({ state, className }: { state: GameState; className?: strin
         // DOM with its text. `TurnAnnouncer` is what announces it.
         <span className="sr-only">
           {blocked.roll[0]}-{blocked.roll[1]}, aucun coup possible
+        </span>
+      )}
+      {spent && (
+        // Every die is spent and `aria-hidden`, so this is the group's only
+        // content — the same reason the blocked roll carries one.
+        <span className="sr-only">
+          {spent.roll[0]}-{spent.roll[1]}, déjà joué
         </span>
       )}
       {live && (
