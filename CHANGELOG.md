@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.5.0](https://github.com/klbsjpolp/backgammon/compare/v1.4.0...v1.5.0) (2026-10-15)
+
+### Features
+
+* **web:** open the board's middle for the dice wherever the screen has room ([c8f182e](https://github.com/klbsjpolp/backgammon/commit/c8f182e5d11d995e34e11496a65885d590c2cbeb))
+
 ## [1.4.0](https://github.com/klbsjpolp/backgammon/compare/v1.3.11...v1.4.0) (2026-10-15)
 
 ### Features
