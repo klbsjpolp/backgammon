@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.4.0](https://github.com/klbsjpolp/backgammon/compare/v1.3.11...v1.4.0) (2026-10-15)
+
+### Features
+
+* **web:** keep the last throw on the board and line fullscreen up on its halves ([1c268da](https://github.com/klbsjpolp/backgammon/commit/1c268daa8dab81267a9b46855f5f94d6a036aacb))
+* **web:** throw the dice onto the board, in the roller's half ([1e51eab](https://github.com/klbsjpolp/backgammon/commit/1e51eab70f58911212a219dd4f880d1c2e9d8fcd))
+
 ## [1.3.11](https://github.com/klbsjpolp/backgammon/compare/v1.3.10...v1.3.11) (2026-10-14)
 
 ## [1.3.10](https://github.com/klbsjpolp/backgammon/compare/v1.3.9...v1.3.10) (2026-10-07)
