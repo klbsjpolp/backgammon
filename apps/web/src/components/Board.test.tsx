@@ -127,6 +127,20 @@ describe('Board', () => {
     expect(clickPoint).not.toHaveBeenCalled();
   });
 
+  it('names your tray as a destination while bearing off is one, and only then', () => {
+    const { rerender } = render(<Board controller={controllerFor('white')} />);
+
+    const tray = screen.getByRole('button', { name: /blancs sortis/i });
+    expect(tray.getAttribute('aria-label')).toMatch(/destination possible du pion tenu$/);
+    expect(tray.getAttribute('aria-disabled')).toBeNull();
+    expect(tray.getAttribute('tabindex')).toBeNull();
+
+    rerender(<Board controller={controllerFor('white', { targets: [] })} />);
+    expect(tray.getAttribute('aria-label')).not.toMatch(/destination/);
+    expect(tray.getAttribute('aria-disabled')).toBe('true');
+    expect(tray.getAttribute('tabindex')).toBe('-1');
+  });
+
   it('shows the bar and forwards clicks on it', () => {
     const clickPoint = vi.fn();
     const state = bearingOffState('black');
