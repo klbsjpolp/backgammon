@@ -73,6 +73,15 @@ describe('useLocalGame — the saved game', () => {
     expect(result.current.state).toEqual(createInitialState('white'));
   });
 
+  it('starts afresh when storage refuses to be read', () => {
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new DOMException('denied', 'SecurityError');
+    });
+
+    const { result } = renderHook(() => useLocalGame());
+    expect(result.current.state).toEqual(createInitialState('white'));
+  });
+
   it('plays on when storage refuses to be written', () => {
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       throw new DOMException('quota', 'QuotaExceededError');
