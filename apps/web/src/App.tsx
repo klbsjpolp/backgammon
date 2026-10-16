@@ -47,9 +47,11 @@ export const App = () => {
    * see `fullscreen.ts`.
    */
   const fullscreen = useFullscreen();
-  // A local game is always live on screen, so an automatic reload would throw it
-  // away; online only has something to lose once a room is joined. Either way the
-  // update lands on the next deliberate start — see `applyPendingUpdate`.
+  // A local game is always live on screen. It survives a reload now — see
+  // `savedGame.ts` — but one that fires on its own still pulls the board out from
+  // under a hand halfway through a move; online only has something to lose once
+  // a room is joined. Either way the update lands on the next deliberate start —
+  // see `applyPendingUpdate`.
   const updates = useAppUpdates({ deferUpdate: mode === 'local' || isOnlineBusy });
   const { applyUpdate, isUpdateAvailable, isUpdateRequired } = updates;
 

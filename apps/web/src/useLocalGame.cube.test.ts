@@ -34,6 +34,8 @@ const passTurnToAi = (result: { current: ReturnType<typeof useLocalGame> }) => {
 
 describe('useLocalGame — AI cube offers', () => {
   beforeEach(() => {
+    // The hook saves every state, and the next test would otherwise resume it.
+    localStorage.clear();
     vi.useFakeTimers();
   });
 

@@ -47,6 +47,19 @@ describe('App', () => {
     expect(screen.getAllByLabelText(/^flèche \d+,/)).toHaveLength(24);
   });
 
+  it('keeps the game against the AI across a trip online and back', async () => {
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: /^lancer$/i }));
+    await screen.findByText(/doit jouer/i, { ignore: '.sr-only' });
+    const dice = screen.getByLabelText('dés').textContent;
+
+    fireEvent.click(screen.getByRole('button', { name: /^en ligne$/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^contre l'ia$/i }));
+
+    expect(screen.getByText(/doit jouer/i, { ignore: '.sr-only' })).toBeDefined();
+    expect(screen.getByLabelText('dés').textContent).toBe(dice);
+  });
+
   it('shows the running version', () => {
     render(<App />);
     expect(screen.getByTestId('app-version').textContent).toBe('Version v1.2.3');

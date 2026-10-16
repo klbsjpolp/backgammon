@@ -1453,6 +1453,34 @@ cache. It is how a running tab learns it is out of date; served from a cache it
 would answer with the version the tab is already running, and the app could never
 notice a deploy.
 
+## A game against the AI outlives the page
+
+The local game lived in `useLocalGame`'s state and nowhere else, so anything that
+unmounted the panel threw it away without a word. Three things did: switching to
+`En ligne` and back, a reload, and iOS evicting an installed app it had sent to the
+background — the last of which is not something the player does at all, and on a
+phone it is the common one. A finished game is saved too, because what the player
+last saw was the result, and `Nouvelle partie` already stands next to it.
+
+The obvious fix was a confirmation on the mode switch, the way `Nouvelle partie`
+asks before throwing a game away. It covers one of the three. The other two cannot
+be intercepted — a `beforeunload` prompt is not offered on iOS and the eviction
+never fires one — so the game is written to `localStorage` on every change instead,
+and the mode switch needs no question because it no longer loses anything.
+
+It is read back through `parseGameState`, the guest's schema, rather than cast.
+An update lands on reload, so the saved game is a frame from the previous release
+exactly as often as a relayed one is, and the same tolerance applies: a field added
+since must parse as absent. One that does not parse starts a new game and is
+`console.warn`ed, for the same reason a dropped frame is. The checker in hand is
+not saved — it is half a gesture, and restoring it would hand back a ring with no
+pointer behind it.
+
+What this does not do is let an update reload a game in progress on its own. The
+game would survive it now, but a reload that fires by itself still takes the board
+out from under a hand that is halfway through a move, so `deferUpdate` stays on in
+local play and the update still lands on the next deliberate start.
+
 ## The interface is French
 
 Every word on the screen was English, in a game whose players are French. It is
