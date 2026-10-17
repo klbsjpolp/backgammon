@@ -278,7 +278,15 @@ const Tray = ({ label, owner, value, active, over, onClick }: TrayProps) => (
     // The count and the caption are two elements, so the default accessible name
     // comes out as the bare "12 blancs sortis"; spelling it out says what the
     // number counts and what is left to bear off.
-    aria-label={`${label}, ${value} sur ${CHECKERS_PER_SIDE}`}
+    //
+    // Your own tray is a destination exactly when bearing off is, and it has to
+    // say so the way the points do: a screen reader holding a checker otherwise
+    // hears "destination possible" on every point but the one it is looking for,
+    // and a Tab walk reaches the tray on every turn of the game whether or not
+    // anything can land there.
+    aria-label={`${label}, ${value} sur ${CHECKERS_PER_SIDE}${active ? ', destination possible du pion tenu' : ''}`}
+    aria-disabled={onClick && !active ? true : undefined}
+    tabIndex={onClick && !active ? -1 : undefined}
     className={cn(
       'board-tray flex h-board-tray-depth w-board-tray flex-col items-center justify-center',
       'rounded-md border border-tray-line bg-tray text-tray-fg',
