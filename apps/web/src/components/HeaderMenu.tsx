@@ -98,7 +98,6 @@ export const HeaderMenu = ({ hasAction, onSlotChange }: HeaderMenuProps) => {
         ref={triggerRef}
         type="button"
         onClick={() => setOpen((o) => !o)}
-        aria-haspopup="true"
         aria-expanded={open}
         aria-controls={panelId}
         aria-label="Actions"
