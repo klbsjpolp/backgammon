@@ -147,7 +147,9 @@ export const App = () => {
            */}
           <div
             className={cn(
-              'flex w-full flex-col items-center gap-3',
+              // `relative` so the theme panel can centre itself under the whole
+              // row rather than hang off its trigger — see `ThemeSwitcher`.
+              'relative flex w-full flex-col items-center gap-3',
               'max-sm:flex-row max-sm:justify-center max-sm:gap-2',
               'compact:flex-row compact:justify-between compact:gap-2',
               'fullscreen:grid fullscreen:grid-cols-[1fr_auto_1fr] fullscreen:items-center fullscreen:gap-3',

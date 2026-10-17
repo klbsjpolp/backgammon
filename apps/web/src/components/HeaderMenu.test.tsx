@@ -61,7 +61,9 @@ describe('HeaderMenu', () => {
     render(<Harness hasAction={true} />);
     expect(trigger()).not.toBeNull();
     expect(expanded()).toBe('false');
-    expect(trigger()?.getAttribute('aria-haspopup')).toBe('true');
+    // A disclosure, not a menu: `aria-haspopup` would promise arrow-key
+    // navigation the panel does not have.
+    expect(trigger()?.hasAttribute('aria-haspopup')).toBe(false);
   });
 
   it('opens the panel on click and moves focus into it', () => {

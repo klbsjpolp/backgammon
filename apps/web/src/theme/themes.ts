@@ -2,7 +2,7 @@
  * The catalogue the switcher renders and the storage plumbing behind it. The
  * colours themselves live in `themes.css`, keyed by the same ids.
  */
-export type ThemeId = 'classic' | 'midnight' | 'parchment';
+export type ThemeId = 'classic' | 'midnight' | 'casino' | 'slate' | 'parchment' | 'blossom' | 'ink';
 
 export interface ThemeDefinition {
   id: ThemeId;
@@ -10,6 +10,12 @@ export interface ThemeDefinition {
   label: string;
   /** One-line description, used as the swatch's tooltip. */
   blurb: string;
+  /**
+   * Which group the picker files it under. Mirrors the block's `color-scheme`;
+   * "a light board" is the thing someone squinting at a phone in the sun is
+   * actually looking for, so it is worth a heading of its own.
+   */
+  scheme: 'dark' | 'light';
   /**
    * Browser/OS chrome colour on mobile. Mirrors the theme's `--canvas`; it has
    * to be a literal because the `<meta>` tag cannot read a CSS variable.
@@ -23,18 +29,49 @@ export const THEMES: readonly ThemeDefinition[] = [
     label: 'Classique',
     blurb: 'Feutre vert et laiton, le style tournoi',
     themeColor: '#03130d',
+    scheme: 'dark',
   },
   {
     id: 'midnight',
     label: 'Minuit',
     blurb: 'Indigo froid, pour jouer lumières éteintes',
     themeColor: '#080b16',
+    scheme: 'dark',
+  },
+  {
+    id: 'casino',
+    label: 'Casino',
+    blurb: 'Feutre bordeaux et laque noire, la salle de jeu',
+    themeColor: '#140507',
+    scheme: 'dark',
+  },
+  {
+    id: 'slate',
+    label: 'Ardoise',
+    blurb: 'Graphite neutre, sans ornement',
+    themeColor: '#0e0f11',
+    scheme: 'dark',
   },
   {
     id: 'parchment',
     label: 'Parchemin',
     blurb: 'Papier crème et plateau de bois',
     themeColor: '#f5ecd9',
+    scheme: 'light',
+  },
+  {
+    id: 'blossom',
+    label: 'Cerisier',
+    blurb: 'Rose pâle et bois de cerisier',
+    themeColor: '#fbf1f2',
+    scheme: 'light',
+  },
+  {
+    id: 'ink',
+    label: 'Encre',
+    blurb: 'Encre et papier, le contraste maximal',
+    themeColor: '#f7f7f2',
+    scheme: 'light',
   },
 ];
 

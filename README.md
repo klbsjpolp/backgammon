@@ -103,8 +103,9 @@ gammon/backgammon scoring) with two modes:
   (create/join a room by code). The board is drawn from each seat's point of view, so
   both colors see their home board bottom-right and bear off onto their own tray.
 
-Three themes — **Classique**, **Minuit** and **Parchemin** — switch from the header
-and are remembered between visits.
+Seven themes — dark **Classique**, **Minuit**, **Casino** and **Ardoise**, light
+**Parchemin**, **Cerisier** and **Encre** — are picked from the swatch in the header
+and remembered between visits.
 
 The interface is in French; this file and the code around it are not.
 

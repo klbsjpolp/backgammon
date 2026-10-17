@@ -1146,10 +1146,11 @@ floor on a screen that small and no reservation could buy the board anything bac
 
 ## Themes
 
-Three themes ship: **Classic** (green felt and brass, the original look),
-**Midnight** (indigo, dark) and **Parchment** (cream paper and a wooden board — the
-one light theme). The choice is remembered in `localStorage` under
-`backgammon:theme`.
+Seven themes ship. Four are dark: **Classic** (green felt and brass, the original
+look), **Midnight** (indigo), **Casino** (burgundy felt, black lacquer) and **Slate**
+(neutral graphite). Three are light: **Parchment** (cream paper and a wooden board),
+**Blossom** (blush pink, cherry wood) and **Ink** (black on paper, for glare and
+e-ink). The choice is remembered in `localStorage` under `backgammon:theme`.
 
 Everything hangs off one CSS layer, `apps/web/src/theme/themes.css`. Each theme is a
 single block of semantic variables — `--surface`, `--muted`, `--danger`, `--felt`,
@@ -1163,14 +1164,23 @@ is a property of the theme and a light theme wants different numbers than a dark
 Two consequences of declaring the variables on `[data-theme='…']` rather than only
 on `:root`:
 
-- The **switcher** is three swatches, each drawn _in_ the theme it selects: the
-  swatch sets `data-theme` on itself, so the variables resolve inside it and you see
-  the felt and accent you would get instead of a legend to decode. It also fits the
-  header on a phone, where the mode switch has already eaten most of the width —
-  a second header row would push the board past the height budget in
-  `--avail-h`.
+- The **switcher** draws each theme _in_ itself: a swatch sets `data-theme` on
+  itself, so the variables resolve inside it and you see the felt and accent you
+  would get instead of a legend to decode. It started as a row of all three
+  swatches in the header, which fitted a phone because three was few; each theme
+  added 32px to a row a phone shares with the mode switch and the menu, and at
+  seven it no longer fitted 375px. It is now one swatch — the active theme's —
+  opening a panel that lists every theme by name, grouped dark and light. The
+  header pays 24px for it however many themes there are, and the panel overlays
+  the page instead of pushing it, so it costs the board's height budget in
+  `--avail-h` nothing in any layout. It hangs off the whole header row rather
+  than its trigger: anchored to a trigger right of centre, a two-column panel ran
+  off the left edge of a phone. A pick applies at once and leaves the panel open,
+  so the board behind it can be compared theme against theme. The panel shares
+  its open/close/focus-return logic with the header menu through `useDisclosure`,
+  the one copy of that rule.
 - `color-scheme` is set per theme, so the UA's own widgets (scrollbars, focus rings,
-  form controls) follow along; Parchment is the only one that reports `light`.
+  form controls) follow along; the three light themes report `light`.
 
 The board's state signals are held to WCAG's 3:1 for non-text UI against **both**
 point colours, and `contrast.test.ts` asserts it for every theme in the catalogue
