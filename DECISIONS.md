@@ -397,13 +397,19 @@ A tray that read "12" asked the player to do arithmetic the board could have don
 them: how close a race is, a real board says by how full the trays are. So a checker
 borne off stays a checker, put away on edge the way it is in a real board's tray.
 
-On edge is not decoration. Fifteen checkers have to fit in a square a point and a half
-wide, and lying flat they would need more than three times the depth a point has;
+On edge is not decoration. Fifteen checkers have to fit in a column a point wide, and
+lying flat they would need more than three times the depth a point has;
 on edge, a slice a fifth of a point thick, fifteen and their gaps come to 3.42 × `--pt`.
 That still did not fit the tray as it was, 1.75 deep, so the tray took a point's depth.
 That height was free: the two trays already sat in a column as tall as both point
 rows, at either end of it with nothing between, so no other part of the board paid
 for it.
+
+The tray also lost width, from 1.6 points to one. It had been sized for a count and
+its caption; holding checkers, anything wider than a checker is a frame of empty wood
+around a slice. The 0.6 × `--pt` it gave back went to the width divisor, 17 to 16.4,
+measured off the rendered frame rather than summed from the tokens — so a board bound
+by its width grows rather than leaving the room unused at its side.
 
 The stack is a pile like a point's, pinned at the frame's edge and growing inwards,
 which is what lets a flight find the checker it is landing on. What it costs is the

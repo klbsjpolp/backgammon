@@ -11,12 +11,12 @@ width and the height the viewport still has free:
 ```css
 --avail-w: calc(100vw - 2.75rem);
 --avail-h: calc(100svh - 19rem);
---pt: clamp(1rem, min(calc(var(--avail-w) / 17), calc(var(--avail-h) / 8.6)), 2.5rem);
+--pt: clamp(1rem, min(calc(var(--avail-w) / 16.4), calc(var(--avail-h) / 8.6)), 2.5rem);
 ```
 
 Everything else on the board is a multiple of `--pt`, declared once as `board-*` tokens in the `@theme inline` block
 directly below. **Markup uses the tokens and contains no arithmetic** — `w-board-point`, `size-board-checker`,
-`gap-board-gutter`. The ratios interlock (12 points + bar + tray + gutters + padding must add up to the 17 in the
+`gap-board-gutter`. The ratios interlock (12 points + bar + tray + gutters + padding must add up to the 16.4 in the
 width divisor; two point depths plus gutters to the 8.6), which is why they live together in one block rather than
 scattered through components.
 

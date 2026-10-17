@@ -270,7 +270,7 @@ interface TrayProps {
 /**
  * Checkers borne off are put away, not counted: they stand on edge in the tray the
  * way they do in a real board's, each one a slice as wide as a checker. On edge is
- * the only way fifteen fit in a square a point and a half wide — and a tray that
+ * the only way fifteen fit in a tray a point wide — and a tray that
  * fills up says how close the race is at a glance, which a number never did.
  *
  * The stack is a pile like any point's (`data-pile`, `data-arrives`), so a checker
