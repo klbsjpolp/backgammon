@@ -261,6 +261,32 @@ describe('Board', () => {
   });
 });
 
+describe('Board — the doubling cube', () => {
+  const cubeFor = (you: Player, cube: GameState['cube']) => {
+    render(<Board controller={controllerFor(you, { state: { ...bearingOffState(you), cube } })} />);
+    return screen.getByRole('img', { name: /^videau/ });
+  };
+
+  it('shows 1 while nobody has doubled, the stake the status line names', () => {
+    const cube = cubeFor('white', { value: 1, owner: null });
+    expect(cube.textContent).toBe('1');
+    expect(cube.getAttribute('aria-label')).toBe('videau ×1');
+  });
+
+  it('shows the stake once doubled, and turns to face whoever owns it', () => {
+    const mine = cubeFor('white', { value: 4, owner: 'white' });
+    expect(mine.textContent).toBe('4');
+    expect(mine.getAttribute('aria-label')).toBe('videau ×4, à vous');
+    expect(mine.className).not.toMatch(/rotate-180/);
+  });
+
+  it('reads upside down from here when the other side owns it', () => {
+    const theirs = cubeFor('white', { value: 2, owner: 'black' });
+    expect(theirs.getAttribute('aria-label')).toBe('videau ×2, à l’adversaire');
+    expect(theirs.className).toMatch(/rotate-180/);
+  });
+});
+
 describe('Board — what it says out loud', () => {
   it('numbers the points the way the player counts them, from either side', () => {
     // The engine's array index is 0..23 in white's direction; a player counts

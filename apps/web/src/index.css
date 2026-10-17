@@ -156,10 +156,27 @@ body {
   --spacing-board-tray: var(--pt);
   /*
    * A checker on edge in the tray. Fifteen of them and the gaps between come to
-   * 3.42 × --pt, which leaves a full tray inside a point's depth with its padding.
+   * 3.12 × --pt, and the tray is cut to exactly that, its padding and its border
+   * — not to a point's depth, which it was until the cube needed the space. The
+   * two trays and the cube share one column the height of both point rows, and
+   * a full-depth tray at each end left the cube 0.12 × --pt between them.
    */
-  --spacing-board-slice: calc(var(--pt) * 0.2);
+  --spacing-board-slice: calc(var(--pt) * 0.18);
   --spacing-board-tray-pad: calc(var(--pt) * 0.1);
+  --spacing-board-tray-depth: calc(var(--pt) * 3.32 + 2px);
+  /*
+   * The doubling cube, in the middle of that column: what the trays gave up
+   * leaves it 1.18 × --pt less the borders, so it sits there with air on both
+   * sides even when the rows are pressed together.
+   */
+  --spacing-board-cube: calc(var(--pt) * 0.7);
+  /*
+   * The trays are cut into their column, and the shadow under the upper lip is
+   * what says so: lit the same as the wood around them, they read as two more
+   * boards laid on top of it. Black at a low alpha suits every theme — it is a
+   * shadow on whatever colour the tray is, not a colour of its own.
+   */
+  --shadow-tray: inset 0 calc(var(--pt) * 0.05) calc(var(--pt) * 0.14) rgb(0 0 0 / 0.35);
   --spacing-board-gutter: calc(var(--pt) * 0.12);
   --spacing-board-stack: calc(var(--pt) * 0.03);
   --spacing-board-pad: calc(var(--pt) * 0.25);
@@ -187,6 +204,7 @@ body {
   /* Floored, or the point numbers stop being legible on a small phone. */
   --text-board-label: max(0.5rem, calc(var(--pt) * 0.22));
   --text-board-checker: calc(var(--pt) * 0.3);
+  --text-board-cube: max(0.5rem, calc(var(--pt) * 0.3));
 }
 
 /*
@@ -309,25 +327,54 @@ body {
  * two stripe periods rather than one, at a ratio that is not a whole number, so
  * the pattern does not visibly repeat down a point.
  *
- * The shading runs *to the tip*: a real point is a triangle and the tip is the
- * end that darkens. Which end that is depends on the row, so the direction is an
- * attribute rather than a constant. `--point-fade` keeps a default for the same
+ * The shading runs *to the tip*, the end of a real point that darkens. Which end
+ * that is depends on the row, so the direction — and the triangle's own corners
+ * — are an attribute rather than a constant. `--point-fade` keeps a default for the same
  * reason `--board-stack-count` is written by the component — an element that
  * somehow arrived without the attribute would make `linear-gradient()` invalid,
  * and an invalid layer takes the whole stack with it.
  */
 .board-point {
-  --grain: clamp(3px, calc(var(--pt) * 0.11), 7px);
   --point-fade: to bottom;
+  --point-tip: polygon(0 0, 100% 0, 50% 100%);
+}
 
+.board-point[data-orientation='bottom'] {
+  --point-fade: to top;
+  --point-tip: polygon(0 100%, 100% 100%, 50% 0);
+}
+
+/*
+ * The triangle itself, laid behind the button's contents — `Point` says why it
+ * is a layer and not the button's own shape. The lift is on this layer for the
+ * reason the `::before` copy below gives for the bar and the trays: the filter
+ * has to reach the wood without its checkers.
+ */
+.board-point-fill,
+.board-point-edge {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.board-point-fill {
+  --grain: clamp(3px, calc(var(--pt) * 0.11), 7px);
+
+  clip-path: var(--point-tip);
+  filter: brightness(var(--lift, 1));
+  transition: filter 150ms cubic-bezier(0.4, 0, 0.2, 1);
   background-image:
     linear-gradient(var(--point-fade), var(--wood-sheen) 0%, transparent 40%, var(--wood-grain) 100%),
     repeating-linear-gradient(90deg, var(--wood-grain) 0 1px, transparent 1px var(--grain)),
     repeating-linear-gradient(90deg, var(--wood-sheen) 0 1px, transparent 1px calc(var(--grain) * 1.7));
 }
 
-.board-point[data-orientation='bottom'] {
-  --point-fade: to top;
+/* The stroke is centred on the edge, so half of it falls outside the box. */
+.board-point-edge {
+  overflow: visible;
+  width: 100%;
+  height: 100%;
 }
 
 /*
@@ -366,7 +413,6 @@ body {
   isolation: isolate;
 }
 
-.board-point::before,
 .board-bar::before,
 .board-tray::before {
   content: '';
@@ -481,7 +527,7 @@ body {
  */
 @media (prefers-contrast: more) {
   .board-frame,
-  .board-point,
+  .board-point-fill,
   .board-bar,
   .board-tray,
   .board-checker,

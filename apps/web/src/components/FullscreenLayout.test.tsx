@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, fireEvent, render, screen } from '@testing-library/react';
+import { createInitialState, type GameState } from '@backgammon/core';
+import { SAVED_GAME_STORAGE_KEY } from '@/lib/savedGame';
 import { fetchRuntimeConfig } from '@/lib/runtimeConfig';
 import { App } from '@/App';
 
@@ -112,6 +114,29 @@ describe('the fullscreen layout', () => {
 
     await enterFullscreen();
     expect(screen.queryByText(/faites glisser un pion/i)).toBeNull();
+  });
+
+  it('puts the new-game button where the roll buttons were once the game is over', async () => {
+    // The band is one row deep: the result with the button stacked under it is
+    // two, and it spilled over the dice and the points either side of the band.
+    const over: GameState = {
+      ...createInitialState('white'),
+      phase: 'gameOver',
+      result: { winner: 'white', kind: 'single', points: 1, cubeValue: 1 },
+    };
+    localStorage.setItem(SAVED_GAME_STORAGE_KEY, JSON.stringify(over));
+    render(<App />);
+
+    const result = () => screen.getByText(/vous gagnez/i, { ignore: '.sr-only' });
+    const newGame = () => screen.getByRole('button', { name: /nouvelle partie/i });
+    // Windowed, it stands right under the result.
+    expect(result().parentElement?.parentElement?.parentElement?.contains(newGame())).toBe(true);
+
+    await enterFullscreen();
+
+    expect(boardFit().contains(newGame())).toBe(true);
+    expect(result().parentElement?.parentElement?.parentElement?.contains(newGame())).toBe(false);
+    expect(screen.queryByRole('button', { name: /^lancer$/i })).toBeNull();
   });
 
   it('puts everything back when fullscreen is left', async () => {

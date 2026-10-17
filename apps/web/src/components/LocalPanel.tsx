@@ -4,6 +4,7 @@ import { ConfirmButton } from '@/components/Button';
 import { Controls, GameLayout, ShortcutHint } from '@/components/GameLayout';
 import { TurnControls } from '@/components/TurnControls';
 import { TurnAnnouncer, TurnStatus } from '@/components/TurnStatus';
+import { useFullscreenState } from '@/fullscreen';
 import { useHeaderSlot } from '@/headerSlot';
 import { SIDE_PLURAL } from '@/lib/french';
 import { useLocalGame } from '@/useLocalGame';
@@ -29,6 +30,16 @@ export const LocalPanel = ({ applyPendingUpdate, onHeaderActionChange }: LocalPa
   const { state } = game;
   const headerSlot = useHeaderSlot();
   const isOver = state.phase === 'gameOver';
+  /*
+   * Fullscreen draws the status and the controls side by side in a band one row
+   * deep (see `FullscreenBand`). The result with the button stacked under it is
+   * two rows, and centred in that band it spilled both ways — under the dice
+   * above it and over the points below. Once the game is over the roll and
+   * double buttons have nothing left to do, so the button takes their half
+   * instead and the band stays one row.
+   */
+  const { isFullscreen } = useFullscreenState();
+  const buttonInControls = isOver && isFullscreen;
 
   /*
    * `useLayoutEffect`, not `useEffect`: `Controls` already stops portaling the
@@ -86,27 +97,31 @@ export const LocalPanel = ({ applyPendingUpdate, onHeaderActionChange }: LocalPa
             {/* The result is the one message with nothing after it — no next roll,
                 no next double — so the action that follows it goes right below
                 rather than behind the header menu's tap. Built once above and
-                dropped in exactly one place: here, or in `danger` below, never
-                both — see `Controls`. */}
-            {isOver && newGameButton}
+                dropped in exactly one place: here, in `primary` (fullscreen), or
+                in `danger` below, never two — see `Controls`. */}
+            {isOver && !buttonInControls && newGameButton}
           </div>
         }
         board={<Board controller={game} />}
         controls={
           <Controls
             primary={
-              <TurnControls
-                canRoll={game.canRoll}
-                canDouble={game.canHumanDouble}
-                isDoubleToYou={game.doubleToYou}
-                isHolding={game.selectedFrom !== null}
-                autoRoll={game.autoRoll}
-                onRoll={game.rollDice}
-                onAutoRollChange={game.setAutoRoll}
-                onDouble={game.double}
-                onRespond={game.respond}
-                onClearSelection={game.clearSelection}
-              />
+              buttonInControls ? (
+                newGameButton
+              ) : (
+                <TurnControls
+                  canRoll={game.canRoll}
+                  canDouble={game.canHumanDouble}
+                  isDoubleToYou={game.doubleToYou}
+                  isHolding={game.selectedFrom !== null}
+                  autoRoll={game.autoRoll}
+                  onRoll={game.rollDice}
+                  onAutoRollChange={game.setAutoRoll}
+                  onDouble={game.double}
+                  onRespond={game.respond}
+                  onClearSelection={game.clearSelection}
+                />
+              )
             }
             danger={!isOver && newGameButton}
           />
