@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.8.0](https://github.com/klbsjpolp/backgammon/compare/v1.7.0...v1.8.0) (2026-10-17)
+
+### Features
+
+* **web:** draw the points as triangles and give the doubling cube a place on the board ([#102](https://github.com/klbsjpolp/backgammon/issues/102)) ([bdcfc8d](https://github.com/klbsjpolp/backgammon/commit/bdcfc8d929ddf88562ca175b1661f56254f143fb))
+
 ## [1.7.0](https://github.com/klbsjpolp/backgammon/compare/v1.6.0...v1.7.0) (2026-10-17)
 
 ### Features
