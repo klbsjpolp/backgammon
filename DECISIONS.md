@@ -424,8 +424,9 @@ middle of that column is where the cube waits, off the playing surface where a r
 sits — and a full-depth tray at each end left it 0.12 × `--pt`. The slice went from a
 fifth of a point to 0.18 and the tray was cut to exactly fifteen of them, its padding and
 its border, which leaves the cube 1.18 × `--pt` less the borders even with the rows
-pressed together. It shows 64 until anyone doubles, because a real cube has no 1, and
-once owned it moves to its owner's end and turns to face them.
+pressed together. It shows the stake as it stands, 1 included: a real cube starts on 64
+because it has no 1, but on screen a 64 read as a stake nobody was playing for. Once
+owned it moves to its owner's end and turns to face them.
 
 ## Points are triangles drawn behind the button
 

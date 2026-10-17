@@ -267,9 +267,9 @@ describe('Board — the doubling cube', () => {
     return screen.getByRole('img', { name: /^videau/ });
   };
 
-  it('shows 64 while nobody has doubled, the face a real cube starts on', () => {
+  it('shows 1 while nobody has doubled, the stake the status line names', () => {
     const cube = cubeFor('white', { value: 1, owner: null });
-    expect(cube.textContent).toBe('64');
+    expect(cube.textContent).toBe('1');
     expect(cube.getAttribute('aria-label')).toBe('videau ×1');
   });
 

@@ -355,8 +355,9 @@ const Tray = ({ label, owner, value, orientation, active, over, onClick }: TrayP
  * The doubling cube, in the middle of the trays' column — off the playing
  * surface, where a real one waits beside the board.
  *
- * It shows 64 until anyone has doubled, because that is the face a real cube is
- * left on at the start: it has no 1. Once someone owns it, it moves to that
+ * It shows the stake as it stands, 1 included. A real cube starts on 64 because
+ * it has no 1, but on screen the 64 read as a stake nobody was playing for, and
+ * the status line beside it says ×1. Once someone owns it, it moves to that
  * player's end of the column and turns to face them — the far side's cube reads
  * upside down from here, which is how a player tells at a glance whose it is
  * without reading anything.
@@ -387,7 +388,7 @@ const Cube = ({ cube, you }: { cube: GameState['cube']; you: Player }) => {
         )}
       >
         <span aria-hidden className="board-label">
-          {cube.value === 1 ? 64 : cube.value}
+          {cube.value}
         </span>
       </div>
     </div>
