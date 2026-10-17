@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.6.0](https://github.com/klbsjpolp/backgammon/compare/v1.5.3...v1.6.0) (2026-10-17)
+
+### Features
+
+* **web:** put borne-off checkers away in the tray instead of counting them ([#100](https://github.com/klbsjpolp/backgammon/issues/100)) ([715d25d](https://github.com/klbsjpolp/backgammon/commit/715d25dd8bf8954a02bf97066cc59b0d93515d4b))
+
 ## [1.5.3](https://github.com/klbsjpolp/backgammon/compare/v1.5.2...v1.5.3) (2026-10-17)
 
 ### Bug Fixes
