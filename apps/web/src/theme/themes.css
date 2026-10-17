@@ -328,6 +328,340 @@
   --die-shade: rgb(63 45 28 / 0.18);
 }
 
+/* --- Casino: burgundy felt and black lacquer, the card room --------------- */
+[data-theme='casino'] {
+  color-scheme: dark;
+
+  --canvas: #140507;
+  --fg: #fbeef0;
+  --muted: #d3a5ad;
+  --heading: #f3c969;
+  --surface: #2a0c12;
+  --surface-soft: #220a0f;
+  --line: #5a2230;
+
+  --accent: #d4a017;
+  --accent-hover: #e8b730;
+  --accent-fg: #1c1206;
+  --info: #3b9ae0;
+  --info-hover: #5cb0ec;
+  --info-fg: #061a2b;
+  --positive: #1f9d63;
+  --positive-hover: #2bb876;
+  --positive-fg: #03170d;
+  --danger: #c8283f;
+  --danger-hover: #a81d31;
+  --danger-fg: #fff1f3;
+  --neutral: #5a3a40;
+  --neutral-hover: #704b52;
+  --neutral-fg: #fbeef0;
+  --disabled: #3a1219;
+  --disabled-fg: #b07f88;
+
+  --info-soft: #0d2638;
+  --info-soft-fg: #bfe1fa;
+  --positive-soft: #0d3324;
+  --positive-soft-fg: #c5f0db;
+  --danger-soft: #4a0f1c;
+  --danger-soft-fg: #ffd9df;
+  --highlight-soft: #3d2a0c;
+
+  --board-frame: #1c1412;
+  --felt: #5c0f1f;
+  --point-even: #7a1a2c;
+  --point-odd: #460b17;
+  --point-line: #2a050d;
+  --point-label: #e0a3ae;
+  --bar: #2a0810;
+  --bar-line: #1f050b;
+  --bar-label: #c98a96;
+  --tray: #33091a;
+  --tray-line: #1f050b;
+  /* The dark checker is the lacquer of the frame and nearly the burgundy's own
+     luminance, so as on Classic the brass rim draws its edge: 4.62 / 7.04. */
+  --checker-light: #f6efe1;
+  --checker-light-fg: #2a0c12;
+  --checker-light-line: #3a1a1a;
+  --checker-dark: #18110f;
+  --checker-dark-fg: #f6efe1;
+  --checker-dark-line: #c9a77a;
+
+  /*
+   * A red felt boxes out a red ring, so the pick family is the gold of the
+   * heading and `--move` is a mid blue — yellow against blue being the one axis
+   * every dichromacy keeps. The blue sits in the only slot a dark red leaves it:
+   * light enough to clear the even point, dark enough to stay 18 L* below
+   * `--pick`. Ratios against even / odd: pick 6.65 / 10.12, pick-strong
+   * 8.59 / 13.09, move 3.90 / 5.94.
+   */
+  --pick: #f3c969;
+  --pick-strong: #fde8a8;
+  --move: #4aa3f5;
+
+  /* Texture: as Classic. The frame is lacquer, so its sheen is a step brighter
+     and its grain a step deeper than Classic's wood. */
+  --felt-warp: rgb(255 255 255 / 0.045);
+  --felt-weft: rgb(0 0 0 / 0.1);
+  --felt-vignette: rgb(0 0 0 / 0.28);
+  --wood-sheen: rgb(255 255 255 / 0.07);
+  --wood-grain: rgb(0 0 0 / 0.12);
+  --checker-sheen: rgb(255 255 255 / 0.22);
+  --checker-shade: rgb(0 0 0 / 0.22);
+  --checker-groove: rgb(0 0 0 / 0.13);
+  --checker-cast: rgb(0 0 0 / 0.38);
+  --die-sheen: rgb(255 255 255 / 0.28);
+  --die-shade: rgb(0 0 0 / 0.2);
+}
+
+/* --- Slate: neutral graphite, nothing on the board but the game ----------- */
+[data-theme='slate'] {
+  color-scheme: dark;
+
+  --canvas: #0e0f11;
+  --fg: #eceef1;
+  --muted: #a2a8b2;
+  --heading: #f2f4f7;
+  --surface: #1b1d21;
+  --surface-soft: #16181b;
+  --line: #343840;
+
+  --accent: #ff7a3d;
+  --accent-hover: #ff9461;
+  --accent-fg: #1a0b04;
+  --info: #4c9bff;
+  --info-hover: #73b2ff;
+  --info-fg: #04152b;
+  --positive: #2fae6e;
+  --positive-hover: #45c482;
+  --positive-fg: #04170d;
+  --danger: #e5484d;
+  --danger-hover: #f06368;
+  --danger-fg: #1f0405;
+  --neutral: #3f434b;
+  --neutral-hover: #50555f;
+  --neutral-fg: #eceef1;
+  --disabled: #23262b;
+  --disabled-fg: #8a9099;
+
+  --info-soft: #11233b;
+  --info-soft-fg: #c4dcfb;
+  --positive-soft: #0f2c1e;
+  --positive-soft-fg: #c6f0d8;
+  --danger-soft: #3b1416;
+  --danger-soft-fg: #ffd8d9;
+  --highlight-soft: #3a2414;
+
+  --board-frame: #3a3d43;
+  --felt: #26292e;
+  --point-even: #363a41;
+  --point-odd: #202327;
+  --point-line: #15171a;
+  --point-label: #a6acb6;
+  --bar: #1a1c20;
+  --bar-line: #121316;
+  --bar-label: #8d939d;
+  --tray: #1d2024;
+  --tray-line: #121316;
+  --checker-light: #f2efe8;
+  --checker-light-fg: #1b1d21;
+  --checker-light-line: #4a4e55;
+  --checker-dark: #0b0c0e;
+  --checker-dark-fg: #f2efe8;
+  --checker-dark-line: #9aa0aa;
+
+  /*
+   * A board with no hue of its own leaves the rings every axis, and the only
+   * colours on it are theirs: orange picks, an azure `--move` placed below them
+   * in lightness. Ratios against even / odd: pick 5.65 / 7.80, pick-strong
+   * 8.23 / 11.37, move 3.41 / 4.71.
+   */
+  --pick: #ffa04d;
+  --pick-strong: #ffd3a8;
+  --move: #3d8cf5;
+
+  /* Texture: as Midnight — the surfaces are as dark, so the shadows need the
+     same extra weight to be seen. */
+  --felt-warp: rgb(255 255 255 / 0.05);
+  --felt-weft: rgb(0 0 0 / 0.13);
+  --felt-vignette: rgb(0 0 0 / 0.3);
+  --wood-sheen: rgb(255 255 255 / 0.06);
+  --wood-grain: rgb(0 0 0 / 0.14);
+  --checker-sheen: rgb(255 255 255 / 0.2);
+  --checker-shade: rgb(0 0 0 / 0.26);
+  --checker-groove: rgb(0 0 0 / 0.16);
+  --checker-cast: rgb(0 0 0 / 0.4);
+  --die-sheen: rgb(255 255 255 / 0.26);
+  --die-shade: rgb(0 0 0 / 0.24);
+}
+
+/* --- Blossom: blush pink and cherry wood, a light board ------------------- */
+[data-theme='blossom'] {
+  color-scheme: light;
+
+  --canvas: #fbf1f2;
+  --fg: #3a1d2a;
+  --muted: #7d5566;
+  --heading: #9c2f5a;
+  --surface: #f3dfe3;
+  --surface-soft: #f7e8eb;
+  --line: #d9b3be;
+
+  --accent: #b8326a;
+  --accent-hover: #962553;
+  --accent-fg: #fff5f8;
+  --info: #0369a1;
+  --info-hover: #075985;
+  --info-fg: #f0f9ff;
+  --positive: #15803d;
+  --positive-hover: #166534;
+  --positive-fg: #f0fdf4;
+  --danger: #b91c1c;
+  --danger-hover: #991b1b;
+  --danger-fg: #fef2f2;
+  --neutral: #8a6574;
+  --neutral-hover: #6f4f5c;
+  --neutral-fg: #fdf6f8;
+  --disabled: #ecd5db;
+  --disabled-fg: #7d5566;
+
+  --info-soft: #d9e7f2;
+  --info-soft-fg: #0b3a56;
+  --positive-soft: #d9ecdc;
+  --positive-soft-fg: #14532d;
+  --danger-soft: #f7d6d6;
+  --danger-soft-fg: #7f1d1d;
+  --highlight-soft: #f5d3dd;
+
+  --board-frame: #6b2f45;
+  --felt: #f2d6dc;
+  --point-even: #ebbcc8;
+  --point-odd: #fbeef1;
+  --point-line: #c08598;
+  --point-label: #6b3a4d;
+  --bar: #e8c4cd;
+  --bar-line: #c08598;
+  --bar-label: #6b3a4d;
+  --tray: #ecccd4;
+  --tray-line: #c08598;
+  /* As on Parchment, the pale checker's body clears neither point and its rim
+     carries the edge alone. */
+  --checker-light: #fffafb;
+  --checker-light-fg: #3a1d2a;
+  --checker-light-line: #6b2f45;
+  --checker-dark: #4a1f33;
+  --checker-dark-fg: #fbeef1;
+  --checker-dark-line: #8f5a70;
+
+  /*
+   * Built the way Parchment is: the rings run darker than the points, `--pick`
+   * at the top of the band, `--pick-strong` a step down, a saturated navy
+   * `--move` at the floor. The pick family is brick rather than the cherry of
+   * the accent, and that is the colour-blind gate speaking: a rose with any
+   * blue in it reads as the navy's neighbour under protanopia (15 ΔE), where a
+   * warm red reads as brown (42). Ratios against even / odd: pick 3.56 / 5.27,
+   * pick-strong 5.15 / 7.62, move 8.00 / 11.84.
+   */
+  --pick: #b8322a;
+  --pick-strong: #8f2420;
+  --move: #0b2a6e;
+
+  /* Texture: as Parchment, with the warm shadow taken toward the cherry. */
+  --felt-warp: rgb(255 250 251 / 0.45);
+  --felt-weft: rgb(107 47 69 / 0.09);
+  --felt-vignette: rgb(107 47 69 / 0.14);
+  --wood-sheen: rgb(255 245 248 / 0.3);
+  --wood-grain: rgb(60 20 35 / 0.14);
+  --checker-sheen: rgb(255 255 255 / 0.3);
+  --checker-shade: rgb(74 31 51 / 0.2);
+  --checker-groove: rgb(74 31 51 / 0.14);
+  --checker-cast: rgb(107 47 69 / 0.28);
+  --die-sheen: rgb(255 255 255 / 0.35);
+  --die-shade: rgb(74 31 51 / 0.18);
+}
+
+/* --- Ink: black on paper, for bright sun and e-ink screens ---------------- */
+[data-theme='ink'] {
+  color-scheme: light;
+
+  --canvas: #f7f7f2;
+  --fg: #111111;
+  --muted: #555552;
+  --heading: #111111;
+  --surface: #ebebe4;
+  --surface-soft: #f1f1eb;
+  --line: #bdbdb3;
+
+  --accent: #111111;
+  --accent-hover: #333333;
+  --accent-fg: #f7f7f2;
+  --info: #1d4ed8;
+  --info-hover: #1e40af;
+  --info-fg: #f5f8ff;
+  --positive: #166534;
+  --positive-hover: #14532d;
+  --positive-fg: #f0fdf4;
+  --danger: #b91c1c;
+  --danger-hover: #991b1b;
+  --danger-fg: #fef2f2;
+  --neutral: #5c5c57;
+  --neutral-hover: #44443f;
+  --neutral-fg: #fafaf6;
+  --disabled: #e3e3dc;
+  --disabled-fg: #666660;
+
+  --info-soft: #dfe6f5;
+  --info-soft-fg: #142f6b;
+  --positive-soft: #dcebdd;
+  --positive-soft-fg: #14532d;
+  --danger-soft: #f5dada;
+  --danger-soft-fg: #7f1d1d;
+  --highlight-soft: #ece6cf;
+
+  --board-frame: #222222;
+  --felt: #f0efe8;
+  --point-even: #d4d3ca;
+  --point-odd: #fbfbf7;
+  --point-line: #8a8a82;
+  --point-label: #3d3d3a;
+  --bar: #e2e1d9;
+  --bar-line: #8a8a82;
+  --bar-label: #3d3d3a;
+  --tray: #e6e5de;
+  --tray-line: #8a8a82;
+  --checker-light: #ffffff;
+  --checker-light-fg: #111111;
+  --checker-light-line: #222222;
+  --checker-dark: #1a1a1a;
+  --checker-dark-fg: #fafafa;
+  --checker-dark-line: #555555;
+
+  /*
+   * The only colour on the page. Vermilion and cobalt rather than two greys,
+   * because greys can only differ in lightness and the gate wants a hue a
+   * dichromat still sees as well. The band is Parchment's — everything below
+   * the even point — and `--point-even` is kept pale (#d4d3ca) to leave it room.
+   * Ratios against even / odd: pick 3.35 / 4.86, pick-strong 4.98 / 7.22,
+   * move 8.16 / 11.83.
+   */
+  --pick: #c7400a;
+  --pick-strong: #9a3010;
+  --move: #0a2a8a;
+
+  /* Texture: barely there. A paper board drawn with Parchment's weave reads as
+     a dirty one, and this theme exists to be read in glare. */
+  --felt-warp: rgb(255 255 255 / 0.5);
+  --felt-weft: rgb(0 0 0 / 0.05);
+  --felt-vignette: rgb(0 0 0 / 0.08);
+  --wood-sheen: rgb(255 255 255 / 0.08);
+  --wood-grain: rgb(0 0 0 / 0.15);
+  --checker-sheen: rgb(255 255 255 / 0.25);
+  --checker-shade: rgb(0 0 0 / 0.15);
+  --checker-groove: rgb(0 0 0 / 0.12);
+  --checker-cast: rgb(0 0 0 / 0.22);
+  --die-sheen: rgb(255 255 255 / 0.3);
+  --die-shade: rgb(0 0 0 / 0.15);
+}
+
 /*
  * The utilities the markup actually uses: `bg-surface`, `text-muted`,
  * `ring-move`, `border-point-line`, … Nothing is emitted globally — `inline`

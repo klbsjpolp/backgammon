@@ -95,8 +95,8 @@ describe('theme switcher', () => {
       within(screen.getByRole('group', { name: group }))
         .getAllByRole('button')
         .map((button) => button.getAttribute('aria-label'));
-    expect(names('Thèmes sombres')).toEqual(['thème Classique', 'thème Minuit']);
-    expect(names('Thèmes clairs')).toEqual(['thème Parchemin']);
+    expect(names('Thèmes sombres')).toEqual(['thème Classique', 'thème Minuit', 'thème Casino', 'thème Ardoise']);
+    expect(names('Thèmes clairs')).toEqual(['thème Parchemin', 'thème Cerisier', 'thème Encre']);
   });
 
   it('draws each swatch in the theme it selects, not the active one', () => {
@@ -109,7 +109,11 @@ describe('theme switcher', () => {
     expect(previews.map((preview) => preview?.getAttribute('data-theme'))).toEqual([
       'classic',
       'midnight',
+      'casino',
+      'slate',
       'parchment',
+      'blossom',
+      'ink',
     ]);
   });
 
