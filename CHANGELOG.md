@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.5.3](https://github.com/klbsjpolp/backgammon/compare/v1.5.2...v1.5.3) (2026-10-17)
+
+### Bug Fixes
+
+* **web:** say when your tray is where the held checker can go ([#98](https://github.com/klbsjpolp/backgammon/issues/98)) ([f0813cb](https://github.com/klbsjpolp/backgammon/commit/f0813cb79f92d838bc94db56d9a263f07477b8c2))
+
 ## [1.5.2](https://github.com/klbsjpolp/backgammon/compare/v1.5.1...v1.5.2) (2026-10-17)
 
 ### Bug Fixes
