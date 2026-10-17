@@ -154,7 +154,12 @@ body {
   --spacing-board-checker: min(calc(var(--pt) * 0.85), calc(var(--pt) - 4px));
   --spacing-board-bar: calc(var(--pt) * 1.15);
   --spacing-board-tray: calc(var(--pt) * 1.6);
-  --spacing-board-tray-depth: calc(var(--pt) * 1.75);
+  /*
+   * A checker on edge in the tray. Fifteen of them and the gaps between come to
+   * 3.42 × --pt, which leaves a full tray inside a point's depth with its padding.
+   */
+  --spacing-board-slice: calc(var(--pt) * 0.2);
+  --spacing-board-tray-pad: calc(var(--pt) * 0.1);
   --spacing-board-gutter: calc(var(--pt) * 0.12);
   --spacing-board-stack: calc(var(--pt) * 0.03);
   --spacing-board-pad: calc(var(--pt) * 0.25);
@@ -182,7 +187,6 @@ body {
   /* Floored, or the point numbers stop being legible on a small phone. */
   --text-board-label: max(0.5rem, calc(var(--pt) * 0.22));
   --text-board-checker: calc(var(--pt) * 0.3);
-  --text-board-count: calc(var(--pt) * 0.55);
 }
 
 /*
@@ -405,6 +409,21 @@ body {
 }
 
 /*
+ * The same checker seen on edge, in the tray: its rim lit along its length, a
+ * cylinder rather than a disc. The rim (`ring-1`) stays, for the same 3:1.
+ */
+.board-slice {
+  background-image: linear-gradient(
+    90deg,
+    var(--checker-shade) 0%,
+    var(--checker-sheen) 30%,
+    transparent 55%,
+    var(--checker-shade) 100%
+  );
+  filter: drop-shadow(0 1px 0.5px var(--checker-cast));
+}
+
+/*
  * The die's bevel. An `<svg>` has no `background-image` to pour a gradient into,
  * so the gradient is declared in the markup and only its stops are coloured from
  * here — which keeps `Dice.tsx` free of anything the theme layer owns, like
@@ -465,11 +484,13 @@ body {
   .board-point,
   .board-bar,
   .board-tray,
-  .board-checker {
+  .board-checker,
+  .board-slice {
     background-image: none;
   }
 
-  .board-checker {
+  .board-checker,
+  .board-slice {
     filter: none;
   }
 

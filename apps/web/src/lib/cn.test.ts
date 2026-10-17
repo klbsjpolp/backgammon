@@ -15,8 +15,8 @@ describe('cn', () => {
 
   it('still collapses conflicting text colours and conflicting board sizes', () => {
     expect(cn('text-stone-100', 'text-stone-900')).toBe('text-stone-900');
-    expect(cn('text-board-label', 'text-board-count')).toBe('text-board-count');
-    expect(cn('text-sm', 'text-board-count')).toBe('text-board-count');
+    expect(cn('text-board-label', 'text-board-checker')).toBe('text-board-checker');
+    expect(cn('text-sm', 'text-board-checker')).toBe('text-board-checker');
   });
 
   it('leaves the board spacing keys alone — they cannot be mistaken for a colour', () => {

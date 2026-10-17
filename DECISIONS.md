@@ -385,9 +385,30 @@ checker moving — the opening position, a board that jumped because a relayed f
 went missing — describes nothing and simply appears, which is what the board did
 before any of this.
 
-Bearing off is the one move with no checker to stand in for, because a tray draws a
-number. It gets one drawn from scratch, which shrinks away on arrival instead of
-landing on a checker that is not there.
+Bearing off used to be the one move with no checker to land on, because a tray drew a
+number, and its stand-in shrank away on arrival. The tray now holds the checkers
+themselves — see below — so it lands like any other, on the slice it becomes. The
+stand-in is still drawn from scratch rather than copied, since a slice is no shape to
+fly a checker in, and it is squashed onto the slice's measured rect on the way down.
+
+## Checkers put away, not counted
+
+A tray that read "12" asked the player to do arithmetic the board could have done for
+them: how close a race is, a real board says by how full the trays are. So a checker
+borne off stays a checker, put away on edge the way it is in a real board's tray.
+
+On edge is not decoration. Fifteen checkers have to fit in a square a point and a half
+wide, and lying flat they would need more than three times the depth a point has;
+on edge, a slice a fifth of a point thick, fifteen and their gaps come to 3.42 × `--pt`.
+That still did not fit the tray as it was, 1.75 deep, so the tray took a point's depth.
+That height was free: the two trays already sat in a column as tall as both point
+rows, at either end of it with nothing between, so no other part of the board paid
+for it.
+
+The stack is a pile like a point's, pinned at the frame's edge and growing inwards,
+which is what lets a flight find the checker it is landing on. What it costs is the
+count on screen, which is now only in the tray's accessible name — a sighted player
+counting fifteen slivers is not the case the tray is drawn for.
 
 ## Checkers you can pick up
 
