@@ -64,7 +64,8 @@ export const ThemeSwitcher = () => {
         ref={triggerRef}
         type="button"
         onClick={() => setOpen((o) => !o)}
-        aria-haspopup="true"
+        // No `aria-haspopup`: its `true` means "opens a menu", and this panel is a
+        // disclosure of ordinary buttons with no menu keyboard model behind it.
         aria-expanded={open}
         aria-controls={panelId}
         aria-label={`Thème : ${current?.label ?? ''}`}
