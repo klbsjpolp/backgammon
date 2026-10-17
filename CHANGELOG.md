@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.7.0](https://github.com/klbsjpolp/backgammon/compare/v1.6.0...v1.7.0) (2026-10-17)
+
+### Features
+
+* **web:** pick the theme from a panel, and add four themes ([#101](https://github.com/klbsjpolp/backgammon/issues/101)) ([dc12dc4](https://github.com/klbsjpolp/backgammon/commit/dc12dc41ff5c7248c587a1fd023c6db024fbd167))
+
 ## [1.6.0](https://github.com/klbsjpolp/backgammon/compare/v1.5.3...v1.6.0) (2026-10-17)
 
 ### Features
