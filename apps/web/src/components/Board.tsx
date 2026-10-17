@@ -232,15 +232,41 @@ const Point = ({
       data-drag-source={selectable || selected ? '' : undefined}
       className={cn(
         'board-point flex h-board-depth w-board-point flex-col items-center gap-board-stack rounded-md',
-        'border border-point-line px-px py-board-point-pad transition',
+        'px-px py-board-point-pad transition',
         orientation === 'bottom' && 'flex-col-reverse justify-start',
-        index % 2 === 0 ? 'bg-point-even' : 'bg-point-odd',
-        selectable && ['cursor-grab ring-2 ring-pick', HOVER_LIFT, PRESSED],
-        selected && ['ring-2 ring-pick-strong', LIFT, PRESSED],
-        target && ['cursor-pointer ring-2 ring-move', HOVER_LIFT, PRESSED],
-        over && ['ring-4 ring-move', LIFT],
+        selectable && ['cursor-grab', HOVER_LIFT, PRESSED],
+        selected && [LIFT, PRESSED],
+        target && ['cursor-pointer', HOVER_LIFT, PRESSED],
+        over && LIFT,
       )}
     >
+      {/*
+       * The triangle is drawn behind the button rather than being its shape: the
+       * button stays the whole column, so a checker stacked past the narrowing
+       * tip, or a tap beside it, still lands on the point it belongs to. A
+       * `clip-path` on the button would have cut its hit area down to the tip.
+       *
+       * The state is said by the triangle's own edge, where it used to be a ring
+       * around the column. A ring is a `box-shadow`, so it can only draw a
+       * rectangle, and a rectangle round a triangle points at the felt either
+       * side of it. The edge is an SVG stroke so it keeps one width down the
+       * slanted sides, which an inset second triangle cannot — its sides come out
+       * a fraction of the base's thickness.
+       */}
+      <span aria-hidden className={cn('board-point-fill', index % 2 === 0 ? 'bg-point-even' : 'bg-point-odd')} />
+      <svg aria-hidden className="board-point-edge" viewBox="0 0 100 100" preserveAspectRatio="none">
+        <polygon
+          points={orientation === 'top' ? '0,0 100,0 50,100' : '0,100 100,100 50,0'}
+          vectorEffect="non-scaling-stroke"
+          className={cn(
+            'fill-none stroke-point-line stroke-1',
+            selectable && 'stroke-pick stroke-2',
+            selected && 'stroke-pick-strong stroke-2',
+            target && 'stroke-move stroke-2',
+            over && 'stroke-move stroke-[4]',
+          )}
+        />
+      </svg>
       <span aria-hidden className="board-label text-board-label leading-none text-point-label">
         {number}
       </span>
@@ -301,8 +327,8 @@ const Tray = ({ label, owner, value, orientation, active, over, onClick }: TrayP
       aria-disabled={onClick && !active ? true : undefined}
       tabIndex={onClick && !active ? -1 : undefined}
       className={cn(
-        'board-tray flex h-board-depth w-board-tray flex-col items-center',
-        'rounded-md border border-tray-line bg-tray py-board-tray-pad',
+        'board-tray flex h-board-tray-depth w-full flex-col items-center',
+        'rounded-md border border-tray-line bg-tray py-board-tray-pad shadow-tray',
         orientation === 'bottom' && 'flex-col-reverse',
         active && ['cursor-pointer ring-2 ring-move', HOVER_LIFT, PRESSED],
         over && ['ring-4 ring-move', LIFT],
@@ -322,6 +348,49 @@ const Tray = ({ label, owner, value, orientation, active, over, onClick }: TrayP
         ))}
       </div>
     </button>
+  );
+};
+
+/**
+ * The doubling cube, in the middle of the trays' column — off the playing
+ * surface, where a real one waits beside the board.
+ *
+ * It shows 64 until anyone has doubled, because that is the face a real cube is
+ * left on at the start: it has no 1. Once someone owns it, it moves to that
+ * player's end of the column and turns to face them — the far side's cube reads
+ * upside down from here, which is how a player tells at a glance whose it is
+ * without reading anything.
+ *
+ * It is a picture of what the status line already says, so it says it once more
+ * as an image rather than as a control: there is nothing to press here, doubling
+ * is a button.
+ */
+const Cube = ({ cube, you }: { cube: GameState['cube']; you: Player }) => {
+  const label = `videau ×${cube.value}${cube.owner ? `, à ${cube.owner === you ? 'vous' : 'l’adversaire'}` : ''}`;
+  return (
+    <div
+      className={cn(
+        'flex flex-1 items-center justify-center py-board-gutter',
+        cube.owner === you && 'items-end',
+        cube.owner && cube.owner !== you && 'items-start',
+      )}
+    >
+      <div
+        role="img"
+        aria-label={label}
+        data-cube={cube.value}
+        data-cube-owner={cube.owner ?? 'none'}
+        className={cn(
+          'board-cube flex size-board-cube items-center justify-center rounded-sm ring-1',
+          'bg-checker-light text-board-cube leading-none font-bold text-checker-light-fg ring-checker-light-line',
+          cube.owner && cube.owner !== you && 'rotate-180',
+        )}
+      >
+        <span aria-hidden className="board-label">
+          {cube.value === 1 ? 64 : cube.value}
+        </span>
+      </div>
+    </div>
   );
 };
 
@@ -744,9 +813,17 @@ export const Board = ({ controller }: { controller: BoardController }) => {
             {diceHalf === 'right' && <BoardDice state={state} previous={previous} />}
           </div>
 
-          {/* The near tray is always this client's, so either color can bear off. */}
-          <div className="flex flex-col justify-between gap-board-gutter">
+          {/*
+           * The near tray is always this client's, so either color can bear off.
+           *
+           * The trays are hollows in one piece of furniture the board's full height,
+           * framed the way the bar is. Two free-standing trays the size and grain of
+           * a point read as a thirteenth point at each end of the row, and nothing
+           * said they were outside the game.
+           */}
+          <div className="board-bar flex w-board-tray flex-col items-stretch justify-between self-stretch rounded-md border border-bar-line bg-bar">
             <Tray label={`${SIDE_PLURAL[them]} sortis`} owner={them} value={board.off[them]} orientation="top" />
+            <Cube cube={state.cube} you={you} />
             <Tray
               label={`${SIDE_PLURAL[you]} sortis`}
               owner={you}

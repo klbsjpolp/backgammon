@@ -15,7 +15,7 @@ import { extendTailwindMerge } from 'tailwind-merge';
 const twMerge = extendTailwindMerge({
   extend: {
     classGroups: {
-      'font-size': [{ text: ['board-checker', 'board-label'] }],
+      'font-size': [{ text: ['board-checker', 'board-cube', 'board-label'] }],
     },
   },
 });

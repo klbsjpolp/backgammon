@@ -416,6 +416,33 @@ which is what lets a flight find the checker it is landing on. What it costs is 
 count on screen, which is now only in the tray's accessible name — a sighted player
 counting fifteen slivers is not the case the tray is drawn for.
 
+The trays later gave some of that depth back, to the doubling cube. Two free-standing
+trays a point wide, a point deep and in the same grain read as a thirteenth point at each
+end of the row, so they became hollows in one framed column the board's full height, the
+way the bar is, with an inset shadow under the upper lip to say they are cut in. The
+middle of that column is where the cube waits, off the playing surface where a real one
+sits — and a full-depth tray at each end left it 0.12 × `--pt`. The slice went from a
+fifth of a point to 0.18 and the tray was cut to exactly fifteen of them, its padding and
+its border, which leaves the cube 1.18 × `--pt` less the borders even with the rows
+pressed together. It shows 64 until anyone doubles, because a real cube has no 1, and
+once owned it moves to its owner's end and turns to face them.
+
+## Points are triangles drawn behind the button
+
+The points were rounded rectangles, which made the board read as a grid of keys. They are
+triangles now, but the triangle is a layer behind the button rather than the button's own
+shape: a `clip-path` on the button would have cut its hit area down to the tip, and a
+checker stacked past where the point narrows, or a tap beside it, has to land on the point
+it belongs to. The button stays the whole column and paints nothing of its own.
+
+That moved the state signals onto the triangle's edge. The rings were `box-shadow`s, which
+can only draw a rectangle, and a rectangle round a triangle mostly outlines felt. The edge
+is an SVG stroke with `vector-effect: non-scaling-stroke`, because the viewBox is stretched
+to the point and a stroke that scaled with it would be thick at the base and hairline down
+the sides — the same failure an inset second triangle has, whose sides come out a fraction
+of the base's thickness. The colours are the ring colours, so `contrast.test.ts` measures
+what it measured before.
+
 ## Checkers you can pick up
 
 Click the checker, then click where it goes, was the whole of it. It is precise, and
@@ -975,6 +1002,12 @@ Three things had to be true of that band, and each was found by getting it wrong
 to 10.7 because the board itself is taller. The band's own floor is `max(3.5rem, 2.1 × --pt)`:
 the multiple is what pays for it on a real fullscreen screen, and the 3.5rem is there so a
 short window still gets a band a 44px button fits in.
+
+The band is one row deep, and the one state that needed two was the end of a game: the
+result with "Nouvelle partie" stacked under it, centred in the band, spilled under the dice
+above and over the points below. Growing the band for it would have moved the whole board
+at the moment the game ended. The roll and double buttons have nothing left to do by then,
+so in fullscreen the button takes their half and the result keeps its own.
 
 ### What a relocation costs, and the one case where that mattered
 
