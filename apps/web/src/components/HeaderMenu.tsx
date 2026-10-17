@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useId, useLayoutEffect, useState } from 'react';
 import type { HeaderSlot } from '@/headerSlot';
 import { cn } from '@/lib/cn';
+import { useDisclosure } from '@/useDisclosure';
 
 /**
  * Three dots, drawn rather than borrowed from a font — see `FullscreenIcon` for
@@ -38,9 +39,8 @@ interface HeaderMenuProps {
  * navigate with arrow keys.
  */
 export const HeaderMenu = ({ hasAction, onSlotChange }: HeaderMenuProps) => {
-  const [open, setOpen] = useState(false);
   const [node, setNode] = useState<HTMLElement | null>(null);
-  const triggerRef = useRef<HTMLButtonElement>(null);
+  const { open, setOpen, triggerRef } = useDisclosure(node);
   const panelId = useId();
 
   /*
@@ -72,7 +72,7 @@ export const HeaderMenu = ({ hasAction, onSlotChange }: HeaderMenuProps) => {
   const closeMenu = useCallback(() => {
     triggerRef.current?.focus();
     setOpen(false);
-  }, []);
+  }, [setOpen, triggerRef]);
 
   /*
    * `useLayoutEffect`, not `useEffect`: `node` itself is only known once the
@@ -89,40 +89,6 @@ export const HeaderMenu = ({ hasAction, onSlotChange }: HeaderMenuProps) => {
     // it would re-run this for no reason every time `App` re-renders.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [node, closeMenu]);
-
-  useEffect(() => {
-    if (!open) return;
-
-    const onPointerDown = (e: MouseEvent) => {
-      const target = e.target as Node;
-      if (triggerRef.current?.contains(target) || node?.contains(target)) return;
-      setOpen(false);
-    };
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false);
-    };
-
-    document.addEventListener('mousedown', onPointerDown);
-    document.addEventListener('keydown', onKeyDown);
-    return () => {
-      document.removeEventListener('mousedown', onPointerDown);
-      document.removeEventListener('keydown', onKeyDown);
-    };
-  }, [open, node]);
-
-  useEffect(() => {
-    if (!node) return;
-    if (open) {
-      node.querySelector<HTMLButtonElement>('button')?.focus();
-      return;
-    }
-    // A close that came from clicking some other control (the theme switch, the
-    // mode toggle) already moved focus where the player put it — pulling it back
-    // to this trigger a moment later would fight that click. Only a close that
-    // leaves the panel itself focused (Escape, or the confirmed action) hands
-    // focus back here.
-    if (node.contains(document.activeElement)) triggerRef.current?.focus();
-  }, [open, node]);
 
   if (!hasAction) return null;
 
