@@ -16,6 +16,7 @@ import {
   type Player,
 } from '@backgammon/core';
 import { NO_PLAY_HOLD_MS, pendingNoPlay } from '@/lib/noPlay';
+import { loadSavedGame, saveGame } from '@/lib/savedGame';
 import { useAutoRoll } from '@/useAutoRoll';
 import { useCheckerSelection } from '@/useCheckerSelection';
 
@@ -61,8 +62,23 @@ export interface LocalGame {
 }
 
 export const useLocalGame = (): LocalGame => {
-  const [state, setState] = useState<GameState>(() => createInitialState(HUMAN));
+  const [state, setState] = useState<GameState>(() => loadSavedGame() ?? createInitialState(HUMAN));
   const [autoRoll, setAutoRoll] = useState(false);
+
+  /*
+   * Every change, the finished game included. The game used to live only in this
+   * hook's state, so anything that unmounted the panel threw it away without a
+   * word: switching to "En ligne" and back, a reload, or iOS evicting an
+   * installed app in the background — a mode switch is the one of those a
+   * confirmation could have caught, and the other two are not ours to intercept.
+   * A finished game is kept for the same reason a running one is: coming back
+   * to the result is what the player last saw, and "Nouvelle partie" stands
+   * right next to it.
+   *
+   * The selection is not saved. A checker in hand is half a gesture, and
+   * restoring it would hand back a ring with no pointer behind it.
+   */
+  useEffect(() => saveGame(state), [state]);
 
   const isHumanTurn = state.turn === HUMAN;
 

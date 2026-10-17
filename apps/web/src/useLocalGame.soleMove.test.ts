@@ -18,6 +18,8 @@ const { useLocalGame } = await import('./useLocalGame');
 
 describe('useLocalGame — a point with one move', () => {
   beforeEach(() => {
+    // The hook saves every state, and the next test would otherwise resume it.
+    localStorage.clear();
     vi.useFakeTimers();
   });
 
