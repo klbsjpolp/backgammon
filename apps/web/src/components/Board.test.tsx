@@ -298,6 +298,16 @@ describe('Board — what it says out loud', () => {
     expect(idle.getAttribute('tabindex')).toBe('-1');
   });
 
+  it('puts the checkers borne off away in the tray rather than counting them', () => {
+    const state = bearingOffState('white');
+    const { container } = render(<Board controller={controllerFor('white', { state })} />);
+
+    const tray = screen.getByRole('button', { name: /blancs sortis, 12 sur 15/i });
+    expect(tray.querySelectorAll('[data-pile="off-white"] > *')).toHaveLength(12);
+    expect(container.querySelectorAll('[data-pile="off-black"] > *')).toHaveLength(state.board.off.black);
+    expect(tray.textContent).toBe('');
+  });
+
   it('counts the bar and the trays in their names', () => {
     const state = bearingOffState('white');
     render(

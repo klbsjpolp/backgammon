@@ -14,7 +14,7 @@ import {
 } from '@backgammon/core';
 import { cn } from '@/lib/cn';
 import { SIDE, SIDE_PLURAL } from '@/lib/french';
-import { barPile, describeMotions, offPile, pointPile, type CheckerMotion, type PileId } from '@/lib/boardDiff';
+import { barPile, describeMotions, offPile, pointPile, type PileId } from '@/lib/boardDiff';
 import { outerChecker } from '@/lib/checkerStack';
 import { centreOf, flyChecker, FLIGHT_MS, HIT_DELAY_MS, HIT_FLIGHT_MS, type StopFlight } from '@/lib/checkerFlight';
 import { useBoardBand } from '@/boardBand';
@@ -259,48 +259,71 @@ interface TrayProps {
   /** Whose tray, so a checker borne off knows which one to fly to. */
   owner: Player;
   value: number;
+  /** Which end of the board the tray sits at: its checkers are stacked from the frame's edge inwards. */
+  orientation: 'top' | 'bottom';
   active?: boolean;
   /** A dragged checker is over this tray and would bear off here. */
   over?: boolean;
   onClick?: () => void;
 }
 
-const Tray = ({ label, owner, value, active, over, onClick }: TrayProps) => (
-  <button
-    type="button"
-    onClick={onClick}
-    disabled={!onClick}
-    data-tray={owner}
-    // The opponent's tray is a square of the board a drag can be let go over, and
-    // one nothing can ever land on. Saying so is what stops a release there from
-    // reaching past it to the nearest point that *is* a destination.
-    data-drop-zone={onClick ? OFF : 'none'}
-    // The count and the caption are two elements, so the default accessible name
-    // comes out as the bare "12 blancs sortis"; spelling it out says what the
-    // number counts and what is left to bear off.
-    //
-    // Your own tray is a destination exactly when bearing off is, and it has to
-    // say so the way the points do: a screen reader holding a checker otherwise
-    // hears "destination possible" on every point but the one it is looking for,
-    // and a Tab walk reaches the tray on every turn of the game whether or not
-    // anything can land there.
-    aria-label={`${label}, ${value} sur ${CHECKERS_PER_SIDE}${active ? ', destination possible du pion tenu' : ''}`}
-    aria-disabled={onClick && !active ? true : undefined}
-    tabIndex={onClick && !active ? -1 : undefined}
-    className={cn(
-      'board-tray flex h-board-tray-depth w-board-tray flex-col items-center justify-center',
-      'rounded-md border border-tray-line bg-tray text-tray-fg',
-      active && ['cursor-pointer ring-2 ring-move', HOVER_LIFT, PRESSED],
-      over && ['ring-4 ring-move', LIFT],
-    )}
-  >
-    {/* One block so the count and its caption turn back upright together. */}
-    <div className="board-label flex flex-col items-center gap-0.5">
-      <span className="text-board-count leading-none font-bold">{value}</span>
-      <span className="text-board-label leading-none tracking-wide text-tray-label uppercase">{label}</span>
-    </div>
-  </button>
-);
+/**
+ * Checkers borne off are put away, not counted: they stand on edge in the tray the
+ * way they do in a real board's, each one a slice as wide as a checker. On edge is
+ * the only way fifteen fit in a tray a point wide — and a tray that
+ * fills up says how close the race is at a glance, which a number never did.
+ *
+ * The stack is a pile like any point's (`data-pile`, `data-arrives`), so a checker
+ * borne off has a real one to land on, and it grows from the frame's edge inwards
+ * for the same reason a point's does.
+ */
+const Tray = ({ label, owner, value, orientation, active, over, onClick }: TrayProps) => {
+  const arrivesAt = orientation === 'bottom' ? 'first' : 'last';
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={!onClick}
+      data-tray={owner}
+      // The opponent's tray is a square of the board a drag can be let go over, and
+      // one nothing can ever land on. Saying so is what stops a release there from
+      // reaching past it to the nearest point that *is* a destination.
+      data-drop-zone={onClick ? OFF : 'none'}
+      // The slices are only paint: the name is what says how many are out and what
+      // is left to bear off.
+      //
+      // Your own tray is a destination exactly when bearing off is, and it has to
+      // say so the way the points do: a screen reader holding a checker otherwise
+      // hears "destination possible" on every point but the one it is looking for,
+      // and a Tab walk reaches the tray on every turn of the game whether or not
+      // anything can land there.
+      aria-label={`${label}, ${value} sur ${CHECKERS_PER_SIDE}${active ? ', destination possible du pion tenu' : ''}`}
+      aria-disabled={onClick && !active ? true : undefined}
+      tabIndex={onClick && !active ? -1 : undefined}
+      className={cn(
+        'board-tray flex h-board-depth w-board-tray flex-col items-center',
+        'rounded-md border border-tray-line bg-tray py-board-tray-pad',
+        orientation === 'bottom' && 'flex-col-reverse',
+        active && ['cursor-pointer ring-2 ring-move', HOVER_LIFT, PRESSED],
+        over && ['ring-4 ring-move', LIFT],
+      )}
+    >
+      <div
+        aria-hidden
+        className="flex flex-col items-center gap-board-stack"
+        data-pile={offPile(owner)}
+        data-arrives={arrivesAt}
+      >
+        {Array.from({ length: value }).map((_, i) => (
+          <div
+            key={i}
+            className={cn('board-slice h-board-slice w-board-checker rounded-sm ring-1', checkerColor(owner))}
+          />
+        ))}
+      </div>
+    </button>
+  );
+};
 
 interface BarProps {
   /** Signed count shown on the far side of the bar (the opponent's checkers). */
@@ -410,11 +433,12 @@ const DragGhost = ({ drag }: { drag: CheckerDrag }) =>
 
 /**
  * What actually crosses the screen. A copy of the checker that landed is exact —
- * same size, same rim, same count label if the stack is a deep one — and bearing
- * off, which has no landed checker to copy, gets one drawn from scratch.
+ * same size, same rim, same count label if the stack is a deep one. A checker
+ * borne off lands as a slice on edge, which is no shape to fly a checker in, so it
+ * gets one drawn from scratch that turns onto its edge as it drops into the tray.
  */
-const standInFor = (player: Player, arrival: HTMLElement | null): HTMLElement => {
-  if (arrival) {
+const standInFor = (player: Player, arrival: HTMLElement, pile: PileId): HTMLElement => {
+  if (pile !== offPile(player)) {
     const copy = arrival.cloneNode(true) as HTMLElement;
     // The checker going home after a drag is still marked lifted when it is copied.
     copy.classList.remove('invisible');
@@ -429,10 +453,6 @@ const standInFor = (player: Player, arrival: HTMLElement | null): HTMLElement =>
   drawn.className = cn('board-checker rounded-full ring-1', checkerColor(player));
   return drawn;
 };
-
-/** Where a checker borne off is headed: its owner's tray, and only its owner's. */
-const trayFor = (root: HTMLElement, motion: CheckerMotion): HTMLElement | null =>
-  motion.to === offPile(motion.player) ? root.querySelector(`[data-tray="${motion.player}"]`) : null;
 
 /** Rects taken one commit ago only mean anything if the board is still where it was. */
 const stillThere = (before: DOMRect, now: DOMRect): boolean =>
@@ -496,13 +516,14 @@ const useCheckerFlights = (
       if (!origin) continue;
 
       const arrival = arrivalOn(root, motion.to);
-      const destination = arrival ?? trayFor(root, motion);
-      if (!destination) continue;
+      if (!arrival) continue;
+      const landing = arrival.getBoundingClientRect();
 
-      const stop = flyChecker(standInFor(motion.player, arrival), {
+      const stop = flyChecker(standInFor(motion.player, arrival, motion.to), {
         from: origin,
-        to: centreOf(destination.getBoundingClientRect()),
+        to: centreOf(landing),
         arrival,
+        ...(motion.to === offPile(motion.player) && { landsAs: landing }),
         ...(motion.kind === 'hit' ? { duration: HIT_FLIGHT_MS, delay: HIT_DELAY_MS } : { duration: FLIGHT_MS }),
       });
       if (stop) flying.push(stop);
@@ -545,7 +566,7 @@ const useReturnFlight = (rootRef: RefObject<HTMLDivElement | null>, board: Board
       const root = rootRef.current;
       const home = root && arrivalOn(root, pile);
       if (!home) return;
-      returning.current = flyChecker(standInFor(you, home), {
+      returning.current = flyChecker(standInFor(you, home, pile), {
         from: rect,
         to: centreOf(home.getBoundingClientRect()),
         arrival: home,
@@ -725,11 +746,12 @@ export const Board = ({ controller }: { controller: BoardController }) => {
 
           {/* The near tray is always this client's, so either color can bear off. */}
           <div className="flex flex-col justify-between gap-board-gutter">
-            <Tray label={`${SIDE_PLURAL[them]} sortis`} owner={them} value={board.off[them]} />
+            <Tray label={`${SIDE_PLURAL[them]} sortis`} owner={them} value={board.off[them]} orientation="top" />
             <Tray
               label={`${SIDE_PLURAL[you]} sortis`}
               owner={you}
               value={board.off[you]}
+              orientation="bottom"
               active={targets.includes(OFF)}
               over={drag?.over === OFF}
               onClick={() => click(OFF)}

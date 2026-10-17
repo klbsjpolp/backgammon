@@ -78,8 +78,6 @@
   --bar-label: #5fa48d;
   --tray: #04241b;
   --tray-line: #022c22;
-  --tray-fg: #d1fae5;
-  --tray-label: #57a487;
   /*
    * The dark checker is nearly the felt's own luminance (2.66 on the light point,
    * 1.61 on the dark one), so as with the pale checker on Parchment its rim is
@@ -177,8 +175,6 @@
   --bar-label: #7f8ab5;
   --tray: #101731;
   --tray-line: #0a0f20;
-  --tray-fg: #e6e9f5;
-  --tray-label: #8b95bd;
   /* Same as Classic, and more so — the dark checker is 1.35 / 1.16 against the
      points here, so the rim is the whole edge: 4.59 / 5.36. */
   --checker-light: #dfe4fb;
@@ -267,8 +263,6 @@
   --bar-label: #6b5334;
   --tray: #dcc79e;
   --tray-line: #b08b57;
-  --tray-fg: #3b2a18;
-  --tray-label: #7a6244;
   /*
    * The pale checker's body clears neither point here (2.02 on the dark point,
    * 1.23 on the light one), so unlike the dark themes its rim is what draws the
@@ -386,8 +380,6 @@
   --color-bar-label: var(--bar-label);
   --color-tray: var(--tray);
   --color-tray-line: var(--tray-line);
-  --color-tray-fg: var(--tray-fg);
-  --color-tray-label: var(--tray-label);
   --color-checker-light: var(--checker-light);
   --color-checker-light-fg: var(--checker-light-fg);
   --color-checker-light-line: var(--checker-light-line);

@@ -168,22 +168,24 @@ describe('checker flights', () => {
     expect(hiddenPiles().sort()).toEqual(['bar-black', 'point-8']);
   });
 
-  it('flies a drawn checker to the tray when one is borne off', () => {
+  it('flies a drawn checker into the tray when one is borne off, and lands it on edge', () => {
     const before = boardOf({ 2: 3 }, { off: { white: 12, black: 0 } });
     const { rerender } = render(<Board controller={controllerFor(before)} />);
     rerender(<Board controller={controllerFor(boardOf({ 2: 2 }, { off: { white: 13, black: 0 } }))} />);
 
     expect(flights).toHaveLength(1);
-    // A tray draws a number, so there is no checker to copy and none to uncover:
-    // the stand-in is drawn from scratch and shrinks away on arrival.
+    // The tray holds a slice, which is no shape to fly a checker in: the stand-in
+    // is drawn from scratch and squashed onto the slice as it lands.
     const drawn = flights[0].element;
     expect(drawn.parentElement).toBe(document.body);
     // Colour *and* moulding: a checker that loses its texture on the way to the
     // tray is a different object arriving than the one that left.
     expect(drawn.className).toContain('bg-checker-light');
     expect(drawn.className).toContain('board-checker');
-    expect(flights[0].keyframes[1].transform).toContain('scale(0.55)');
-    expect(flights[0].keyframes[1].opacity).toBe('0');
+    expect(flights[0].keyframes[1].transform).toContain('scale(');
+    // The slice it lands on stays hidden until it gets there.
+    expect(hiddenPiles()).toEqual(['off-white']);
+    settle(flights[0]);
     expect(hiddenPiles()).toEqual([]);
   });
 

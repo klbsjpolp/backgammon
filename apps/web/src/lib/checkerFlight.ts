@@ -72,11 +72,14 @@ export interface Flight {
   from: Rect;
   /** Screen point it is heading for. */
   to: Spot;
+  /** The checker now standing at the destination, hidden while its stand-in is in the air. */
+  arrival: HTMLElement;
   /**
-   * The checker now standing at the destination, hidden while its stand-in is in
-   * the air. `null` when there is none to hide: a tray draws a number, not a stack.
+   * The shape it comes down in, when that is not the shape it left in: a checker
+   * borne off is put away on edge, and squashing the stand-in onto the slice's
+   * rect on the way is what makes it the same object arriving.
    */
-  arrival: HTMLElement | null;
+  landsAs?: Rect;
   duration?: number;
   delay?: number;
 }
@@ -89,7 +92,7 @@ export type StopFlight = () => void;
  * nothing moved — which is what a player who asked for no motion gets.
  */
 export const flyChecker = (flyer: HTMLElement, flight: Flight): StopFlight | null => {
-  const { from, to, arrival } = flight;
+  const { from, to, arrival, landsAs } = flight;
   if (!canAnimate(flyer)) return null;
 
   const start = centreOf(from);
@@ -110,26 +113,20 @@ export const flyChecker = (flyer: HTMLElement, flight: Flight): StopFlight | nul
   flyer.setAttribute('aria-hidden', 'true');
   document.body.append(flyer);
 
-  const hidden = arrival?.style.visibility ?? '';
-  if (arrival) arrival.style.visibility = 'hidden';
+  const hidden = arrival.style.visibility;
+  arrival.style.visibility = 'hidden';
 
-  // Bearing off ends on a tray with a number on it: there is nothing to uncover,
-  // so the stand-in shrinks away rather than landing on a checker that isn't there.
-  const lands = arrival !== null;
-  const animation = flyer.animate(
-    [
-      { transform: 'none', opacity: '1' },
-      { transform: `translate(${dx}px, ${dy}px)${lands ? '' : ' scale(0.55)'}`, opacity: lands ? '1' : '0' },
-    ],
-    {
-      duration: flight.duration ?? FLIGHT_MS,
-      delay: flight.delay ?? 0,
-      easing: TRAVEL,
-      // A delayed flight has to already be at its origin while it waits, or the
-      // checker shows up at the destination and then jumps back to the start.
-      fill: 'backwards',
-    },
-  );
+  // Measured on screen, so a slice that the portrait board turned upright is
+  // squashed the right way without anyone here knowing the board was turned.
+  const reshape = landsAs ? ` scale(${landsAs.width / from.width}, ${landsAs.height / from.height})` : '';
+  const animation = flyer.animate([{ transform: 'none' }, { transform: `translate(${dx}px, ${dy}px)${reshape}` }], {
+    duration: flight.duration ?? FLIGHT_MS,
+    delay: flight.delay ?? 0,
+    easing: TRAVEL,
+    // A delayed flight has to already be at its origin while it waits, or the
+    // checker shows up at the destination and then jumps back to the start.
+    fill: 'backwards',
+  });
 
   // Once only: a flight that is stopped early settles on the spot and then has
   // its `cancel` event arrive afterwards, and the second pass would undo the first.
@@ -138,7 +135,7 @@ export const flyChecker = (flyer: HTMLElement, flight: Flight): StopFlight | nul
     if (settled) return;
     settled = true;
     flyer.remove();
-    if (arrival) arrival.style.visibility = hidden;
+    arrival.style.visibility = hidden;
   };
   animation.onfinish = settle;
   animation.oncancel = settle;
