@@ -29,7 +29,7 @@
     "@types/node": "^26.6.5",
     "@typescript-eslint/eslint-plugin": "catalog:",
     "@typescript-eslint/parser": "catalog:",
-    "commit-and-tag-version": "^13.2.1",
+    "commit-and-tag-version": "^13.3.0",
     "commitizen": "^4.3.2",
     "cz-conventional-changelog": "^3.3.0",
     "eslint": "^10.13.0",
