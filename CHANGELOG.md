@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.9.3](https://github.com/klbsjpolp/backgammon/compare/v1.9.2...v1.9.3) (2026-10-22)
+
+### Bug Fixes
+
+* **web:** give a portrait phone's board the hint's two lines ([ee5dc39](https://github.com/klbsjpolp/backgammon/commit/ee5dc39e9ccc43b8bbe20f0e5211b6f25b2b3aea))
+
 ## [1.9.2](https://github.com/klbsjpolp/backgammon/compare/v1.9.1...v1.9.2) (2026-10-22)
 
 ## [1.9.1](https://github.com/klbsjpolp/backgammon/compare/v1.9.0...v1.9.1) (2026-10-22)
