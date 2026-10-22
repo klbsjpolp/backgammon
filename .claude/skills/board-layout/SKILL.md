@@ -73,6 +73,13 @@ Before and after any such change, check **three** cases — they are CSS-only, n
 
 ## Finishing
 
-`pnpm --filter @backgammon/web test`, then `pnpm dev` and check a portrait phone and a landscape one in devtools —
-the page must fit the viewport exactly, with no scrollbar, in both. Record anything you learned the hard way in
-`DECISIONS.md` under "Phone layout".
+`pnpm --filter @backgammon/web test`, then `pnpm --filter @backgammon/web layout`. It starts its own dev server, opens
+the app at two portrait phones, two landscape phones (568 × 320 is the tightest), a tablet and a desktop, before and
+after the first roll, and fails if the page scrolls in any of them — it must fit the viewport exactly. It prints the
+width of one point at each size and where it saved the screenshots; look at them, since fitting is not the same as
+looking right, and compare the point widths before and after your change. In a cloud session it finds the
+preinstalled Chromium on its own; locally, `pnpm --filter @backgammon/web exec playwright install chromium` once.
+
+It cannot emulate an installed app (`display-mode: standalone`, where `--top-clear` applies) or a notch's safe-area
+insets, so a change to either still wants a real device. Record anything you learned the hard way in `DECISIONS.md`
+under "Phone layout".
