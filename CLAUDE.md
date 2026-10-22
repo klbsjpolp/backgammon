@@ -119,54 +119,37 @@ The UI numbers points a third way: each player sees their own 1..24, counting fr
 
 ## Web app conventions
 
-- **The board's size is one CSS length.** `--pt` (the width of one point) is computed in `apps/web/src/index.css` as
-  the largest unit fitting the width and height the viewport has left; everything else is a multiple of it, declared
-  as `board-*` tokens in `@theme inline`. Markup uses the tokens (`w-board-point`, `size-board-checker`) and contains
-  no arithmetic. If you add page chrome, you spend the board's height — update `--avail-h` / `--avail-w` to match, and
-  check a portrait phone and a landscape one (the `compact` variant).
-- **`@theme inline` is required, not incidental.** `--pt` lives on `.board-fit`, not `:root`, so the utilities have to
-  carry the expression and evaluate it where `--pt` is inherited.
+Each rule here has its reason in a skill — `board-layout`, `add-theme` or `web-interaction` — and DECISIONS.md.
+Load the skill before changing what the rule covers; the one-liners are here so nobody breaks one without knowing.
+
+- **The board's size is one CSS length.** Everything is a multiple of `--pt`, as `board-*` tokens in
+  `@theme inline` (required: `--pt` lives on `.board-fit`, not `:root`). Markup uses the tokens and contains no
+  arithmetic. Page chrome is paid for out of `--avail-h` / `--avail-w`; after any change to either, run
+  `pnpm --filter @backgammon/web layout`, which screenshots six viewports and fails if any of them scrolls.
 - **The interface is French.** Every visible string, accessible name, placeholder and error banner — there is no
-  i18n layer, on purpose. Engine vocabulary (`white`, `gammon`, …) reaches the screen through `apps/web/src/lib/french.ts`, never
-  translated at the point of use, and a sentence capitalises its own first word (no CSS `capitalize`). Code,
-  comments, commits and docs stay English.
-- **Colours come from the theme layer.** `apps/web/src/theme/themes.css` holds one block of semantic variables per
-  theme (`--felt`, `--point-even`, `--pick`, …) mapped to utilities. **No component names a palette colour**, and
-  alpha is baked into the variable rather than written as a `/60` modifier in the markup. Adding a theme is one block,
-  one entry in `themes.ts`, one id in the pre-paint script in `index.html` — and it must pass `contrast.test.ts`,
-  which holds every theme to WCAG 3:1 for the board's state rings against both point colours.
-- **Accessibility is tested, not aspirational.** There is exactly **one** always-mounted `sr-only` polite live region
-  (`TurnAnnouncer`) and it carries everything worth hearing. A live region must be in the tree _before_ its content
-  changes or nothing is announced — never render one together with its text. That is why the panels mount it as a
-  **sibling of `GameLayout`** rather than inside `TurnStatus`: fullscreen draws the status inside the board's frame,
-  and a subtree that changes position in the tree is rebuilt, not moved — which put the region back on screen together
-  with its text on every toggle. Anything that relocates the status must leave the announcer where it is. Points out
-  of play are `aria-disabled` with `tabIndex={-1}` (not `disabled`, which drops them from the accessible tree in some
-  readers).
-- **Both game modes share their chrome.** `TurnStatus` and `TurnControls` are common to `LocalPanel` and
-  `OnlinePanel`; only the wiring differs. Don't re-implement status text in a panel — that is exactly how they drifted
-  apart before. The same goes for holding a checker and playing it: `useCheckerSelection` is the one copy, and the two
-  games differ only in what playing a move does (apply it, or relay it).
-- **A drag is the click flow entered from the other end**, not a second way to play a move — `useCheckerDrag` holds the
-  source with `selectFrom` and plays with `moveChecker`, so letting go over nothing leaves the checker selected. The
-  scroll lock is load-bearing: `touch-action: none` on the drag sources plus a `touchmove` that is cancelled for the
-  length of a touch gesture, or iOS hands the drag to the page scroller half way through. A release resolves against
-  `data-drop-zone` rects, and a zone under the pointer answers for itself — the points tile, so reaching past one to a
-  neighbour plays a move nobody aimed at.
+  i18n layer, on purpose. Engine vocabulary (`white`, `gammon`, …) reaches the screen through
+  `apps/web/src/lib/french.ts`, never translated at the point of use, and a sentence capitalises its own first word
+  (no CSS `capitalize`). Code, comments, commits and docs stay English.
+- **Colours come from the theme layer** (`apps/web/src/theme/themes.css`). No component names a palette colour, alpha
+  is baked into the variable rather than a `/60` modifier, and every theme passes `contrast.test.ts`.
+- **One live region, always mounted.** `TurnAnnouncer` is the only one and sits beside `GameLayout`, not inside
+  `TurnStatus`; anything that moves the status leaves it where it is. Points out of play are `aria-disabled` with
+  `tabIndex={-1}`, never `disabled`.
+- **Both game modes share their chrome.** `TurnStatus`, `TurnControls` and `useCheckerSelection` are the one copy;
+  the panels differ only in wiring. A drag goes through the same selection (`selectFrom`, `moveChecker`), and its
+  scroll lock (`touch-action: none` plus a cancelled `touchmove`) is what keeps iOS from stealing it.
 - The rules engine is the state machine (`phase`: rolling → moving → doubleOffered → gameOver). React hooks drive it;
   there is no XState here on purpose.
-- **A service worker precaches the bundle, so `location.reload()` no longer picks up a deploy** — it re-serves the
-  precached build. `reloadApp` hands over to the waiting worker first and only then reloads; anything that wants to move
-  the app onto a new version goes through it. The worker is registered in `prompt` mode because `useAppUpdates` owns
-  _when_ a reload is safe, and `runtime-config.json` must stay out of every cache or a tab cannot notice a new release.
+- **`location.reload()` does not pick up a deploy** — the service worker re-serves the precached build. Go through
+  `reloadApp`; keep the worker in `prompt` mode and `runtime-config.json` out of every cache.
 
 ## Skills in this repo
 
 `.claude/skills/` holds the recipes for the changes that are easiest to get subtly wrong. Reach for them by name:
 `core-rules` (the rules engine and its coordinate frames), `change-game-state` (anything crossing the wire between
 host and guest), `board-layout` (`--pt` and the page's height budget), `add-theme` (palette plus the contrast gate),
-and `record-decision` (the house style for `DECISIONS.md` entries and commit bodies). `/check` runs the CI gate and
-fixes what it can.
+`web-interaction` (selection, drag, the announcer, updates) and `record-decision` (the house style for
+`DECISIONS.md` entries and commit bodies). `/check` runs the CI gate and fixes what it can.
 
 ## Code style
 

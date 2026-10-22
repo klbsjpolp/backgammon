@@ -1676,7 +1676,9 @@ anything to someone waiting to start.
 - Stronger AI still possible: checker play is a full move-sequence search with a shot-aware
   evaluation, and cube decisions come off a heuristic win-probability estimate — neither is
   equity-based, and rollouts would beat both.
-- Sentry, Playwright e2e.
+- Sentry, Playwright e2e. `pnpm --filter @backgammon/web layout` drives the real app in Chromium, but only to
+  screenshot the layout and fail on a page that scrolls, and only when run by hand: it is the check the board-layout
+  skill asks for, not a test of play, and CI does not install a browser for it.
 - Online polish: reconnection/resume parity with skip-bo, richer lobby (names,
   kicking). A dropped socket still ends the
   game for that seat: `useOnlineGame` reports `disconnected` and stops there,
