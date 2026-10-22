@@ -60,5 +60,8 @@ DECISIONS.md → **Installable, and offline**.
 
 ## Checking it
 
-`pnpm --filter @backgammon/web test` covers all of the above in jsdom. For anything you can see — the status moving,
-the controls, fullscreen — also run `pnpm --filter @backgammon/web layout` and look at the screenshots.
+`pnpm --filter @backgammon/web test` covers the logic of all of the above in jsdom: what is rendered where, which
+handler a simulated pointer reaches, when the update hook decides a reload is safe. It does not run a screen reader,
+iOS's scroll handoff, the Fullscreen API or a real service worker, so it cannot say any of those behave. For what you
+can see, run `pnpm --filter @backgammon/web layout` and look at the screenshots; for the rest — an announcement being
+heard, a drag surviving on an iPhone, a deploy being picked up — only the real thing on a device answers.
