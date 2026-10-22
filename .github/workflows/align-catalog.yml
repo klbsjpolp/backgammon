@@ -1,0 +1,51 @@
+name: Align catalog groups
+
+# Dependabot bumps one catalog entry per PR, so a vitest bump arrives without
+# @vitest/coverage-v8 and fails `pnpm peers check` every time. This finishes the
+# bump on Dependabot's own branch instead of leaving a red PR to fix by hand.
+on:
+  pull_request:
+    branches: [main]
+    paths: [pnpm-workspace.yaml]
+
+permissions:
+  contents: write
+  # A push made with GITHUB_TOKEN starts no workflow, so CI is dispatched
+  # explicitly to put checks on the aligned commit.
+  actions: write
+
+jobs:
+  align:
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.head_ref }}
+
+      - uses: pnpm/action-setup@v5
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22.x
+
+      - name: Align the catalog
+        run: node .github/scripts/align-catalog.mjs
+
+      - name: Commit, push and run CI
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ github.head_ref }}
+        run: |
+          if git diff --quiet; then exit 0; fi
+          # --ignore-scripts: this job holds a write token, and resolving the
+          # lockfile needs no package's install scripts.
+          pnpm install --lockfile-only --ignore-scripts
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898341+github-actions[bot]@users.noreply.github.com'
+          git commit -am 'chore(deps): move the rest of the lockstep group with it'
+          git push origin "HEAD:$BRANCH"
+          gh workflow run ci.yml --ref "$BRANCH"

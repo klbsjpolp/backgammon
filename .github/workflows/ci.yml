@@ -5,6 +5,9 @@ on:
     branches: [main, master, develop]
   pull_request:
     branches: [main, master, develop]
+  # align-catalog.yml pushes to Dependabot branches with GITHUB_TOKEN, which
+  # starts no workflow on its own; it dispatches this one instead.
+  workflow_dispatch:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
