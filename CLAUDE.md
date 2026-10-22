@@ -8,6 +8,23 @@ A backgammon game: a pure rules engine, a host-authoritative runtime for online 
 [README.md](README.md) is the user-facing tour; **[DECISIONS.md](DECISIONS.md) is the reference** — it records why
 things are the way they are, and most of the traps below are explained there in full.
 
+It is ~1,700 lines, so read the section that covers your change rather than the file: `grep -n '^##' DECISIONS.md`
+for the headings, then `sed -n` the range. Where to look:
+
+| Touching                                | Section                                                                                        |
+| --------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `evaluateBoard`, the cube, AI strength  | **AI** (and its sub-sections)                                                                  |
+| what a guest may send or trust, schemas | **Trust boundaries**, **Online / realtime-infra integration**                                  |
+| no-play rolls, sole moves, undo         | **A roll nobody can play**, **The move that has nothing to decide**, **Taking a checker back** |
+| checker animation, drag, trays          | **Checkers that travel**, **Checkers you can pick up**, **Checkers put away, not counted**     |
+| layout, `--pt`, header, full screen     | **Phone layout**, **Full screen**, **Nothing on the page moves during a game**                 |
+| colours, rings, texture                 | **Themes**                                                                                     |
+| screen readers, focus                   | **Accessibility**                                                                              |
+| service worker, offline, saved games    | **Installable, and offline**, **A game against the AI outlives the page**                      |
+| UI wording                              | **The interface is French**                                                                    |
+| CI, releases, dependencies              | **Stack**, **Releasing under a branch ruleset**                                                |
+| something that looks missing            | **Deferred** — it may be left out on purpose                                                   |
+
 ```
 packages/backgammon-core      @backgammon/core     rules: board, dice, moves, cube, AI. No React, no I/O.
 packages/backgammon-runtime   @backgammon/runtime  host runtime + zod schemas for the wire. No transport.
@@ -30,9 +47,19 @@ pnpm format       # prettier --write (run this before lint if format:check fails
 pnpm build        # core → runtime → web
 ```
 
-Run **`pnpm lint && pnpm typecheck && pnpm test`** before committing — that is what CI runs (on Node 22 and 24), plus
-`pnpm build`. Single package: `pnpm --filter @backgammon/core test`. Single file: `pnpm --filter @backgammon/web exec
-vitest run src/useLocalGame.test.ts`.
+Run **`pnpm peers check && pnpm lint && pnpm typecheck && pnpm test`** before committing — that is what CI runs (on
+Node 22 and 24), plus `pnpm build`. `peers check` only says anything after a dependency change, but then it is the one
+step that fails in CI and nowhere else.
+
+The full gate takes about a minute and a half, most of it `pnpm lint` (prettier walks the whole tree) and the web
+tests. While iterating, check only what you touched and leave the full gate for the end:
+
+```bash
+pnpm exec prettier --check --ignore-unknown $(git diff --name-only --diff-filter=d HEAD)   # git add -N new files first
+pnpm --filter @backgammon/core test                       # one package
+pnpm --filter @backgammon/web exec vitest run src/useLocalGame.test.ts   # one file
+pnpm --filter @backgammon/web exec eslint src/components/Board.tsx       # one file's lint
+```
 
 ## Board coordinates — read this before touching `core`
 
@@ -70,10 +97,20 @@ The UI numbers points a third way: each player sees their own 1..24, counting fr
 
 `evaluateBoard` is tuned, not derived, and reasoning about it is wrong often enough that nothing goes in unmeasured.
 
-- **Duel it, and run base-against-base first.** `npx tsx` a scratch script importing
-  `packages/backgammon-core/src/index.js`, play N seeded games swapping sides every game, and score points rather
-  than wins. The seed asymmetry alone moves the win rate ~2%, so without that control you will read noise as a
-  result. 600 games takes ~10s.
+- **Duel it, and run base-against-base first.** `packages/backgammon-core/scripts/duel.ts` plays seeded games
+  between two copies of core, swapping sides every game and scoring points rather than wins. The seed asymmetry
+  alone moves the win rate ~2%, so without the control you will read noise as a result. 600 games takes ~7s:
+
+  ```bash
+  git worktree add /tmp/base origin/main
+  B=/tmp/base/packages/backgammon-core/src/index.ts       # absolute: pnpm runs it from the package
+  pnpm --filter @backgammon/core duel --a $B --b $B      # control: the noise floor
+  pnpm --filter @backgammon/core duel --b $B             # your checkout (A) against main (B)
+  ```
+
+  It prints A's net points per game with a ±2 SE margin; a difference inside the margin is not a result. `--games`,
+  `--seed` and `--no-cube` (checker play alone) are the knobs.
+
 - **Most good-sounding terms measure as nothing.** A race branch, quadrant crossovers and four gammon-specific terms
   all tied or lost; what won was a stacking penalty, backgammon stakes and counting hits from the bar. DECISIONS.md
   records which and why the losers lost — read it before re-deriving one of them.
@@ -89,6 +126,10 @@ The UI numbers points a third way: each player sees their own 1..24, counting fr
   check a portrait phone and a landscape one (the `compact` variant).
 - **`@theme inline` is required, not incidental.** `--pt` lives on `.board-fit`, not `:root`, so the utilities have to
   carry the expression and evaluate it where `--pt` is inherited.
+- **The interface is French.** Every visible string, accessible name, placeholder and error banner — there is no
+  i18n layer, on purpose. Engine vocabulary (`white`, `gammon`, …) reaches the screen through `apps/web/src/lib/french.ts`, never
+  translated at the point of use, and a sentence capitalises its own first word (no CSS `capitalize`). Code,
+  comments, commits and docs stay English.
 - **Colours come from the theme layer.** `apps/web/src/theme/themes.css` holds one block of semantic variables per
   theme (`--felt`, `--point-even`, `--pick`, …) mapped to utilities. **No component names a palette colour**, and
   alpha is baked into the variable rather than written as a `/60` modifier in the markup. Adding a theme is one block,
