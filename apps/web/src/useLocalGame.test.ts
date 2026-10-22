@@ -71,6 +71,9 @@ describe('useLocalGame', () => {
     const rolled = result.current.state;
     expect(result.current.isHumanMoving).toBe(true);
     expect(result.current.canHumanUndo).toBe(false);
+    // Nothing played yet, so there is nothing to take back.
+    act(() => result.current.undo());
+    expect(result.current.state).toBe(rolled);
 
     const move = result.current.legalMoves[0];
     act(() => result.current.moveChecker(move.from, move.to));
