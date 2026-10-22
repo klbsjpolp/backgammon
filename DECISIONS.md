@@ -857,6 +857,23 @@ Spending those 40px showed that the roomy layout's height budget had been 84px
 short all along — 16.25rem against a measured 21.5rem. The `--pt` cap had been
 hiding it on any window tall enough to matter.
 
+### The hint goes in portrait too
+
+A portrait phone's board is turned and bound by the screen's height, and on a tall one that leaves width
+unused rather than height: an installed iPhone 16 Pro Max (440 × 956) drew a 34px point with 120px of width
+empty either side of the board, because the status bar, the Liquid Glass clearance and the home indicator take
+136px before the page starts and every row under the board comes out of what is left. The hint — "Vous jouez
+les blancs. Faites glisser un pion là où il va…" — was two of those rows. It says how to move a checker, which
+is read once, and landscape had already dropped it for the same reason. Without it the point is 37px there and
+38px at 390 × 844 (from 35), and the reservation shrinks by exactly what the row and its gap occupied (2.75rem),
+measured by the gap under the version line staying at 24px.
+
+The version line and the board's own reservation were the other candidates and stay as they are: the first is where a player asks
+for an update, and the second measured 16px loose, which is not worth
+re-deriving a number that has been wrong in both directions before. What it costs is that a first-time player
+on a phone is not told a checker can be dragged; clicking it works as it always did, and the drag is found by
+trying.
+
 ## The abandon button rides in the header
 
 This used to be conditional: **Nouvelle partie** / **Quitter** rode in the header only on a

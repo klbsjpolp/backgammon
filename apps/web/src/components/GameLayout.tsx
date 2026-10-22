@@ -118,8 +118,9 @@ export const GameLayout = ({ status, board, controls, hint }: GameLayoutProps) =
       <div className="w-full min-w-0 compact:col-start-2 compact:row-start-1">{status}</div>
       <div className="compact:col-start-1 compact:row-span-3 compact:row-start-1">{board}</div>
       <div className="w-full compact:col-start-2 compact:row-start-2">{controls}</div>
-      {/* Landscape has no height to spare once take/drop show up: the hint goes first. */}
-      <p className="text-center text-xs text-muted compact:hidden">{hint}</p>
+      {/* Landscape has no height to spare once take/drop show up, and a portrait
+          phone's board is bound by height: on both, the hint is the row that goes. */}
+      <p className="text-center text-xs text-muted compact:hidden portrait-phone:hidden">{hint}</p>
     </div>
   );
 };
