@@ -1384,6 +1384,23 @@ there is nothing to lose there and a little edge definition to gain.
   cost is that a patch release is never picked up without a bump; that is what
   Dependabot is for. CI runs `pnpm peers check` straight after install, since an
   install does not fail on peers by itself.
+- **Dependabot's half of a catalog bump is finished by a workflow.** Grouping the
+  catalog's members in `dependabot.yml` was not enough: Dependabot moves exactly
+  one catalog entry per PR. It took `typescript-eslint` to 8.71.2 and left
+  `@typescript-eslint/*` at 8.71.1, which the peer check misses because that
+  package depends on its siblings rather than peering them, so main installed two
+  copies again; it then took `vitest` to 5.0.5 alone, which the peer check did
+  catch, and the PR sat red until someone bumped the coverage provider by hand.
+  `align-catalog.yml` now runs on every Dependabot PR that touches
+  `pnpm-workspace.yaml`, raises each group to its newest member with
+  `.github/scripts/align-catalog.mjs` and pushes the result to Dependabot's branch.
+  The cost is a workflow holding `contents: write`, kept narrow: it runs only on
+  PRs Dependabot opened, and resolves the lockfile with `--ignore-scripts` so no
+  package code runs with that token. A push made with `GITHUB_TOKEN` starts no
+  workflow, so it dispatches CI itself; and since the branch then carries a commit
+  that is not Dependabot's, Dependabot stops rebasing that PR on its own. The
+  groups are listed in the script, not inferred, so a new lockstep pair has to be
+  added there as well as to the catalog.
 
 ## Online / realtime-infra integration
 
