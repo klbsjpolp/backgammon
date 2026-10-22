@@ -165,7 +165,49 @@ describe('snapshots that should not be resumed from', () => {
   });
 });
 
+describe('taking a move back online', () => {
+  it('undoes the last move for the seat on roll, and only for it', () => {
+    const host = newHost();
+    host.applyAction(0, { type: 'roll' });
+    const rolled = host.getState();
+    expect(() => host.applyAction(0, { type: 'undo' })).toThrow(/nothing to undo/);
+
+    const move = host.viewFor(0).legalMoves[0];
+    host.applyAction(0, { type: 'move', from: move.from, to: move.to, die: move.die });
+    expect(() => host.applyAction(1, { type: 'undo' })).toThrow(/not your turn|nothing to undo/);
+
+    host.applyAction(0, { type: 'undo' });
+    expect(host.getState()).toEqual(rolled);
+  });
+
+  it('relays the log so a guest can offer undo, and survives a snapshot with it', () => {
+    const host = newHost();
+    host.applyAction(0, { type: 'roll' });
+    const move = host.viewFor(0).legalMoves[0];
+    host.applyAction(0, { type: 'move', from: move.from, to: move.to, die: move.die });
+
+    const wire = JSON.parse(JSON.stringify(host.getState())) as unknown;
+    expect(parseGameState(wire)?.played?.moves).toHaveLength(1);
+
+    const successor = newHost();
+    successor.restore(parseHostSnapshot(JSON.parse(JSON.stringify(host.snapshot())))!);
+    successor.applyAction(0, { type: 'undo' });
+    expect(successor.getState().played?.moves).toEqual([]);
+  });
+});
+
 describe('frames from an older build', () => {
+  it('accepts a state serialized before `played` existed, and offers no undo from it', () => {
+    const host = newHost();
+    host.applyAction(0, { type: 'roll' });
+    const legacy = JSON.parse(JSON.stringify(host.getState())) as Record<string, unknown>;
+    delete legacy.played;
+
+    const parsed = parseGameState(legacy);
+    expect(parsed).not.toBeNull();
+    expect(parsed?.played).toBeNull();
+  });
+
   it('accepts a state serialized before `noPlay` existed', () => {
     const legacy = JSON.parse(JSON.stringify(createInitialState('white'))) as Record<string, unknown>;
     delete legacy.noPlay;

@@ -10,6 +10,10 @@ import { cn } from '@/lib/cn';
 export interface TurnControlsProps {
   canRoll: boolean;
   canDouble: boolean;
+  /** It is this player's move and they have rolled — the dice are being played. */
+  isMoving: boolean;
+  /** A checker has been moved this turn and the turn is still open. */
+  canUndo: boolean;
   /** A double is pending *this* player's answer, so take/drop belong on screen. */
   isDoubleToYou: boolean;
   /** A checker is in the player's hand, so the way to put it back belongs there. */
@@ -18,6 +22,7 @@ export interface TurnControlsProps {
   autoRoll: boolean;
   onRoll: () => void;
   onDouble: () => void;
+  onUndo: () => void;
   onAutoRollChange: (autoRoll: boolean) => void;
   onRespond: (accept: boolean) => void;
   onClearSelection: () => void;
@@ -46,18 +51,22 @@ const Slot = ({ className, ...props }: ButtonProps) => <Button className={cn(SLO
  * moment. Rolling and doubling are both impossible while a double is pending or
  * a checker is in hand, so the buttons standing in for them cost nothing:
  *
- *   slot 1 — Roll, or Take while a double is yours to answer.
+ *   slot 1 — Roll, or Take while a double is yours to answer, or Undo while
+ *            your dice are being played.
  *   slot 2 — Double, or Drop for that same answer, or Cancel while holding.
  *   slot 3 — auto-roll, which is a setting and never changes.
  */
 export const TurnControls = ({
   canRoll,
   canDouble,
+  isMoving,
+  canUndo,
   isDoubleToYou,
   isHolding,
   autoRoll,
   onRoll,
   onDouble,
+  onUndo,
   onAutoRollChange,
   onRespond,
   onClearSelection,
@@ -66,6 +75,25 @@ export const TurnControls = ({
     {isDoubleToYou ? (
       <Slot onClick={() => onRespond(true)} className="bg-positive text-positive-fg hover:bg-positive-hover">
         Prendre
+      </Slot>
+    ) : isMoving ? (
+      // Slot 1 and not slot 2, where "Annuler" puts a held checker down: the
+      // tap that puts it down and a second tap on the same spot would otherwise
+      // take back a move nobody asked to lose. Here the slot turns back into
+      // a disabled Roll the moment the last die is played, so a hurried double
+      // tap stops at the end of the turn.
+      //
+      // Standing from the roll on, disabled until there is something to take
+      // back, so the button does not appear under the thumb mid-turn. "Défaire"
+      // rather than "Annuler", which is already slot 2's word for a different
+      // thing; the spoken name leads with the visible one, as there.
+      <Slot
+        onClick={onUndo}
+        disabled={!canUndo}
+        aria-label="Défaire, reprendre le dernier pion joué"
+        className="bg-neutral text-neutral-fg enabled:hover:bg-neutral-hover"
+      >
+        Défaire
       </Slot>
     ) : (
       <Slot onClick={onRoll} disabled={!canRoll} className="text-base">

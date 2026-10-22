@@ -83,7 +83,24 @@ export interface GameState {
    * whole of the opponent's reply rather than flashing past.
    */
   noPlay: NoPlay | null;
+  /**
+   * The checkers moved so far this turn, and the board they were moved from —
+   * what lets the player take them back until the turn ends.
+   *
+   * It has to live in the state rather than beside it: online, the host is the
+   * one that applies an undo, and a host that takes over after a disconnect
+   * rebuilds from a snapshot of this and nothing else. Null outside the moving
+   * phase, so a turn that has ended cannot be reopened; also null from a build
+   * that predates it, which simply offers no undo for that turn.
+   */
+  played: PlayedThisTurn | null;
   result: GameResult | null;
+}
+
+/** The moves of the turn in progress, replayed from `start` to undo the last. */
+export interface PlayedThisTurn {
+  start: Board;
+  moves: Move[];
 }
 
 /** A roll that had no legal move, kept so the UI can say so. */

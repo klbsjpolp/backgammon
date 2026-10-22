@@ -20,6 +20,8 @@ const baseGame = (): LocalGame => ({
   isHumanTurn: true,
   canRoll: true,
   canHumanDouble: true,
+  isHumanMoving: false,
+  canHumanUndo: false,
   doubleToYou: false,
   autoRoll: false,
   setAutoRoll: vi.fn(),
@@ -32,6 +34,7 @@ const baseGame = (): LocalGame => ({
   moveChecker: vi.fn(),
   clearSelection: vi.fn(),
   double: vi.fn(),
+  undo: vi.fn(),
   respond: vi.fn(),
 });
 

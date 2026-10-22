@@ -5,11 +5,14 @@ import { TurnControls, type TurnControlsProps } from './TurnControls';
 const props = (overrides: Partial<TurnControlsProps> = {}): TurnControlsProps => ({
   canRoll: true,
   canDouble: true,
+  isMoving: false,
+  canUndo: false,
   isDoubleToYou: false,
   isHolding: false,
   autoRoll: false,
   onRoll: vi.fn(),
   onDouble: vi.fn(),
+  onUndo: vi.fn(),
   onAutoRollChange: vi.fn(),
   onRespond: vi.fn(),
   onClearSelection: vi.fn(),
@@ -86,5 +89,27 @@ describe('TurnControls — the row that must not grow', () => {
     render(<TurnControls {...props({ isDoubleToYou: true, isHolding: true })} />);
     expect(screen.getByRole('button', { name: /^refuser$/i })).toBeDefined();
     expect(screen.queryByRole('button', { name: /^annuler/i })).toBeNull();
+  });
+
+  it('stands undo in for roll while the dice are being played, disabled until a checker has moved', () => {
+    const p = props({ canRoll: false, canDouble: false, isMoving: true });
+    const { container, rerender } = render(<TurnControls {...p} />);
+
+    expect(controlCount(container)).toBe(3);
+    expect(screen.queryByRole('button', { name: /^lancer$/i })).toBeNull();
+    const undo = screen.getByRole('button', { name: /^défaire/i });
+    expect(undo.textContent).toBe('Défaire');
+    expect((undo as HTMLButtonElement).disabled).toBe(true);
+
+    rerender(<TurnControls {...p} canUndo />);
+    fireEvent.click(screen.getByRole('button', { name: /^défaire/i }));
+    expect(p.onUndo).toHaveBeenCalled();
+  });
+
+  it('keeps undo out of the slot that puts a held checker down', () => {
+    // A second tap where "Annuler" just was would otherwise take a move back.
+    render(<TurnControls {...props({ canRoll: false, isMoving: true, canUndo: true, isHolding: true })} />);
+    const buttons = [...document.querySelectorAll('button')].map((b) => b.textContent);
+    expect(buttons).toEqual(['Défaire', 'Annuler']);
   });
 });

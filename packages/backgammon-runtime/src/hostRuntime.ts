@@ -1,6 +1,7 @@
 import type { GameState, Player, Rng } from '@backgammon/core';
 import {
   canDouble,
+  canUndo,
   createInitialState,
   currentLegalMoves,
   offerDouble,
@@ -8,6 +9,7 @@ import {
   playMove,
   respondDouble,
   roll,
+  undoMove,
 } from '@backgammon/core';
 import type { BackgammonAction, BackgammonGameConfig } from './actionSchema.js';
 import { serializeView, type BackgammonView } from './views.js';
@@ -100,6 +102,11 @@ export class BackgammonHost {
         );
         if (!legal) throw new Error('illegal move');
         this.state = playMove(this.state, legal);
+        return;
+      }
+      case 'undo': {
+        if (!canUndo(this.state, player)) throw new Error('nothing to undo');
+        this.state = undoMove(this.state);
         return;
       }
       case 'offerDouble': {

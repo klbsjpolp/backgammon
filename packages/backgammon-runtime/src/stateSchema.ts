@@ -32,6 +32,18 @@ const boardSchema = z.object({
 });
 
 const dieSchema = z.number().int().min(1).max(6);
+
+// `BAR` (-1) and `OFF` (24) are the sentinels either side of the 24 points.
+const moveSchema = z.object({
+  from: z
+    .number()
+    .int()
+    .min(-1)
+    .max(POINT_COUNT - 1),
+  to: z.number().int().min(0).max(POINT_COUNT),
+  die: dieSchema,
+  hit: z.boolean(),
+});
 const rollSchema = z.tuple([dieSchema, dieSchema]);
 
 export const gameStateSchema = z.object({
@@ -52,6 +64,12 @@ export const gameStateSchema = z.object({
   // that keeps this schema honest.
   noPlay: z
     .object({ player: playerSchema, roll: rollSchema })
+    .nullish()
+    .transform((value) => value ?? null),
+  // Absent from older builds for the same reason as `noPlay`. Three moves at
+  // most: the fourth of a double ends the turn, which clears the log.
+  played: z
+    .object({ start: boardSchema, moves: z.array(moveSchema).max(3) })
     .nullish()
     .transform((value) => value ?? null),
   result: z

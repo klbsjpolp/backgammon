@@ -112,12 +112,15 @@ export const LocalPanel = ({ applyPendingUpdate, onHeaderActionChange }: LocalPa
                 <TurnControls
                   canRoll={game.canRoll}
                   canDouble={game.canHumanDouble}
+                  isMoving={game.isHumanMoving}
+                  canUndo={game.canHumanUndo}
                   isDoubleToYou={game.doubleToYou}
                   isHolding={game.selectedFrom !== null}
                   autoRoll={game.autoRoll}
                   onRoll={game.rollDice}
                   onAutoRollChange={game.setAutoRoll}
                   onDouble={game.double}
+                  onUndo={game.undo}
                   onRespond={game.respond}
                   onClearSelection={game.clearSelection}
                 />

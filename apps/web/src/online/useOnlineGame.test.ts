@@ -199,6 +199,23 @@ describe('useOnlineGame', () => {
     expect((view?.payload as GameState).roll).not.toBeNull();
   });
 
+  it('takes its own move back as host and rebroadcasts the rewound board', async () => {
+    const { result } = renderHook(() => useOnlineGame());
+    await startGame(result, 0);
+    act(() => result.current.rollDice());
+    await waitFor(() => expect(result.current.state?.phase).toBe('moving'));
+    const rolled = result.current.state;
+
+    const from = result.current.selectableFroms[0];
+    act(() => result.current.clickPoint(from));
+    act(() => result.current.clickPoint(result.current.targets[0]));
+    await waitFor(() => expect(result.current.canUndo).toBe(true));
+
+    act(() => result.current.undo());
+    await waitFor(() => expect(result.current.state).toEqual(rolled));
+    expect(socket().sentOfType('relay').at(-1)?.payload).toEqual(rolled);
+  });
+
   it('applies a legal move relayed by the guest and hands the turn over', async () => {
     const { result } = renderHook(() => useOnlineGame());
     // The guest (seat 1, black) is on roll first.
@@ -312,6 +329,26 @@ describe('useOnlineGame', () => {
       expect(relayed?.payload).toMatchObject({ type: 'move', from });
       // The guest does not move its own board; it waits for the host's view.
       expect(result.current.state).toEqual(moving);
+    });
+
+    it('asks the host to take a move back, and only when its view says there is one', async () => {
+      const { result } = renderHook(() => useOnlineGame());
+      await startAsGuest(result);
+
+      const { createInitialState, applyRoll, playMove } = await import('@backgammon/core');
+      const moved = playMove(applyRoll(createInitialState('black'), [3, 1]), { from: 16, to: 19, die: 3, hit: false });
+      // A host from before undo existed sends no log, and so is never asked for
+      // an action it would not understand.
+      socket().emit({ type: 'relayed', fromSeat: 0, kind: 'view', payload: { ...moved, played: undefined } });
+      await waitFor(() => expect(result.current.isMoving).toBe(true));
+      expect(result.current.canUndo).toBe(false);
+      act(() => result.current.undo());
+      expect(socket().sentOfType('relay')).toHaveLength(0);
+
+      socket().emit({ type: 'relayed', fromSeat: 0, kind: 'view', payload: moved });
+      await waitFor(() => expect(result.current.canUndo).toBe(true));
+      act(() => result.current.undo());
+      expect(socket().sentOfType('relay').at(-1)).toMatchObject({ kind: 'move', payload: { type: 'undo' } });
     });
 
     it('sends a point only move on its own, without a destination click', async () => {

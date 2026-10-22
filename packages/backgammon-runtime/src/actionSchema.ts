@@ -14,6 +14,10 @@ export const backgammonActionSchema = z.discriminatedUnion('type', [
     to: z.number().int(),
     die: z.number().int().min(1).max(6),
   }),
+  // Takes back the last checker moved this turn. A host from before this
+  // existed fails to parse it and ignores it, but no guest offers it to one:
+  // the button waits on `played`, which such a host never sends.
+  z.object({ type: z.literal('undo') }),
   z.object({ type: z.literal('offerDouble') }),
   z.object({ type: z.literal('respondDouble'), accept: z.boolean() }),
 ]);
