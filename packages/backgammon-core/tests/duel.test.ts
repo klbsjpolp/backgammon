@@ -9,8 +9,20 @@ describe('duel harness', () => {
     const options = { games: 4, seed: 7, cube: true };
     const first = duel(core, core, options);
     expect(first.games).toBe(4);
-    expect(first.winsA).toBeGreaterThanOrEqual(0);
-    expect(first.winsA).toBeLessThanOrEqual(4);
     expect(duel(core, core, options)).toEqual(first);
+  });
+
+  // Each seed is played once from each side, so an engine against itself plays
+  // the same game twice with the colours swapped and wins exactly one of them.
+  it('scores an engine against itself at exactly zero', () => {
+    const result = duel(core, core, { games: 6, seed: 3, cube: true });
+    expect(result.net).toBe(0);
+    expect(result.winsA).toBe(3);
+  });
+
+  it('refuses a game count that cannot be split into pairs', () => {
+    for (const games of [0, 3, 2.5, Number.NaN]) {
+      expect(() => duel(core, core, { games, seed: 1, cube: true })).toThrow(/even/);
+    }
   });
 });

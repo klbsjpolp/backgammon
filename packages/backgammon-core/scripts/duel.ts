@@ -2,8 +2,7 @@
  * Plays two builds of the AI against each other — the measurement every change
  * to `evaluateBoard` or the cube owes before it goes in (see CLAUDE.md).
  *
- *   pnpm --filter @backgammon/core duel --a $B --b $B   # control: the noise floor
- *   pnpm --filter @backgammon/core duel --b $B          # this checkout against B
+ *   pnpm --filter @backgammon/core duel --b $B   # this checkout (A) against B
  *
  * `--a` and `--b` are absolute paths to a core `src/index.ts` (pnpm runs this
  * from the package directory), and both default to this checkout. Get a base
@@ -54,18 +53,22 @@ const playGame = (white: Engine, black: Engine, rules: Engine, rng: Core.Rng, cu
 };
 
 /**
- * Game `i` is dealt from seed `seed + i` and A takes white on the even ones, so
- * both engines see every dice sequence the same number of times from each side.
- * That is the control for the seed asymmetry, which alone moves a win rate ~2%.
- * Points rather than wins, because a gammon saved is worth as much as a game won.
+ * Games are dealt in pairs: both games of a pair use the same seed, with A white
+ * in the first and black in the second, so each engine plays every dice sequence
+ * from both sides. That cancels the seed asymmetry, which alone moves a win rate
+ * ~2%, and it makes two identical engines score exactly zero. Points rather than
+ * wins, because a gammon saved is worth as much as a game won.
  */
 export const duel = (a: Engine, b: Engine, { games, seed, cube }: DuelOptions): DuelResult => {
+  if (!Number.isInteger(games) || games < 2 || games % 2 !== 0) {
+    throw new Error(`games must be a positive even number, so every seed is played from both sides (got ${games})`);
+  }
   let net = 0;
   let sumSq = 0;
   let winsA = 0;
   for (let i = 0; i < games; i++) {
     const aIsWhite = i % 2 === 0;
-    const result = playGame(aIsWhite ? a : b, aIsWhite ? b : a, a, a.createRng(seed + i), cube);
+    const result = playGame(aIsWhite ? a : b, aIsWhite ? b : a, a, a.createRng(seed + Math.floor(i / 2)), cube);
     const aWon = (result.winner === 'white') === aIsWhite;
     const points = aWon ? result.points : -result.points;
     net += points;
