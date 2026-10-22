@@ -9,6 +9,14 @@
 @custom-variant compact (@media (orientation: landscape) and (max-height: 640px));
 
 /*
+ * Portrait phones: the board is turned a quarter turn and bound by the screen's
+ * height, so every row of chrome under it is checker size given away. The same
+ * query as the turned layout below, rather than `max-sm:portrait:`, whose
+ * `width < 40rem` leaves out a phone exactly 640px wide that the layout includes.
+ */
+@custom-variant portrait-phone (@media (orientation: portrait) and (max-width: 640px));
+
+/*
  * The Fullscreen API, toggled from the header (see FullscreenButton). A plain
  * attribute selector rather than a media query — nothing about the viewport
  * changes that CSS can detect on its own, so the state has to come from JS,
@@ -662,8 +670,16 @@ body[data-drag-active] {
 
        And by another 2.4375rem (39px) when the dice left their row under the
        buttons for the board itself: the gap below the version line had grown
-       from 24px back to 63px at every phone width from 360 to 430. */
-    --avail-w: calc(100svh - 16.5rem - var(--inset-top) - env(safe-area-inset-bottom));
+       from 24px back to 63px at every phone width from 360 to 430.
+
+       And by another 2.75rem (44px: the hint's two lines and the grid gap above
+       them) when the hint left portrait, as it had already left landscape. On an
+       installed iPhone 16 Pro Max the status bar, the Liquid Glass clearance and
+       the home indicator take 136px before any of this, the board was bound by
+       height at a 34px point with 120px of width unused, and a sentence that
+       says how to move a checker is read once and then only costs the checkers.
+       The gap below the version line stays 24px at 390 × 844, as before. */
+    --avail-w: calc(100svh - 13.75rem - var(--inset-top) - env(safe-area-inset-bottom));
     /* The page padding, and nothing else: with the dice up in the header row the
        turned board has the full width of the screen to be deep in. A narrow phone
        is the one that notices — this is what limits it, where a tall one is
