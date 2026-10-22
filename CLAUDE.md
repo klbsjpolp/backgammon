@@ -97,19 +97,19 @@ The UI numbers points a third way: each player sees their own 1..24, counting fr
 
 `evaluateBoard` is tuned, not derived, and reasoning about it is wrong often enough that nothing goes in unmeasured.
 
-- **Duel it, and run base-against-base first.** `packages/backgammon-core/scripts/duel.ts` plays seeded games
-  between two copies of core, swapping sides every game and scoring points rather than wins. The seed asymmetry
-  alone moves the win rate ~2%, so without the control you will read noise as a result. 600 games takes ~7s:
+- **Duel it, and read the margin.** `packages/backgammon-core/scripts/duel.ts` plays seeded games between two copies
+  of core and scores points rather than wins. Games are dealt in pairs, one seed played once from each side, because
+  the seed asymmetry alone moves the win rate ~2% and would otherwise read as a result. 600 games takes ~7s:
 
   ```bash
   git worktree add /tmp/base origin/main
   B=/tmp/base/packages/backgammon-core/src/index.ts       # absolute: pnpm runs it from the package
-  pnpm --filter @backgammon/core duel --a $B --b $B      # control: the noise floor
   pnpm --filter @backgammon/core duel --b $B             # your checkout (A) against main (B)
   ```
 
-  It prints A's net points per game with a ±2 SE margin; a difference inside the margin is not a result. `--games`,
-  `--seed` and `--no-cube` (checker play alone) are the knobs.
+  It prints A's net points per game with a ±2 SE margin; a difference inside the margin is not a result. An engine
+  against itself scores exactly zero, which is what to check if you change the harness. `--games` (even), `--seed`
+  and `--no-cube` (checker play alone) are the knobs.
 
 - **Most good-sounding terms measure as nothing.** A race branch, quadrant crossovers and four gammon-specific terms
   all tied or lost; what won was a stacking penalty, backgammon stakes and counting hits from the bar. DECISIONS.md
