@@ -27,12 +27,13 @@ interface Viewport {
   mobile: boolean;
 }
 
-// The phones are the cases that break: the smallest of each orientation, plus a
-// common modern size. 568 × 320 is the one DECISIONS.md measures the landscape
+// The phones are the cases that break: the smallest of each orientation, plus
+// common modern sizes up to a Pro Max. 568 × 320 is the one DECISIONS.md measures the landscape
 // sidebar against.
 const VIEWPORTS: Viewport[] = [
   { name: 'phone-portrait-375x667', width: 375, height: 667, mobile: true },
   { name: 'phone-portrait-390x844', width: 390, height: 844, mobile: true },
+  { name: 'phone-portrait-440x956', width: 440, height: 956, mobile: true },
   { name: 'phone-landscape-568x320', width: 568, height: 320, mobile: true },
   { name: 'phone-landscape-844x390', width: 844, height: 390, mobile: true },
   { name: 'tablet-portrait-820x1180', width: 820, height: 1180, mobile: true },
