@@ -227,12 +227,15 @@ export const OnlinePanel = ({ applyPendingUpdate, onBusyChange, onLeaveActionCha
               <TurnControls
                 canRoll={g.canRoll}
                 canDouble={g.myPlayer != null && canDouble(state, g.myPlayer)}
+                isMoving={g.isMoving}
+                canUndo={g.canUndo}
                 isDoubleToYou={doubleToMe}
                 isHolding={g.selectedFrom !== null}
                 autoRoll={g.autoRoll}
                 onRoll={g.rollDice}
                 onAutoRollChange={g.setAutoRoll}
                 onDouble={g.double}
+                onUndo={g.undo}
                 onRespond={g.respond}
                 onClearSelection={g.clearSelection}
               />

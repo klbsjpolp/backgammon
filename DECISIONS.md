@@ -1552,6 +1552,58 @@ game would survive it now, but a reload that fires by itself still takes the boa
 out from under a hand that is halfway through a move, so `deferUpdate` stays on in
 local play and the update still lands on the next deliberate start.
 
+## Taking a checker back
+
+A checker put down on the wrong point stayed there. The rules engine applied each
+move the moment it was made, and nothing could take one back: a slip of the finger
+on a phone, or a drag released a point short, cost the whole turn.
+
+The usual answer is to stop committing moves as they are made — play the whole
+turn, then confirm it, and undo freely until then. That is one more click on every
+turn of every game, to protect a move most players never want back, and it was
+ruled out for exactly that. So the turn still ends the instant its last die is
+played, and an undo is offered only before that: after the first move of an
+ordinary roll, after the first three of a double. The move that ends the turn —
+or wins the game, or leaves nothing else playable — cannot be taken back, because
+by then the turn it belonged to is over, the opponent may already be rolling, and
+reopening it would hand a player back a turn the other side is acting on.
+
+The undo lives in `GameState` as `played`: the board the turn started from and the
+moves made since. Keeping it beside the state, in the hooks, was the smaller
+change and is wrong online. The host is the one that applies an undo, and a host
+that takes over after a disconnect rebuilds from a snapshot of the state and
+nothing else, so a log kept elsewhere would vanish exactly when a guest needed
+it. It is cleared whenever the turn ends, so the field is null outside the moving
+phase and cannot carry anything across into the next turn.
+
+`undoMove` replays the turn from that board, minus the last move, rather than
+running the last move backwards. A move can hit, enter from the bar or bear off,
+and each would want its own inverse, written in the absolute frame that rule code
+is not supposed to touch; the replay goes through `playMove`, so it is validated
+as it goes and lands on the very state those moves produced the first time, down
+to the order of the remaining dice. The log is extended in `applyLegalMove`, which
+the AI search runs at every node, so it costs a small copy there: 60 seeded games
+played the same 3,498 turns in 1,044ms with it and 1,060ms without, which is
+noise.
+
+Both directions of the version skew fall out of the field being optional. A host
+from before this sends no `played`, so the guest's button stays disabled and never
+asks that host for an `undo` it would not parse. A guest from before this strips
+the field and has no button. A game saved mid-turn by an older build resumes with
+no log and gets its undo back from the next roll — `applyLegalMove` extends a log
+that exists and does not start one partway through a turn, which would rewind to
+the wrong board.
+
+The button stands in for `Lancer`, in the first slot, from the roll until the
+turn ends — disabled until there is a move to take back, so it does not appear
+under the thumb mid-turn. Not in the second slot, where it would have had more
+room: that is where `Annuler` puts a held checker down, and a second tap on the
+same spot would take back a move nobody asked to lose. Where it is, the slot turns
+back into a disabled `Lancer` the moment the last die is played, so a hurried
+double tap stops at the end of the turn. It is called `Défaire` and not
+`Annuler` for the same reason: both can be on screen at once, and a speech-input
+user saying "Annuler" has to reach one control.
+
 ## The interface is French
 
 Every word on the screen was English, in a game whose players are French. It is
@@ -1604,7 +1656,6 @@ anything to someone waiting to start.
 - Match play, Crawford rule, Jacoby rule.
 - Opening roll to decide who starts (white starts locally; online the server's
   `currentSeatIndex` decides).
-- Undoing a checker move before the turn is committed.
 - Stronger AI still possible: checker play is a full move-sequence search with a shot-aware
   evaluation, and cube decisions come off a heuristic win-probability estimate — neither is
   equity-based, and rollouts would beat both.

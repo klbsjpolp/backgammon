@@ -8,6 +8,7 @@ import {
   BAR,
   OFF,
   canDouble,
+  canUndo,
   checkersOn,
   chooseTurn,
   createInitialBoard,
@@ -23,6 +24,7 @@ import {
   roll,
   shouldDouble,
   shouldTakeDouble,
+  undoMove,
   winProbability,
   type Board,
   type GameState,
@@ -516,5 +518,84 @@ describe('applyLegalMove — the unchecked fast path', () => {
     const state = movingState(createInitialBoard(), 'white', [3, 3, 3, 3]);
     const after = applyLegalMove(state, currentLegalMoves(state)[0]);
     expect(after.remaining).toEqual([3, 3, 3]);
+  });
+});
+
+describe('taking a move back', () => {
+  const checkerTotal = (b: Board) =>
+    b.points.reduce((sum, v) => sum + Math.abs(v), 0) + b.bar.white + b.bar.black + b.off.white + b.off.black;
+
+  const rolled = (board: Board, roll: [number, number], turn: Player = 'white'): GameState =>
+    applyRoll({ ...createInitialState(turn), board }, roll);
+
+  it('rewinds to the state the roll left, dice order included', () => {
+    const start = applyRoll(createInitialState('white'), [3, 1]);
+    expect(canUndo(start, 'white')).toBe(false);
+
+    const moved = playMove(start, { from: 7, to: 4, die: 3, hit: false });
+    expect(moved.remaining).toEqual([1]);
+    expect(canUndo(moved, 'white')).toBe(true);
+    // Only the player whose turn it is.
+    expect(canUndo(moved, 'black')).toBe(false);
+
+    expect(undoMove(moved)).toEqual(start);
+  });
+
+  it('puts a hit checker back where it was, off the bar', () => {
+    const start = rolled(makeBoard({ 10: 2, 8: -1, 23: -14, 0: 13 }), [2, 6]);
+    const hit = playMove(start, { from: 10, to: 8, die: 2, hit: true });
+    expect(hit.board.bar.black).toBe(1);
+
+    const back = undoMove(hit);
+    expect(back.board).toEqual(start.board);
+    expect(back.board.bar.black).toBe(0);
+    expect(checkerTotal(back.board)).toBe(30);
+  });
+
+  it('takes a double back one checker at a time', () => {
+    const states = [applyRoll(createInitialState('white'), [2, 2])];
+    for (let i = 0; i < 3; i++) {
+      const s = states[states.length - 1];
+      states.push(playMove(s, currentLegalMoves(s)[0]));
+    }
+    expect(states[3].remaining).toEqual([2]);
+
+    for (let i = 3; i > 0; i--) {
+      const back = undoMove(states[i]);
+      expect(back).toEqual(states[i - 1]);
+      expect(checkerTotal(back.board)).toBe(30);
+    }
+    expect(canUndo(states[0], 'white')).toBe(false);
+  });
+
+  it('has nothing to take back once the last die has ended the turn', () => {
+    const start = applyRoll(createInitialState('white'), [3, 1]);
+    const ended = playMove(playMove(start, { from: 7, to: 4, die: 3, hit: false }), {
+      from: 5,
+      to: 4,
+      die: 1,
+      hit: false,
+    });
+    expect(ended.turn).toBe('black');
+    expect(ended.played).toBeNull();
+    expect(canUndo(ended, 'white')).toBe(false);
+    expect(undoMove(ended)).toBe(ended);
+  });
+
+  it('cannot take back the move that won the game', () => {
+    const start = rolled(makeBoard({ 0: 1, 23: -15 }, {}, { white: 14 }), [1, 2]);
+    const won = playMove(start, currentLegalMoves(start)[0]);
+    expect(won.phase).toBe('gameOver');
+    expect(won.played).toBeNull();
+    expect(canUndo(won, 'white')).toBe(false);
+  });
+
+  it('offers no undo for a turn begun before the log existed', () => {
+    // A saved game, or a frame from an older host, mid-turn: there is no
+    // starting board to rewind to, so none is invented from the current one.
+    const legacy = { ...applyRoll(createInitialState('white'), [3, 1]), played: null };
+    const moved = playMove(legacy, { from: 7, to: 4, die: 3, hit: false });
+    expect(moved.played).toBeNull();
+    expect(canUndo(moved, 'white')).toBe(false);
   });
 });

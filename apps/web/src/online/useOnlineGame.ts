@@ -10,7 +10,7 @@ import {
   type BackgammonAction,
   type BackgammonView,
 } from '@backgammon/runtime';
-import { canDouble, opponent, type GameState, type Player } from '@backgammon/core';
+import { canDouble, canUndo, opponent, type GameState, type Player } from '@backgammon/core';
 import { pendingNoPlay } from '@/lib/noPlay';
 import { useAutoRoll } from '@/useAutoRoll';
 import { useCheckerSelection } from '@/useCheckerSelection';
@@ -44,6 +44,11 @@ export interface OnlineGame {
   /** We are the one who has yet to roll — what Roll and auto-roll both wait on. */
   canRoll: boolean;
   rollDice: () => void;
+  /** We have rolled and are playing our dice. */
+  isMoving: boolean;
+  /** We have moved a checker this turn and the turn has not ended. */
+  canUndo: boolean;
+  undo: () => void;
   clickPoint: (index: number) => void;
   playOnlyMove: (index: number) => void;
   targetsFrom: (from: number) => number[];
@@ -325,6 +330,14 @@ export const useOnlineGame = (): OnlineGame => {
   // the cell this roll's dice are about to take — see `useAutoRoll`.
   useAutoRoll(autoRoll, canRoll, rollDice, gameState ? pendingNoPlay(gameState) !== null : false);
 
+  const isMoving = canSelect && status === 'playing';
+  const mayUndo = gameState !== null && myPlayer !== null && canUndo(gameState, myPlayer);
+  const { clearSelection } = selection;
+  const undo = useCallback(() => {
+    clearSelection();
+    if (mayUndo) sendAction({ type: 'undo' });
+  }, [clearSelection, mayUndo, sendAction]);
+
   const double = useCallback(() => {
     if (gameState && myPlayer && canDouble(gameState, myPlayer)) sendAction({ type: 'offerDouble' });
   }, [gameState, myPlayer, sendAction]);
@@ -366,6 +379,9 @@ export const useOnlineGame = (): OnlineGame => {
     setAutoRoll,
     canRoll,
     rollDice,
+    isMoving,
+    canUndo: mayUndo,
+    undo,
     double,
     respond,
   };

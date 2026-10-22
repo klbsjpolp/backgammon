@@ -65,6 +65,24 @@ describe('useLocalGame', () => {
     expect(result.current.state.board.points[from]).not.toBe(before);
   });
 
+  it('takes the last checker back, the one in hand put down with it, until the turn ends', () => {
+    const { result } = renderHook(() => useLocalGame());
+    act(() => result.current.rollDice());
+    const rolled = result.current.state;
+    expect(result.current.isHumanMoving).toBe(true);
+    expect(result.current.canHumanUndo).toBe(false);
+
+    const move = result.current.legalMoves[0];
+    act(() => result.current.moveChecker(move.from, move.to));
+    expect(result.current.canHumanUndo).toBe(true);
+
+    act(() => result.current.selectFrom(result.current.selectableFroms[0]));
+    act(() => result.current.undo());
+    expect(result.current.state).toEqual(rolled);
+    expect(result.current.selectedFrom).toBeNull();
+    expect(result.current.canHumanUndo).toBe(false);
+  });
+
   it('clears a selection that is neither a target nor another source', () => {
     const { result } = renderHook(() => useLocalGame());
     act(() => result.current.rollDice());

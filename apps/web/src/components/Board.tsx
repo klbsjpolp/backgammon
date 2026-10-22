@@ -658,7 +658,8 @@ const useReturnFlight = (rootRef: RefObject<HTMLDivElement | null>, board: Board
  * worth. Clicking a source and then double-clicking the destination delivers a
  * click that lands the checker, a click that selects the point it landed on, and
  * then the double click, which would spend another die on the checker that just
- * arrived; there is no undo to take that back.
+ * arrived — and if that was the last die, the turn is over and not even
+ * `Défaire` can take it back.
  *
  * Refusing every double click whose first half moved something is what separates
  * the two, and the board object is the witness: `playMove` returns a new one and

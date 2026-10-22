@@ -3,6 +3,7 @@ import {
   chooseTurn,
   currentLegalMoves,
   canDouble,
+  canUndo,
   createInitialState,
   offerDouble,
   OFF,
@@ -11,6 +12,7 @@ import {
   roll,
   shouldDouble,
   shouldTakeDouble,
+  undoMove,
   type GameState,
   type Move,
   type Player,
@@ -44,6 +46,10 @@ export interface LocalGame {
   /** The human is the one who has yet to roll — what Roll and auto-roll both wait on. */
   canRoll: boolean;
   canHumanDouble: boolean;
+  /** The human has rolled and is playing their dice. */
+  isHumanMoving: boolean;
+  /** The human has moved a checker this turn and the turn has not ended. */
+  canHumanUndo: boolean;
   /** True while the AI has a double pending the human's take/drop answer. */
   doubleToYou: boolean;
   /** Roll for the human automatically, instead of waiting for the Roll button. */
@@ -58,6 +64,7 @@ export interface LocalGame {
   moveChecker: (from: number, to: number) => void;
   clearSelection: () => void;
   double: () => void;
+  undo: () => void;
   respond: (accept: boolean) => void;
 }
 
@@ -105,6 +112,13 @@ export const useLocalGame = (): LocalGame => {
   const double = useCallback(() => {
     setState((s) => (canDouble(s, HUMAN) ? offerDouble(s) : s));
   }, []);
+
+  // The checker in hand is dropped with the move: it may be the one going back,
+  // and a ring on a point that has just emptied holds nothing.
+  const undo = useCallback(() => {
+    clearSelection();
+    setState((s) => (canUndo(s, HUMAN) ? undoMove(s) : s));
+  }, [clearSelection]);
 
   const respond = useCallback((accept: boolean) => {
     setState((s) => (s.phase === 'doubleOffered' && s.doubleOfferedBy === AI ? respondDouble(s, accept) : s));
@@ -186,12 +200,15 @@ export const useLocalGame = (): LocalGame => {
     isHumanTurn,
     canRoll,
     canHumanDouble: canDouble(state, HUMAN),
+    isHumanMoving: isHumanTurn && state.phase === 'moving',
+    canHumanUndo: canUndo(state, HUMAN),
     doubleToYou: state.phase === 'doubleOffered' && state.doubleOfferedBy === AI,
     autoRoll,
     setAutoRoll,
     newGame,
     rollDice,
     double,
+    undo,
     respond,
   };
 };

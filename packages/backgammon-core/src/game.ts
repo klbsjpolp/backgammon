@@ -29,6 +29,7 @@ export const createInitialState = (startingPlayer: Player = 'white'): GameState 
   cube: { value: 1, owner: null },
   doubleOfferedBy: null,
   noPlay: null,
+  played: null,
   result: null,
 });
 
@@ -42,7 +43,10 @@ const endTurn = (state: GameState): GameState => ({
   phase: 'rolling',
   roll: null,
   remaining: [],
+  played: null,
 });
+
+const diceFor = ([d1, d2]: [number, number]): number[] => (d1 === d2 ? [d1, d1, d1, d1] : [d1, d2]);
 
 const loserTrappedInWinnerHome = (state: GameState, winner: Player, loser: Player): boolean => {
   if (state.board.bar[loser] > 0) return true;
@@ -66,11 +70,11 @@ const detectResult = (state: GameState, winner: Player): GameResult => {
 /** Record a dice roll and enter the moving phase (passing the turn if no move is possible). */
 export const applyRoll = (state: GameState, roll: [number, number]): GameState => {
   if (state.phase !== 'rolling') return state;
-  const [d1, d2] = roll;
-  const remaining = d1 === d2 ? [d1, d1, d1, d1] : [d1, d2];
+  const remaining = diceFor(roll);
   // A player's own new roll answers whatever their last one failed to do.
   const noPlay = state.noPlay?.player === state.turn ? null : state.noPlay;
-  const moving: GameState = { ...state, roll, remaining, phase: 'moving', noPlay };
+  const played = { start: state.board, moves: [] };
+  const moving: GameState = { ...state, roll, remaining, phase: 'moving', noPlay, played };
   if (legalMoves(moving.board, moving.turn, remaining).length === 0) {
     return { ...endTurn(moving), noPlay: { player: state.turn, roll } };
   }
@@ -100,11 +104,14 @@ export const applyLegalMove = (state: GameState, move: Move): GameState => {
 
   const board = applyMove(state.board, state.turn, move);
   const remaining = state.remaining.slice(0, idx).concat(state.remaining.slice(idx + 1));
-  let next: GameState = { ...state, board, remaining };
+  // A state from before the log existed has none to extend, and keeps it that
+  // way rather than starting one mid-turn that would rewind to the wrong board.
+  const played = state.played && { start: state.played.start, moves: [...state.played.moves, move] };
+  let next: GameState = { ...state, board, remaining, played };
 
   if (board.off[state.turn] === CHECKERS_PER_SIDE) {
     const result = detectResult(next, state.turn);
-    return { ...next, phase: 'gameOver', result, remaining: [] };
+    return { ...next, phase: 'gameOver', result, remaining: [], played: null };
   }
 
   if (remaining.length === 0 || legalMoves(board, state.turn, remaining).length === 0) {
@@ -128,6 +135,38 @@ export const playMove = (state: GameState, move: Move): GameState => {
     throw new Error(`illegal move: ${move.from} -> ${move.to} with die ${move.die}`);
   }
   return applyLegalMove(state, move);
+};
+
+// --- Taking a move back ---------------------------------------------------
+
+/**
+ * May the player take back the last checker they moved?
+ *
+ * Only while their turn is still open. The move that spends the last die — or
+ * leaves nothing else playable — ends the turn in the same step, so there is no
+ * moment to undo it in, and that is deliberate: the alternative is a "confirm
+ * the turn" click on every single turn, to protect a move most players never
+ * want back.
+ */
+export const canUndo = (state: GameState, player: Player): boolean =>
+  state.phase === 'moving' && state.turn === player && (state.played?.moves.length ?? 0) > 0;
+
+/**
+ * Take back the last checker moved this turn.
+ *
+ * Replays the turn from its starting board minus the last move, rather than
+ * running that move backwards. A move can hit, enter from the bar or bear off,
+ * and each wants its own inverse — written once more, in the absolute frame, by
+ * hand. The replay goes through {@link playMove}, so it is checked as it goes
+ * and lands on exactly the state those moves produced the first time, dice
+ * order included.
+ */
+export const undoMove = (state: GameState): GameState => {
+  if (!canUndo(state, state.turn) || !state.played || !state.roll) return state;
+  const { start, moves } = state.played;
+  let next: GameState = { ...state, board: start, remaining: diceFor(state.roll), played: { start, moves: [] } };
+  for (const move of moves.slice(0, -1)) next = playMove(next, move);
+  return next;
 };
 
 // --- Doubling cube ---------------------------------------------------------
