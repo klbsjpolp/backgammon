@@ -18,10 +18,12 @@ describe('duel harness', () => {
     const result = duel(core, core, { games: 6, seed: 3, cube: true });
     expect(result.net).toBe(0);
     expect(result.winsA).toBe(3);
+    // Every pair nets zero, so there is no spread to report either.
+    expect(result.margin).toBe(0);
   });
 
-  it('refuses a game count that cannot be split into pairs', () => {
-    for (const games of [0, 3, 2.5, Number.NaN]) {
+  it('refuses a game count that is not at least two pairs', () => {
+    for (const games of [0, 2, 3, 2.5, Number.NaN]) {
       expect(() => duel(core, core, { games, seed: 1, cube: true })).toThrow(/even/);
     }
   });

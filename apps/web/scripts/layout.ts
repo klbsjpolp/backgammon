@@ -16,7 +16,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
-import { chromium, type Page } from 'playwright';
+import { chromium, type Browser, type Page } from 'playwright';
 import { createServer } from 'vite';
 
 interface Viewport {
@@ -77,6 +77,10 @@ const main = async (): Promise<void> => {
   const out = resolve(values.out);
   await mkdir(out, { recursive: true });
   const viewports = VIEWPORTS.filter((v) => !values.only || v.name.includes(values.only));
+  // A typo here would otherwise check nothing and report success.
+  if (viewports.length === 0) {
+    throw new Error(`--only ${values.only} matches no viewport: ${VIEWPORTS.map((v) => v.name).join(', ')}`);
+  }
 
   const server = await createServer({
     root: fileURLToPath(new URL('..', import.meta.url)),
@@ -88,9 +92,12 @@ const main = async (): Promise<void> => {
   if (!url) throw new Error('the dev server did not report a URL');
 
   const executablePath = process.env.CHROMIUM_PATH ?? (existsSync(CONTAINER_CHROMIUM) ? CONTAINER_CHROMIUM : undefined);
-  const browser = await chromium.launch({ executablePath });
+  // Launched inside the server's try, so a missing browser still closes Vite;
+  // an open server keeps the process alive and the command would never return.
+  let browser: Browser | undefined;
   let failures = 0;
   try {
+    browser = await chromium.launch({ executablePath });
     for (const v of viewports) {
       const context = await browser.newContext({
         viewport: { width: v.width, height: v.height },
@@ -122,7 +129,7 @@ const main = async (): Promise<void> => {
       await context.close();
     }
   } finally {
-    await browser.close();
+    await browser?.close();
     await server.close();
   }
   if (failures > 0) {

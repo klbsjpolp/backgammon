@@ -27,7 +27,10 @@ export interface DuelResult {
   /** Points won by A minus points won by B, summed over every game. */
   net: number;
   winsA: number;
-  /** Two standard errors of the mean net points per game. */
+  /**
+   * Two standard errors of the mean net points per game, taken over pairs: the
+   * two games of a pair share their dice, so they are one observation, not two.
+   */
   margin: number;
 }
 
@@ -60,24 +63,32 @@ const playGame = (white: Engine, black: Engine, rules: Engine, rng: Core.Rng, cu
  * wins, because a gammon saved is worth as much as a game won.
  */
 export const duel = (a: Engine, b: Engine, { games, seed, cube }: DuelOptions): DuelResult => {
-  if (!Number.isInteger(games) || games < 2 || games % 2 !== 0) {
-    throw new Error(`games must be a positive even number, so every seed is played from both sides (got ${games})`);
+  // Two pairs at the least, since one pair is one observation and has no spread.
+  if (!Number.isInteger(games) || games < 4 || games % 2 !== 0) {
+    throw new Error(
+      `games must be an even number of at least 4, so every seed is played from both sides (got ${games})`,
+    );
   }
+  const pairs = games / 2;
   let net = 0;
   let sumSq = 0;
   let winsA = 0;
-  for (let i = 0; i < games; i++) {
-    const aIsWhite = i % 2 === 0;
-    const result = playGame(aIsWhite ? a : b, aIsWhite ? b : a, a, a.createRng(seed + Math.floor(i / 2)), cube);
-    const aWon = (result.winner === 'white') === aIsWhite;
-    const points = aWon ? result.points : -result.points;
-    net += points;
-    sumSq += points * points;
-    if (aWon) winsA++;
+  for (let p = 0; p < pairs; p++) {
+    let pairNet = 0;
+    for (const aIsWhite of [true, false]) {
+      const result = playGame(aIsWhite ? a : b, aIsWhite ? b : a, a, a.createRng(seed + p), cube);
+      const aWon = (result.winner === 'white') === aIsWhite;
+      pairNet += aWon ? result.points : -result.points;
+      if (aWon) winsA++;
+    }
+    net += pairNet;
+    sumSq += pairNet * pairNet;
   }
-  const mean = net / games;
-  const variance = games > 1 ? (sumSq - games * mean * mean) / (games - 1) : 0;
-  return { games, net, winsA, margin: 2 * Math.sqrt(variance / games) };
+  // A game is worth half a pair, so two standard errors of the per-game mean
+  // are 2 · √(variance / pairs) / 2.
+  const pairMean = net / pairs;
+  const variance = (sumSq - pairs * pairMean * pairMean) / (pairs - 1);
+  return { games, net, winsA, margin: Math.sqrt(variance / pairs) };
 };
 
 const load = async (path: string | undefined): Promise<Engine> =>
