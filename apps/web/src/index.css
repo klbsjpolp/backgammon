@@ -678,8 +678,14 @@ body[data-drag-active] {
        the home indicator take 136px before any of this, the board was bound by
        height at a 34px point with 120px of width unused, and a sentence that
        says how to move a checker is read once and then only costs the checkers.
-       The gap below the version line stays 24px at 390 × 844, as before. */
-    --avail-w: calc(100svh - 13.75rem - var(--inset-top) - env(safe-area-inset-bottom));
+       The gap below the version line stays 24px at 390 × 844, as before.
+
+       And by another 2.75rem (44px) when the version line left portrait too
+       (28px with its gap) and the reservation stopped carrying 16px of slack
+       nobody had a use for. The gap under the controls is now the page's 8px
+       padding and 4px of margin, from 360 to 430 wide; on an installed
+       iPhone Pro Max that took a point from 35 to 38px. */
+    --avail-w: calc(100svh - 11rem - var(--inset-top) - env(safe-area-inset-bottom));
     /* The page padding, and nothing else: with the dice up in the header row the
        turned board has the full width of the screen to be deep in. A narrow phone
        is the one that notices — this is what limits it, where a tall one is
