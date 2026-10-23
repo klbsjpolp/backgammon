@@ -8,6 +8,7 @@ import {
   BAR,
   OFF,
   canDouble,
+  MAX_CUBE,
   canUndo,
   checkersOn,
   chooseTurn,
@@ -164,6 +165,16 @@ describe('doubling cube', () => {
   it('only lets the cube owner double', () => {
     const state = { ...createInitialState('white'), cube: { value: 2, owner: 'black' as Player } };
     expect(canDouble(state, 'white')).toBe(false);
+  });
+
+  it('stops doubling once the cube reaches 64', () => {
+    const at32 = { ...createInitialState('white'), cube: { value: 32, owner: 'white' as Player } };
+    const at64 = respondDouble(offerDouble(at32), true);
+    expect(at64.cube).toEqual({ value: MAX_CUBE, owner: 'black' });
+    const blackOnRoll = { ...at64, turn: 'black' as Player };
+    expect(canDouble(blackOnRoll, 'black')).toBe(false);
+    expect(offerDouble(blackOnRoll)).toBe(blackOnRoll);
+    expect(shouldDouble(blackOnRoll, 'black')).toBe(false);
   });
 });
 
