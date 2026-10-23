@@ -746,3 +746,20 @@ body[data-fullscreen] .board-fit {
 body[data-fullscreen] .board-frame {
   min-height: calc(var(--pt) * 8.32 + max(3.5rem, calc(var(--pt) * 2.1)));
 }
+
+/*
+ * Fullscreen on a portrait phone-sized window, which the button never offers
+ * (it is hidden there) but a desktop window in fullscreen can be narrowed into.
+ * The rule above budgets the screen's height across the board, and the turned
+ * board's across is the screen's width: the frame spilled sideways and the page
+ * scrolled. So the two budgets are swapped back the way the turned layout swaps
+ * them, with fullscreen's one header row as the chrome, and the wrapper reserves
+ * the frame's full fullscreen depth rather than the windowed 8.6.
+ */
+@media (orientation: portrait) and (max-width: 640px) {
+  body[data-fullscreen] .board-fit {
+    --avail-w: calc(100svh - 5rem - var(--inset-top) - env(safe-area-inset-bottom));
+    --avail-h: calc(100vw - 2rem - env(safe-area-inset-left) - env(safe-area-inset-right));
+    width: calc(var(--pt) * 8.32 + max(3.5rem, calc(var(--pt) * 2.1)) + 2px);
+  }
+}
