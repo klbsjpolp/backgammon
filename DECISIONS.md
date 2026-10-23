@@ -956,6 +956,14 @@ lobby `quitButton` already used for its own inline-or-portal choice. The menu th
 opened on nothing now does not open at all, and the button a won game needs stands right next
 to the sentence that just said so.
 
+It stood _under_ it at first, which was a row nobody had budgeted: the board and everything
+below it dropped 52px the moment the game ended, and a portrait phone scrolled by 36px. It is
+beside the result now, stretched to the status box's height rather than the other way round —
+on a portrait phone that is 40px, under the 44px every other control keeps, because the four
+pixels would have moved the board just the same. The landscape sidebar keeps the stack: it is
+~156px wide, already gives the result three lines, and a sidebar growing downwards moves
+nothing.
+
 ## Full screen
 
 On a desktop monitor `--pt` was still capped at the 2.5rem chosen for a windowed browser, so
