@@ -171,11 +171,20 @@ export const undoMove = (state: GameState): GameState => {
 
 // --- Doubling cube ---------------------------------------------------------
 
+/**
+ * The highest the cube goes: the top face of a real one. Money play has no
+ * limit, but with nothing to stop it a cube passed back and forth reached
+ * 262144 against the AI, which takes on its chances without looking at the
+ * stake, and outgrew the tray that shows it.
+ */
+export const MAX_CUBE = 64;
+
 /** May the player on roll offer a double right now? */
 export const canDouble = (state: GameState, player: Player): boolean =>
   state.phase === 'rolling' &&
   state.turn === player &&
   state.result === null &&
+  state.cube.value < MAX_CUBE &&
   (state.cube.owner === null || state.cube.owner === player);
 
 export const offerDouble = (state: GameState): GameState => {

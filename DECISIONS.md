@@ -27,6 +27,14 @@ you think and record it" instruction). Open questions are at the bottom.
 - **Doubling cube** is modelled in core (value, owner, offer/take/drop) and detected in
   the runtime/UI. Win detection includes **single / gammon (2×) / backgammon (3×)** and
   multiplies by the cube. The AI turns the cube too — see below.
+- **The cube stops at 64**, the top face of a real one. Money play has no limit, and
+  this one had none until a game against the AI ended at 262144: the AI takes on its
+  chances alone, never on the stake, so a player who redoubles every turn it can is
+  answered every time, and the number outgrew the tray that shows it. A cap is a house
+  rule, but the common one. It lives in `canDouble`, which the host, the AI and both
+  panels' Double button already go through, so nothing else enforces it. A host one
+  release behind still lets a cube past 64; the guest's schema takes that as it comes
+  rather than drop the frame.
 - **Single games** (play to a win), not match play.
 
 ## AI
