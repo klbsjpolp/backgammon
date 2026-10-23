@@ -874,6 +874,23 @@ re-deriving a number that has been wrong in both directions before. What it cost
 on a phone is not told a checker can be dragged; clicking it works as it always did, and the drag is found by
 trying.
 
+### And the version line, after all
+
+The paragraph above kept the version line and the reservation's 16px of slack, and both went
+a release later, when the board on an installed iPhone Pro Max was still the thing a player
+asked to be bigger: 35px points, the turned board 337px wide in a 430px screen. It is bound by
+the screen's length, and a pixel of length buys only 1/16.4 of a pixel of point — which is
+why the width looks so empty, and why the only way to fill it is rows of chrome. The version
+line and its gap were 28px of them. Landscape had already dropped it on the argument that
+holds here too: it is a quarter turn away, and an update that matters banners itself without
+being asked for. With the slack cut to 4px of margin as well, the reservation goes from
+13.75rem to 11rem and the point from 35 to 38px there; 390 × 844 now reaches the 2.5rem cap.
+
+The cost is that "Rechercher une mise à jour" is not on a portrait phone's screen. Putting it
+in the header menu instead was the obvious way to keep it, and is not done: that menu only
+exists while there is a game to abandon, and making it exist always would take a breakpoint
+in JavaScript, which this layout has so far managed without.
+
 ## The abandon button rides in the header
 
 This used to be conditional: **Nouvelle partie** / **Quitter** rode in the header only on a

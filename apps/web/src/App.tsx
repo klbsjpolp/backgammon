@@ -241,8 +241,13 @@ export const App = () => {
 
           {/* A landscape phone has no height to give a footer; the same line is one
             rotation away, and an update that matters still banners itself.
-            Fullscreen does not drop it — it moved up into the header row. */}
-          {!fullscreen.isFullscreen && <div className="w-full compact:hidden">{versionLine}</div>}
+            Fullscreen does not drop it — it moved up into the header row.
+
+            A portrait phone drops it for the same reason. Its board is bound by
+            the screen's length, so the line and the gap above it were 28px of
+            board length, ~1.7px on every point, spent on a link that is used
+            once in a while and is a quarter turn away. */}
+          {!fullscreen.isFullscreen && <div className="w-full compact:hidden portrait-phone:hidden">{versionLine}</div>}
 
           {updates.isUpdateRequired && updates.minimumSupportedVersion && (
             <UpdateRequiredOverlay
