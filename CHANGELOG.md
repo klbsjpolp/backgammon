@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.9.4](https://github.com/klbsjpolp/backgammon/compare/v1.9.3...v1.9.4) (2026-10-23)
+
+### Bug Fixes
+
+* **web:** give a portrait phone's board the version line's height ([bb9c290](https://github.com/klbsjpolp/backgammon/commit/bb9c2909c65a5b634700f8b0c2937b93d33d0478))
+* **web:** keep a portrait fullscreen board inside the screen ([34eaebf](https://github.com/klbsjpolp/backgammon/commit/34eaebf5936f04c8bc4527d712450ea1446b79e7))
+* **web:** put the new-game button beside the result, not under it ([677d3ea](https://github.com/klbsjpolp/backgammon/commit/677d3ea146dcb089f91bd6e5a7e6118b7a7c038e))
+
 ## [1.9.3](https://github.com/klbsjpolp/backgammon/compare/v1.9.2...v1.9.3) (2026-10-22)
 
 ### Bug Fixes
