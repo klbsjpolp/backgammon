@@ -8,6 +8,7 @@ import { useFullscreenState } from '@/fullscreen';
 import { useHeaderSlot } from '@/headerSlot';
 import { SIDE_PLURAL } from '@/lib/french';
 import { useLocalGame } from '@/useLocalGame';
+import { cn } from '@/lib/cn';
 
 interface LocalPanelProps {
   /**
@@ -71,7 +72,11 @@ export const LocalPanel = ({ applyPendingUpdate, onHeaderActionChange }: LocalPa
       confirmLabel="Recommencer ?"
       confirm={!isOver}
       onConfirm={startNewGame}
-      className="bg-positive text-positive-fg hover:bg-positive-hover"
+      className={cn(
+        'bg-positive text-positive-fg hover:bg-positive-hover',
+        // Beside the result it takes the status box's height — see the status row below.
+        isOver && !buttonInControls && 'portrait-phone:min-h-0',
+      )}
     />
   );
 
@@ -92,10 +97,28 @@ export const LocalPanel = ({ applyPendingUpdate, onHeaderActionChange }: LocalPa
           </>
         }
         status={
-          <div className="flex w-full flex-col items-center gap-2">
-            <TurnStatus state={state} you={game.you} opponentLabel="IA" />
+          /*
+           * Beside the result rather than under it. Stacked, the button was a
+           * row the height budget never paid for: the board and everything
+           * under it dropped 52px the moment the game ended, and a portrait
+           * phone scrolled by that much. In a row it is as tall as the status
+           * box already is — stretched to it, and on a portrait phone allowed
+           * below its 44px minimum to match the box's 40, since four pixels
+           * more there would move the board just the same.
+           *
+           * The landscape sidebar keeps the stack: it is ~156px wide, the
+           * result already needs three lines of it, and a sidebar growing
+           * downwards moves nothing.
+           *
+           * `min-w-0` on the status for the reason `GameLayout` gives: its
+           * lines are `truncate`, whose min-content is the whole sentence.
+           */
+          <div className="flex w-full items-stretch gap-2 compact:flex-col compact:items-center">
+            <div className="min-w-0 flex-1 compact:w-full">
+              <TurnStatus state={state} you={game.you} opponentLabel="IA" />
+            </div>
             {/* The result is the one message with nothing after it — no next roll,
-                no next double — so the action that follows it goes right below
+                no next double — so the action that follows it goes right beside it
                 rather than behind the header menu's tap. Built once above and
                 dropped in exactly one place: here, in `primary` (fullscreen), or
                 in `danger` below, never two — see `Controls`. */}

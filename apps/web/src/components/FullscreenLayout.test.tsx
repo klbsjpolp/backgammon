@@ -129,13 +129,13 @@ describe('the fullscreen layout', () => {
 
     const result = () => screen.getByText(/vous gagnez/i, { ignore: '.sr-only' });
     const newGame = () => screen.getByRole('button', { name: /nouvelle partie/i });
-    // Windowed, it stands right under the result.
-    expect(result().parentElement?.parentElement?.parentElement?.contains(newGame())).toBe(true);
+    // Windowed, it stands right beside the result.
+    expect(newGame().parentElement?.contains(result())).toBe(true);
 
     await enterFullscreen();
 
     expect(boardFit().contains(newGame())).toBe(true);
-    expect(result().parentElement?.parentElement?.parentElement?.contains(newGame())).toBe(false);
+    expect(newGame().parentElement?.contains(result())).toBe(false);
     expect(screen.queryByRole('button', { name: /^lancer$/i })).toBeNull();
   });
 
