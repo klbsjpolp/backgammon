@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.10.0](https://github.com/klbsjpolp/backgammon/compare/v1.9.4...v1.10.0) (2026-10-23)
+
+### Features
+
+* **core:** stop the doubling cube at 64 ([89a04e6](https://github.com/klbsjpolp/backgammon/commit/89a04e67a1f7323a5c42cd95d50d9782b49da206))
+
 ## [1.9.4](https://github.com/klbsjpolp/backgammon/compare/v1.9.3...v1.9.4) (2026-10-23)
 
 ### Bug Fixes
