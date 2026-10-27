@@ -23,8 +23,8 @@
     "test:coverage": "pnpm --filter @backgammon/core test:coverage && pnpm --filter @backgammon/runtime test:coverage && pnpm --filter @backgammon/web test:coverage"
   },
   "devDependencies": {
-    "@commitlint/cli": "^21.2.3",
-    "@commitlint/config-conventional": "^21.2.3",
+    "@commitlint/cli": "^21.2.4",
+    "@commitlint/config-conventional": "^21.2.4",
     "@eslint/js": "^10.0.1",
     "@types/node": "^26.6.5",
     "@typescript-eslint/eslint-plugin": "catalog:",
