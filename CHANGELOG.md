@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.11.0](https://github.com/klbsjpolp/backgammon/compare/v1.10.2...v1.11.0) (2026-11-01)
+
+### Features
+
+* **web:** report each finished game to sentry, as skip-bo does ([c29e5cc](https://github.com/klbsjpolp/backgammon/commit/c29e5cce6fa35ec958d9b367f5eb148f7db48be3))
+
 ## [1.10.2](https://github.com/klbsjpolp/backgammon/compare/v1.10.1...v1.10.2) (2026-10-27)
 
 ## [1.10.1](https://github.com/klbsjpolp/backgammon/compare/v1.10.0...v1.10.1) (2026-10-27)
