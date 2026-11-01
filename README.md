@@ -136,3 +136,16 @@ VITE_BACKGAMMON_API_URL=https://your-realtime-infra-server
 ```
 
 See [DECISIONS.md](DECISIONS.md).
+
+## Errors and game stats go to Sentry, if you give it a DSN
+
+`VITE_SENTRY_DSN` is the browser DSN of a Sentry project. Set it as a repository
+**secret** for the deployed site, or in `apps/web/.env.local` locally. Without it,
+Sentry is never initialised: nothing is sent, and the app runs the same.
+
+With it, Sentry receives the crashes the error screen catches and one `game.completed`
+event per finished game — local games, and online games from the host only, so each
+game is counted once. Its tags (`game.mode`, `game.winner_kind`, `game.result_kind`,
+`game.end_reason`, `game.cube_value`, …) give the breakdown on the issue page; the
+`game.completed` span carries the duration, turns, hits and cube for the Trace Explorer.
+It is the same shape skip-bo sends, so one project can hold both. No player name is sent.

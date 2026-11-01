@@ -1718,6 +1718,29 @@ state that could not be restored, the missing configuration — is translated.
 The lobby's `readyState` is mapped rather than printed, since only `ready` means
 anything to someone waiting to start.
 
+## A finished game is reported once, from the board it was played on
+
+Skip-bo sends a `game.completed` event to Sentry at the end of every game, and backgammon now sends the same shape,
+so one Sentry project reads both. Its record is built by watching the stream of `GameState`s rather than from the
+engine: timing reads the wall clock, which `core` must never do, and everything else — whose turn it is, the bar,
+the checkers off, the result — is already on every state. Nothing was added to `GameState` or to the wire for it.
+
+Hits are the one count that is not on the state, and the obvious way to get them, counting moves flagged `hit`, is
+wrong: an undo takes the hit back, and a count of moves keeps it. They are counted instead as the growth of the
+opponent's bar over the turn, since during a turn only the mover's hits and the mover's undos change it.
+
+A game is only recorded if it was seen from the opening position. One first seen part-way through — a guest promoted
+to host after a disconnect, a reload whose recording was lost — has no start to measure from, and a game reported as
+four turns long is worse than one not reported. The cost was that the local game, which survives a reload, would then
+never report the games iOS evicts in the background, which on a phone are the common ones. So the recording is saved
+next to the game, under its own key, on every change and when the page is hidden, and picked back up with it; time
+while the page was gone, or hidden, is counted for nobody. Online, only the host reports — it ran the game, and a
+report per seat would count every game twice — and it keeps nothing, since a reload loses its seat anyway.
+
+A game abandoned with `Nouvelle partie` ends unreported: the board going back to the opening after play is what
+starts the next recording. No player name is sent. The local game has none, and online ones are whatever a
+stranger typed into the lobby.
+
 ## Deferred
 
 - Match play, Crawford rule, Jacoby rule.
@@ -1726,9 +1749,13 @@ anything to someone waiting to start.
 - Stronger AI still possible: checker play is a full move-sequence search with a shot-aware
   evaluation, and cube decisions come off a heuristic win-probability estimate — neither is
   equity-based, and rollouts would beat both.
-- Sentry, Playwright e2e. `pnpm --filter @backgammon/web layout` drives the real app in Chromium, but only to
+- Playwright e2e. `pnpm --filter @backgammon/web layout` drives the real app in Chromium, but only to
   screenshot the layout and fail on a page that scrolls, and only when run by hand: it is the check the board-layout
   skill asks for, not a test of play, and CI does not install a browser for it.
+- Sentry's page-load tracing, session replay and source-map upload. Errors and finished games are sent; the
+  rest waits until something needs it — replay is most of the SDK's weight, and source maps need an auth token the
+  deploy does not have.
+- A history of finished games on the device, the dialog skip-bo shows them in. The stats are only sent so far.
 - Online polish: reconnection/resume parity with skip-bo, richer lobby (names,
   kicking). A dropped socket still ends the
   game for that seat: `useOnlineGame` reports `disconnected` and stops there,

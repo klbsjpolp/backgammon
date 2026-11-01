@@ -14,6 +14,7 @@ import { canDouble, canUndo, opponent, type GameState, type Player } from '@back
 import { pendingNoPlay } from '@/lib/noPlay';
 import { useAutoRoll } from '@/useAutoRoll';
 import { useCheckerSelection } from '@/useCheckerSelection';
+import { useGameStats } from '@/useGameStats';
 import { createOnlineRoom, joinOnlineRoom } from './api';
 
 const PING_INTERVAL_MS = 25_000;
@@ -298,6 +299,11 @@ export const useOnlineGame = (): OnlineGame => {
     setMyPlayer(null);
     setStatus('idle');
   }, [sendRaw, setStatus]);
+
+  // Only the host reports: it is the one that ran the game, and a report per
+  // seat would count every online game twice.
+  const isHost = session !== null && session.seatIndex === session.hostSeatIndex;
+  useGameStats(isHost ? gameState : null, { mode: 'online', aiPlayer: null });
 
   const view = useMemo<BackgammonView | null>(
     () => (gameState && myPlayer ? serializeView(gameState, myPlayer) : null),

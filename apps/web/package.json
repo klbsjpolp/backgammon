@@ -17,6 +17,7 @@
     "@backgammon/core": "workspace:*",
     "@backgammon/runtime": "workspace:*",
     "@klbsjpolp/realtime-core": "^0.1.0",
+    "@sentry/react": "^11.10.0",
     "clsx": "^2.1.1",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
