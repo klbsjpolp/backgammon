@@ -5,7 +5,7 @@ import type { GameStatsRecord } from '@/lib/gameStats';
  * Sends a finished game to Sentry, the same two-part shape skip-bo uses so both
  * games read the same way in one dashboard:
  *
- * - a `game.completed` message whose **tags** are the categorical breakdown —
+ * - a `game.completed` event whose **tags** are the categorical breakdown —
  *   Sentry groups every game into one issue, and its tag distribution is "how
  *   many games, how many won by the AI, how many gammons, how many ended on a
  *   dropped double";
@@ -23,12 +23,14 @@ export const reportGameCompleted = (record: GameStatsRecord): void => {
   const winnerKind = record.winnerIsAI ? 'ai' : 'human';
   const [white, black] = record.players;
 
-  Sentry.captureMessage('game.completed', {
+  // captureEvent, not captureMessage: the SDK turns a message into a
+  // synthetic exception carrying the caller's stack, so the issue was titled
+  // with the minified name of this function (`$w`) and grouped by it. A plain
+  // event keeps the title `game.completed`, and the fixed fingerprint keeps
+  // every game in that one issue whatever the build renames.
+  Sentry.captureEvent({
+    message: 'game.completed',
     level: 'info',
-    // Without a fingerprint Sentry groups the message by its attached stack
-    // trace, whose top frame is a minified name (`$w` on the first deploy) that
-    // a rebuild can rename — every release would then open a new issue, and no
-    // one issue's tag distribution would cover all the games.
     fingerprint: ['game.completed'],
     tags: {
       'game.mode': record.mode,

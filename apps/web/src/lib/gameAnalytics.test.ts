@@ -5,7 +5,7 @@ import type { GameStatsPlayer, GameStatsRecord } from './gameStats';
 
 const end = vi.fn();
 vi.mock('@sentry/react', () => ({
-  captureMessage: vi.fn(),
+  captureEvent: vi.fn(),
   startInactiveSpan: vi.fn(() => ({ end })),
 }));
 
@@ -43,9 +43,9 @@ describe('reportGameCompleted', () => {
   it('sends the breakdown as tags and the numbers on a span lasting the game', () => {
     reportGameCompleted(record);
 
-    expect(Sentry.captureMessage).toHaveBeenCalledWith(
-      'game.completed',
+    expect(Sentry.captureEvent).toHaveBeenCalledWith(
       expect.objectContaining({
+        message: 'game.completed',
         fingerprint: ['game.completed'],
         tags: expect.objectContaining({
           'game.mode': 'local',
@@ -79,8 +79,7 @@ describe('reportGameCompleted', () => {
         { ...black, isWinner: true },
       ],
     });
-    expect(Sentry.captureMessage).toHaveBeenLastCalledWith(
-      'game.completed',
+    expect(Sentry.captureEvent).toHaveBeenLastCalledWith(
       expect.objectContaining({ tags: expect.objectContaining({ 'game.winner_kind': 'ai' }) }),
     );
     expect(Sentry.startInactiveSpan).not.toHaveBeenCalled();
