@@ -64,4 +64,32 @@ describe('reportGameCompleted', () => {
     );
     expect(end).toHaveBeenCalledWith(new Date(record.endedAt));
   });
+
+  it('names the AI as the winner, and sends no span for a game with no usable times', () => {
+    vi.mocked(Sentry.startInactiveSpan).mockClear();
+    const [white, black] = record.players;
+    reportGameCompleted({
+      ...record,
+      winner: 'black',
+      winnerIsAI: true,
+      startedAt: 'not a date',
+      players: [
+        { ...white, isWinner: false },
+        { ...black, isWinner: true },
+      ],
+    });
+    expect(Sentry.captureMessage).toHaveBeenLastCalledWith(
+      'game.completed',
+      expect.objectContaining({ tags: expect.objectContaining({ 'game.winner_kind': 'ai' }) }),
+    );
+    expect(Sentry.startInactiveSpan).not.toHaveBeenCalled();
+  });
+
+  it('reads the loser as white when black wins', () => {
+    vi.mocked(Sentry.startInactiveSpan).mockClear();
+    reportGameCompleted({ ...record, winner: 'black' });
+    expect(Sentry.startInactiveSpan).toHaveBeenCalledWith(
+      expect.objectContaining({ attributes: expect.objectContaining({ 'game.loser_pips_left': 0 }) }),
+    );
+  });
 });
