@@ -176,6 +176,9 @@ jobs:
           NODE_ENV: production
           VITE_APP_VERSION: ${{ needs.release.outputs.release_tag }}
           VITE_BACKGAMMON_API_URL: ${{ secrets.VITE_BACKGAMMON_API_URL || vars.VITE_BACKGAMMON_API_URL }}
+          # Optional: without it the build ships with Sentry off, errors and
+          # finished-game stats included.
+          VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN }}
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v5

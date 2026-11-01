@@ -9,6 +9,8 @@ interface ImportMetaEnv {
   readonly VITE_APP_VERSION?: string;
   /** Base URL of the shared realtime-infra server. */
   readonly VITE_BACKGAMMON_API_URL?: string;
+  /** Browser Sentry DSN; unset means Sentry is never initialised. */
+  readonly VITE_SENTRY_DSN?: string;
 }
 
 interface ImportMeta {

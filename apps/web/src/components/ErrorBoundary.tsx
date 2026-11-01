@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
+import { captureReactException } from '@sentry/react';
 import { Button } from '@/components/Button';
 import { reloadApp } from '@/lib/reload';
 
@@ -30,8 +31,11 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   componentDidCatch(error: Error, info: ErrorInfo): void {
-    // Nothing collects these yet (Sentry is deferred), but a crash that leaves
-    // no trace at all is not debuggable from a bug report either.
+    // React 19 hands an error a boundary caught to the boundary alone, not to
+    // `window.onerror`, so Sentry's global handlers never see it: it is sent
+    // from here or not at all. The console line stays for a bug report from a
+    // build without a DSN.
+    captureReactException(error, info);
     console.error('Unhandled error in the backgammon app', error, info.componentStack);
   }
 

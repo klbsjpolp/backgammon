@@ -21,6 +21,7 @@ import { NO_PLAY_HOLD_MS, pendingNoPlay } from '@/lib/noPlay';
 import { loadSavedGame, saveGame } from '@/lib/savedGame';
 import { useAutoRoll } from '@/useAutoRoll';
 import { useCheckerSelection } from '@/useCheckerSelection';
+import { useGameStats } from '@/useGameStats';
 
 const HUMAN: Player = 'white';
 const AI: Player = 'black';
@@ -86,6 +87,7 @@ export const useLocalGame = (): LocalGame => {
    * restoring it would hand back a ring with no pointer behind it.
    */
   useEffect(() => saveGame(state), [state]);
+  useGameStats(state, { mode: 'local', aiPlayer: AI });
 
   const isHumanTurn = state.turn === HUMAN;
 
