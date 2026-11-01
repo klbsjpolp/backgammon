@@ -197,4 +197,32 @@ describe('game stats tracker', () => {
     expect(isOpeningPosition(createInitialState('black'))).toBe(true);
     expect(isOpeningPosition(roll(createInitialState('white'), createRng(1)))).toBe(false);
   });
+
+  it('makes its own ids, and ignores a hide it already knows about', () => {
+    const onComplete = vi.fn<(record: GameStatsRecord) => void>();
+    const tracker = createGameStatsTracker({ appVersion: 'v1', mode: 'online', aiPlayer: null, onComplete });
+    expect(tracker.checkpoint(0)).toBeNull();
+    tracker.observe(createInitialState('black'), 0);
+    tracker.setHidden(true, 1_000);
+    tracker.setHidden(true, 5_000);
+    // Hidden, so a checkpoint has no running turn to credit.
+    expect(tracker.checkpoint(9_000)!.players.black.playTimeMs).toBe(1_000);
+    expect(tracker.checkpoint(9_000)!.id).toMatch(/.+/);
+  });
+
+  it.each([
+    ['id', 1],
+    ['startedAtMs', 'soon'],
+    ['turn', 'red'],
+    ['totalTurns', null],
+    ['opponentBarAtTurnStart', undefined],
+    ['hasLeftOpening', 'yes'],
+    ['players', null],
+  ])('refuses a saved recording whose %s is wrong', (key, value) => {
+    const { tracker } = track();
+    tracker.observe(createInitialState('white'), 0);
+    const saved = tracker.checkpoint(0)!;
+    expect(parseOpenRecording({ ...saved, [key]: value })).toBeNull();
+    expect(parseOpenRecording({ ...saved, players: { ...saved.players, black: { turns: 1 } } })).toBeNull();
+  });
 });

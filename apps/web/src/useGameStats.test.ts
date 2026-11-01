@@ -59,4 +59,23 @@ describe('useGameStats', () => {
     expect(report).toHaveBeenCalledTimes(1);
     expect(report.mock.calls[0][0]).toMatchObject({ mode: 'online', winnerIsAI: false });
   });
+
+  it('ignores a saved recording it cannot read', () => {
+    localStorage.setItem(GAME_STATS_STORAGE_KEY, '{not json');
+    renderHook(() => useGameStats(dropped, { mode: 'local', aiPlayer: 'black' }));
+    expect(report).not.toHaveBeenCalled();
+  });
+
+  it('saves the recording when the page is hidden or left', () => {
+    renderHook(() => useGameStats(opening, { mode: 'local', aiPlayer: 'black' }));
+    localStorage.removeItem(GAME_STATS_STORAGE_KEY);
+    const visibility = vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');
+    document.dispatchEvent(new Event('visibilitychange'));
+    expect(localStorage.getItem(GAME_STATS_STORAGE_KEY)).not.toBeNull();
+    visibility.mockRestore();
+
+    localStorage.removeItem(GAME_STATS_STORAGE_KEY);
+    window.dispatchEvent(new Event('pagehide'));
+    expect(localStorage.getItem(GAME_STATS_STORAGE_KEY)).not.toBeNull();
+  });
 });
