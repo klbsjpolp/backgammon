@@ -25,6 +25,11 @@ export const reportGameCompleted = (record: GameStatsRecord): void => {
 
   Sentry.captureMessage('game.completed', {
     level: 'info',
+    // Without a fingerprint Sentry groups the message by its attached stack
+    // trace, whose top frame is a minified name (`$w` on the first deploy) that
+    // a rebuild can rename — every release would then open a new issue, and no
+    // one issue's tag distribution would cover all the games.
+    fingerprint: ['game.completed'],
     tags: {
       'game.mode': record.mode,
       'game.winner_kind': winnerKind,

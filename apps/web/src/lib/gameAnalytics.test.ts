@@ -46,6 +46,7 @@ describe('reportGameCompleted', () => {
     expect(Sentry.captureMessage).toHaveBeenCalledWith(
       'game.completed',
       expect.objectContaining({
+        fingerprint: ['game.completed'],
         tags: expect.objectContaining({
           'game.mode': 'local',
           'game.winner_kind': 'human',
