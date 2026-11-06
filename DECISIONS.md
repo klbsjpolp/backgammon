@@ -1741,6 +1741,14 @@ A game abandoned with `Nouvelle partie` ends unreported: the board going back to
 starts the next recording. No player name is sent. The local game has none, and online ones are whatever a
 stranger typed into the lobby.
 
+The SDK's `Dedupe` integration is turned off for these events' sake. It drops an event identical to the one before it,
+judged by message, fingerprint and stack trace alone — and every `game.completed` is identical on all three, since the
+fixed fingerprint is what keeps them in one issue. Tags and `extra`, where the games differ, are not looked at. So
+every game after the first in a page session was discarded in the browser: 15 of 26 in the first week, with the spans
+all arriving and the issue showing 11. Making the message unique would have split the title the way the fingerprint
+was added to prevent. The cost is that an error thrown twice in a row is now sent twice, which at this app's volume is
+nothing.
+
 ## Deferred
 
 - Match play, Crawford rule, Jacoby rule.
