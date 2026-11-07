@@ -328,10 +328,17 @@ describe('ai cube strategy', () => {
     expect(shouldDouble(createInitialState('white'), 'white')).toBe(false);
   });
 
-  it('doubles inside the window and holds back when too good', () => {
-    expect(shouldDouble(race(3, 0), 'white')).toBe(true);
-    // A commanding lead is worth playing on for the gammon rather than cashing.
-    expect(shouldDouble(race(9, 0), 'white')).toBe(false);
+  /** One black checker still back in white's home board, the rest of black home: contact. */
+  const contact = (whiteOn: number): GameState => ({
+    ...createInitialState('white'),
+    board: makeBoard({ 4: whiteOn, 2: -1, 20: -14 }, {}, { white: 15 - whiteOn, black: 0 }),
+  });
+
+  it('doubles inside the window and holds back when too good while there is contact', () => {
+    expect(shouldDouble(contact(13), 'white')).toBe(true);
+    // A commanding lead with a shot still to hit is worth playing on for the gammon.
+    expect(winProbability(contact(9), 'white')).toBeGreaterThan(0.85);
+    expect(shouldDouble(contact(9), 'white')).toBe(false);
   });
 
   it('never doubles when it does not own the cube', () => {
@@ -347,6 +354,43 @@ describe('ai cube strategy', () => {
   it('drops a hopeless double and takes a playable one', () => {
     expect(shouldTakeDouble(race(9, 0), 'black')).toBe(false);
     expect(shouldTakeDouble(race(0, 0), 'black')).toBe(true);
+  });
+
+  describe('in a race', () => {
+    /** Both sides on their own 4- and 5-points (`[on 4, on 5]` each), the rest borne off. */
+    const bearoff = ([w4, w5]: [number, number], [b4, b5]: [number, number]): GameState => ({
+      ...createInitialState('white'),
+      board: makeBoard({ 3: w4, 4: w5, 20: -b4, 19: -b5 }, {}, { white: 15 - w4 - w5, black: 15 - b4 - b5 }),
+    });
+
+    it('cashes a race it is far ahead in, since no gammon is left to play for', () => {
+      // Black is all home: the gammon the probability window holds back for cannot happen.
+      expect(shouldDouble(race(9, 0), 'white')).toBe(true);
+    });
+
+    it('drops the short race the probability estimate would have taken', () => {
+      // One checker each on the 4- and 5-points, white on roll: both need two
+      // rolls and white goes first. The logistic puts black near 38%; it is a drop.
+      const state = { ...bearoff([1, 1], [1, 1]), phase: 'doubleOffered' as const };
+      expect(winProbability(state, 'black')).toBeGreaterThan(0.22);
+      expect(shouldTakeDouble(state, 'black')).toBe(false);
+    });
+
+    it('doubles from the centre where it would not redouble', () => {
+      // Four each on the 5-point: being on roll is worth a double, not quite a redouble.
+      const state = bearoff([0, 4], [0, 4]);
+      expect(shouldDouble(state, 'white')).toBe(true);
+      expect(shouldDouble({ ...state, cube: { value: 2, owner: 'white' } }, 'white')).toBe(false);
+    });
+
+    it('keeps the probability window while the loser can still be gammoned', () => {
+      // The sides have passed, but black has nothing off and fifteen still outside home.
+      const state: GameState = {
+        ...createInitialState('white'),
+        board: makeBoard({ 0: 6, 10: -15 }, {}, { white: 9, black: 0 }),
+      };
+      expect(shouldDouble(state, 'white')).toBe(false);
+    });
   });
 });
 
