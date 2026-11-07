@@ -377,10 +377,36 @@ describe('ai cube strategy', () => {
     });
 
     it('doubles from the centre where it would not redouble', () => {
-      // Four each on the 5-point: being on roll is worth a double, not quite a redouble.
-      const state = bearoff([0, 4], [0, 4]);
+      // White counts 17, raised a seventh (rounded down) to 19; black counts 15.
+      // Four behind is exactly the double; one past the redouble. Keeping the
+      // seventh's fraction would read 4 3/7 and refuse the double as well.
+      const state = bearoff([0, 3], [1, 2]);
       expect(shouldDouble(state, 'white')).toBe(true);
       expect(shouldDouble({ ...state, cube: { value: 2, owner: 'white' } }, 'white')).toBe(false);
+    });
+
+    describe('with black on roll', () => {
+      // The AI plays black, so its own home points are the ones the count must read right.
+      const blackOnRoll = (points: Record<number, number>, off: { white: number; black: number }): GameState => ({
+        ...createInitialState('black'),
+        board: makeBoard(points, {}, off),
+      });
+
+      it('mirrors the double and redouble decisions', () => {
+        // The position above, colours swapped.
+        const state = blackOnRoll({ 19: -3, 3: 1, 4: 2 }, { white: 12, black: 12 });
+        expect(shouldDouble(state, 'black')).toBe(true);
+        expect(shouldDouble({ ...state, cube: { value: 2, owner: 'black' } }, 'black')).toBe(false);
+      });
+
+      it('charges for checkers piled on its own 1-point', () => {
+        // Six pips against fifteen, but all six on black's 1-point: each extra one
+        // there costs two, so black is six behind on Keith's count and holds the cube.
+        const state = blackOnRoll({ 23: -6, 3: 1, 4: 1, 5: 1 }, { white: 12, black: 9 });
+        expect(winProbability(state, 'black')).toBeGreaterThan(0.68);
+        expect(shouldDouble(state, 'black')).toBe(false);
+        expect(shouldTakeDouble({ ...state, phase: 'doubleOffered', doubleOfferedBy: 'black' }, 'white')).toBe(true);
+      });
     });
 
     it('keeps the probability window while the loser can still be gammoned', () => {
