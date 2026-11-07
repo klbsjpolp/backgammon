@@ -49,7 +49,9 @@ you think and record it" instruction). Open questions are at the bottom.
   the opening position at ~0.54 for the player on roll. `shouldDouble` fires inside the
   classic window (0.68–0.85: strong enough to gain, not so strong that playing on for the
   gammon beats cashing) and `shouldTakeDouble` uses a take point of 0.22, a little under the
-  textbook 25% to account for owning the cube after taking.
+  textbook 25% to account for owning the cube after taking. A pure race is the exception:
+  once nothing can be hit and the loser cannot be gammoned, both decisions come off Keith's
+  count instead (see _A race cube is counted, not estimated_).
 
 ### Losing well
 
@@ -141,6 +143,31 @@ actually removed was the made-point and prime bonuses, and those are not caution
 how a bear-off avoids gaps and wasted pips, and a `prime²` that peaks at six home points made is a distribution
 heuristic that happens to be spelled like a blockade. There is nothing cautious left in a race to remove, so there is
 no race branch.
+
+### A race cube is counted, not estimated
+
+The checker play has no race branch; the cube now does, and the difference is that this one measured. A game against
+the AI ended on a cube of 64, and self-play showed why `winProbability` lets that happen: in races of 30 pips or less
+its logistic is far too flat. Positions it put at 0.27 won 11% of the time, ones at 0.40 won 21%, and at the other end
+0.82 won 94%. So it took doubles well under the take point, which in a short race where both sides redouble every
+turn walks the cube to the top, and it declined to double races it had all but won, calling them too good when there
+was no gammon left to play for.
+
+Retuning the logistic was the obvious fix and not the right one. The flatness is not a constant set wrong: lowering the
+floor on its scale (`max(20, …)` down to 8 or 4) moved the race calibration by about a point, because a pip lead,
+however scaled, does not see what decides a bear-off — checkers piled on the low points, gaps on the high ones. Keith's
+count does: the pip count plus a penalty for exactly that wastage, with the side on roll raised by a seventh, and
+thresholds published for the double (4 behind or better), the redouble (3) and the take (the doubler at least 2
+behind). It is what a person uses for a race cube, and it is what the AI uses now.
+
+It only applies where its assumptions hold. Contact keeps the probability window, and so does a race in which the
+loser still has nothing off and a checker outside home, because Keith's count knows nothing about gammons and that is
+the one case where holding back for one is right. Measured over three disjoint sets of 6000 games against the old cube: +0.27, +0.34 and +0.27 points per game, each well outside its ±0.1 margin, with checker play unchanged (`--no-cube` scores exactly zero). The seventh is rounded down, as Keith publishes it; keeping the fraction instead cost 0.008 ± 0.007 a game, a small loss but not nothing, and it moved positions sitting exactly on a threshold to the wrong side of it.
+
+A second change was tried and left out: taking at 25% instead of 22% when the take would put the cube at 64, where
+nobody can turn it again and the ownership the cushion pays for is worth nothing. It is right in principle and
+measured as nothing, +0.011 ± 0.015 over 6000 games, because self-play cubes almost never get that high. That says
+the duel cannot see it rather than that it is wrong, but nothing goes in unmeasured.
 
 ## Trust boundaries
 
