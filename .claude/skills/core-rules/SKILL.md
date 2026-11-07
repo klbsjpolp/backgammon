@@ -42,7 +42,8 @@ it must stay set until the same player rolls again, or the UI has nothing to say
 
 Win detection covers single / gammon (2×) / backgammon (3×) and multiplies by the cube. The AI's cube decisions come
 off `winProbability`, a heuristic (not a rollout): `shouldDouble` inside 0.68–0.85, `shouldTakeDouble` at a 0.22 take
-point.
+point — except in a pure race the loser cannot be gammoned in, where both use Keith's count, because the logistic is
+badly miscalibrated there (DECISIONS.md, _A race cube is counted, not estimated_).
 
 ## Tests
 

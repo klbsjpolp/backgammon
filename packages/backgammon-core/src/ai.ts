@@ -1,5 +1,14 @@
 import type { Board, GameState, Move, Player } from './types.js';
-import { CHECKERS_PER_SIDE, POINT_COUNT, checkersOn, homeRange, inHomeBoard, opponent, pipCount } from './board.js';
+import {
+  CHECKERS_PER_SIDE,
+  POINT_COUNT,
+  allHome,
+  checkersOn,
+  homeRange,
+  inHomeBoard,
+  opponent,
+  pipCount,
+} from './board.js';
 import { applyLegalMove, canDouble, currentLegalMoves } from './game.js';
 
 /**
@@ -312,14 +321,86 @@ const TOO_GOOD_POINT = 0.85;
  * value of owning the cube after taking.
  */
 const TAKE_POINT = 0.22;
+/**
+ * Pure race: no checker can be hit again. White travels down and black up, so
+ * the sides have passed once white's rearmost checker is below black's.
+ */
+const isRace = (board: Board): boolean => {
+  if (board.bar.white > 0 || board.bar.black > 0) return false;
+  let whiteBack = -1;
+  let blackBack = POINT_COUNT;
+  for (let i = 0; i < POINT_COUNT; i++) {
+    if (board.points[i] > 0) whiteBack = i;
+    if (board.points[i] < 0 && blackBack === POINT_COUNT) blackBack = i;
+  }
+  return whiteBack < blackBack;
+};
+
+/**
+ * Can `player` still lose a gammon? Not once a checker is off, and not in a race
+ * once all fifteen are home, since the next roll takes one off.
+ */
+const canBeGammoned = (board: Board, player: Player): boolean => board.off[player] === 0 && !allHome(board, player);
+
+/**
+ * Keith count: the pip count plus a penalty for the wastage a raw count misses —
+ * checkers piled on the low points, which bear off with most of a die thrown
+ * away, and gaps on the high ones, which make high rolls play short. It is the
+ * standard way a person decides a race cube, and it is what this one uses.
+ */
+const keithCount = (board: Board, player: Player): number => {
+  // `n`-point of the player's home board: white's is index n - 1, black's the mirror.
+  const on = (n: number): number => checkersOn(board, player, player === 'white' ? n - 1 : POINT_COUNT - n);
+  let count = pipCount(board, player);
+  count += 2 * Math.max(0, on(1) - 1);
+  count += Math.max(0, on(2) - 1);
+  count += Math.max(0, on(3) - 3);
+  for (const n of [4, 5, 6]) if (on(n) === 0) count += 1;
+  return count;
+};
+
+/**
+ * How far behind the side on roll is, on Keith's scale: its count raised by a
+ * seventh for being on roll, minus the other side's. Negative means ahead.
+ */
+const keithDeficit = (board: Board, onRoll: Player): number =>
+  (keithCount(board, onRoll) * 8) / 7 - keithCount(board, opponent(onRoll));
+
+/**
+ * Keith's thresholds. A double is right at a deficit of up to 4, a redouble up
+ * to 3 (owning the cube is worth giving up), and the taker should take while
+ * the doubler is at least 2 behind.
+ */
+const KEITH_DOUBLE = 4;
+const KEITH_REDOUBLE = 3;
+const KEITH_TAKE = 2;
+
+/**
+ * Races are decided by Keith's count rather than {@link winProbability}, whose
+ * logistic is far too flat once the sides have passed: in self-play, race
+ * positions it put at 0.27 won 11% of the time and ones it put at 0.82 won 94%.
+ * So it took doubles a quarter of the way under the take point and sat on races
+ * it should have cashed, "too good" in positions with no gammon left to play for.
+ * A race where the loser can still be gammoned keeps the probability window,
+ * because Keith's count knows nothing about gammons.
+ */
+const raceCube = (state: GameState, doubler: Player): boolean =>
+  isRace(state.board) && !canBeGammoned(state.board, opponent(doubler));
 
 /** Should `player` offer a double right now? */
 export const shouldDouble = (state: GameState, player: Player): boolean => {
   if (!canDouble(state, player)) return false;
+  if (raceCube(state, player)) {
+    const limit = state.cube.owner === null ? KEITH_DOUBLE : KEITH_REDOUBLE;
+    return keithDeficit(state.board, player) <= limit;
+  }
   const p = winProbability(state, player);
   return p >= DOUBLE_POINT && p <= TOO_GOOD_POINT;
 };
 
 /** Should `player` take (rather than drop) the double currently offered to them? */
-export const shouldTakeDouble = (state: GameState, player: Player): boolean =>
-  winProbability(state, player) >= TAKE_POINT;
+export const shouldTakeDouble = (state: GameState, player: Player): boolean => {
+  const doubler = opponent(player);
+  if (raceCube(state, doubler)) return keithDeficit(state.board, doubler) >= KEITH_TAKE;
+  return winProbability(state, player) >= TAKE_POINT;
+};
