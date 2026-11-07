@@ -162,9 +162,7 @@ behind). It is what a person uses for a race cube, and it is what the AI uses no
 
 It only applies where its assumptions hold. Contact keeps the probability window, and so does a race in which the
 loser still has nothing off and a checker outside home, because Keith's count knows nothing about gammons and that is
-the one case where holding back for one is right. Measured over three disjoint sets of 6000 games against the old
-cube: +0.24, +0.32 and +0.25 points per game, each well outside its ±0.1 margin, with checker play unchanged
-(`--no-cube` scores exactly zero).
+the one case where holding back for one is right. Measured over three disjoint sets of 6000 games against the old cube: +0.27, +0.34 and +0.27 points per game, each well outside its ±0.1 margin, with checker play unchanged (`--no-cube` scores exactly zero). The seventh is rounded down, as Keith publishes it; keeping the fraction instead cost 0.008 ± 0.007 a game, a small loss but not nothing, and it moved positions sitting exactly on a threshold to the wrong side of it.
 
 A second change was tried and left out: taking at 25% instead of 22% when the take would put the cube at 64, where
 nobody can turn it again and the ownership the cushion pays for is worth nothing. It is right in principle and

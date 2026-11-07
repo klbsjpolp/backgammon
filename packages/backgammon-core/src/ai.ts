@@ -361,10 +361,15 @@ const keithCount = (board: Board, player: Player): number => {
 
 /**
  * How far behind the side on roll is, on Keith's scale: its count raised by a
- * seventh for being on roll, minus the other side's. Negative means ahead.
+ * seventh for being on roll, minus the other side's. Negative means ahead. The
+ * seventh is rounded down, as Keith publishes it — the thresholds below were
+ * fitted to whole counts, and a fraction left in reads 22 against 21 as 4 1/7
+ * behind, one past the double, where the method doubles.
  */
-const keithDeficit = (board: Board, onRoll: Player): number =>
-  (keithCount(board, onRoll) * 8) / 7 - keithCount(board, opponent(onRoll));
+const keithDeficit = (board: Board, onRoll: Player): number => {
+  const count = keithCount(board, onRoll);
+  return count + Math.floor(count / 7) - keithCount(board, opponent(onRoll));
+};
 
 /**
  * Keith's thresholds. A double is right at a deficit of up to 4, a redouble up
