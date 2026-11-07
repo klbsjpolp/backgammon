@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.11.4](https://github.com/klbsjpolp/backgammon/compare/v1.11.3...v1.11.4) (2026-11-07)
+
+### Bug Fixes
+
+* **web:** stop the sentry sdk discarding every game after the first ([#122](https://github.com/klbsjpolp/backgammon/issues/122)) ([589df17](https://github.com/klbsjpolp/backgammon/commit/589df174347dee440a134c5b3ca016cb24af4c6a))
+
 ## [1.11.3](https://github.com/klbsjpolp/backgammon/compare/v1.11.2...v1.11.3) (2026-11-01)
 
 ### Bug Fixes
