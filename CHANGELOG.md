@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.11.5](https://github.com/klbsjpolp/backgammon/compare/v1.11.4...v1.11.5) (2026-11-08)
+
+### Bug Fixes
+
+* **core:** decide a race cube by keith's count, not the win estimate ([ead76bf](https://github.com/klbsjpolp/backgammon/commit/ead76bf6e3119396eeb1f71fcf39ef8569516417))
+* **core:** round keith's seventh down and check the count from black's side ([d13a163](https://github.com/klbsjpolp/backgammon/commit/d13a16317ba5b1d61eeba9708df90346b98d3718))
+
 ## [1.11.4](https://github.com/klbsjpolp/backgammon/compare/v1.11.3...v1.11.4) (2026-11-07)
 
 ### Bug Fixes
